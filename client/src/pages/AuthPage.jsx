@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Compass, Mail, Lock, User, Eye, EyeOff, ArrowRight, CheckCircle, AlertCircle, Globe } from 'lucide-react';
+import { Compass, Mail, Lock, User, Eye, EyeOff, ArrowRight, CheckCircle, AlertCircle, Globe, Image, Upload } from 'lucide-react';
 
 export default function AuthPage({ onSuccess }) {
   const { login, signup } = useAuth();
@@ -12,6 +12,7 @@ export default function AuthPage({ onSuccess }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [avatar, setAvatar] = useState('');
   const [languagePref, setLanguagePref] = useState('en');
   
   // Feedback states
@@ -19,10 +20,35 @@ export default function AuthPage({ onSuccess }) {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
+  const validateEmail = (val) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(val).toLowerCase().trim());
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) { // 2MB limit
+        setError('Image file must be under 2MB.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatar(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setMessage('');
+
+    if (!validateEmail(email)) {
+      setError('Please enter a valid email address (e.g. user@example.com).');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -30,15 +56,15 @@ export default function AuthPage({ onSuccess }) {
         const res = await fetch('/api/auth/forgot-password', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email })
+          body: JSON.stringify({ email: email.toLowerCase().trim() })
         });
         const data = await res.json();
         setMessage(data.message);
       } else if (isLogin) {
-        await login(email, password);
+        await login(email.toLowerCase().trim(), password);
         if (onSuccess) onSuccess();
       } else {
-        await signup(name, email, password, languagePref);
+        await signup(name, email.toLowerCase().trim(), password, languagePref, avatar);
         if (onSuccess) onSuccess();
       }
     } catch (err) {
@@ -52,7 +78,7 @@ export default function AuthPage({ onSuccess }) {
     <div className="min-h-[80vh] flex items-center justify-center py-10 px-4">
       <div className="w-full max-w-md bg-white border-2 border-[#1F2B2E] rounded-sm p-8 shadow-[4px_4px_0px_0px_#1F2B2E] relative">
         
-        {/* Header Header Boarding Pass Motif */}
+        {/* Header Boarding Pass Motif */}
         <div className="flex items-center justify-between border-b-2 border-dashed border-[#1F2B2E] pb-5 mb-6">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 bg-[#1F2B2E] text-[#F6F3EC] flex items-center justify-center font-mono font-bold text-lg rounded-sm">
@@ -133,6 +159,50 @@ export default function AuthPage({ onSuccess }) {
                 </div>
               </div>
 
+              {/* Custom Avatar Picker */}
+              <div className="space-y-1">
+                <label className="text-xs font-mono font-bold uppercase text-[#1F2B2E]">CHOOSE AVATAR (URL OR FILE)</label>
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Image className="absolute left-3 top-3 h-4 w-4 text-[#1F2B2E]/60" />
+                    <input
+                      type="url"
+                      placeholder="Paste Image URL (e.g. https://...)"
+                      value={avatar}
+                      onChange={(e) => setAvatar(e.target.value)}
+                      className="w-full bg-[#F6F3EC] border border-[#1F2B2E] rounded-sm pl-9 pr-3 py-2 text-xs text-[#1F2B2E] placeholder-[#1F2B2E]/40 focus:outline-none focus:ring-2 focus:ring-[#2C5F7C] font-mono"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label className="cursor-pointer px-3 py-1.5 bg-[#F6F3EC] border border-[#1F2B2E] font-mono text-[11px] font-bold text-[#2C5F7C] hover:bg-[#1F2B2E] hover:text-white transition flex items-center gap-1.5">
+                      <Upload className="h-3.5 w-3.5" />
+                      <span>UPLOAD IMAGE FILE</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                      />
+                    </label>
+                    {avatar && (
+                      <button
+                        type="button"
+                        onClick={() => setAvatar('')}
+                        className="text-[11px] font-mono text-[#B84A3E] hover:underline"
+                      >
+                        CLEAR
+                      </button>
+                    )}
+                  </div>
+                  {avatar && (
+                    <div className="flex items-center gap-3 p-2 bg-[#F6F3EC] border border-[#1F2B2E]">
+                      <img src={avatar} alt="Preview" className="h-10 w-10 object-cover border border-[#1F2B2E]" />
+                      <span className="text-[10px] font-mono text-[#2C5F7C] font-bold">AVATAR PREVIEW</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="space-y-1">
                 <label className="text-xs font-mono font-bold uppercase text-[#1F2B2E]">LANGUAGE PREFERENCE</label>
                 <div className="relative">
@@ -162,7 +232,10 @@ export default function AuthPage({ onSuccess }) {
                 required
                 placeholder="alex@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (error && error.includes('email')) setError('');
+                }}
                 className="w-full bg-[#F6F3EC] border border-[#1F2B2E] rounded-sm pl-9 pr-3 py-2 text-sm text-[#1F2B2E] placeholder-[#1F2B2E]/40 focus:outline-none focus:ring-2 focus:ring-[#2C5F7C] font-mono"
               />
             </div>

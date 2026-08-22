@@ -13,6 +13,8 @@ export default function Navbar() {
     navigate('/login');
   };
 
+  const initialLetter = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
+
   return (
     <header className="bg-white border-b-2 border-[#1F2B2E] sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -75,11 +77,17 @@ export default function Navbar() {
                 to="/profile"
                 className="flex items-center gap-2 px-3 py-1 bg-white border border-[#1F2B2E] font-mono text-xs font-bold hover:bg-[#F6F3EC] transition"
               >
-                <img
-                  src={user.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'}
-                  alt={user.name}
-                  className="h-6 w-6 object-cover border border-[#1F2B2E]"
-                />
+                {user.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt={user.name}
+                    className="h-6 w-6 object-cover border border-[#1F2B2E]"
+                  />
+                ) : (
+                  <div className="h-6 w-6 bg-[#1F2B2E] text-[#F6F3EC] flex items-center justify-center font-mono font-bold text-xs border border-[#1F2B2E]">
+                    {initialLetter}
+                  </div>
+                )}
                 <span className="text-[#1F2B2E] uppercase hidden sm:inline">{user.name}</span>
               </Link>
 
