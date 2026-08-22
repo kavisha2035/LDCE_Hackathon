@@ -227,21 +227,6 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// POST /api/auth/forgot-password
-router.post('/forgot-password', async (req, res) => {
-  try {
-    const { email } = req.body;
-    if (!email || !isValidEmail(email)) {
-      return res.status(400).json({ error: 'Validation Error', message: 'Please provide a valid email address.' });
-    }
-    return res.status(200).json({
-      message: `Password reset instructions have been dispatched to ${email.toLowerCase().trim()}.`
-    });
-  } catch (error) {
-    console.error('Forgot password error:', error);
-    res.status(500).json({ error: 'Internal Server Error', message: error.message });
-  }
-});
 
 // POST /api/auth/refresh (Reads HTTP-Only Cookie or request body)
 router.post('/refresh', async (req, res) => {
