@@ -20,8 +20,21 @@ import {
 
 function MainApp() {
   const { user, logout, isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'activities', 'budget', 'calendar', 'profile', 'auth', 'admin'
+  const [activeTab, setActiveTab] = useState('overview');
+  const [resetToken, setResetToken] = useState(null);
   
+  // Detect reset_token query param from password reset email link
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('reset_token');
+    if (token) {
+      setResetToken(token);
+      setActiveTab('reset');
+      // Clean URL without reload
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
   // Health check & Cities data
   const [health, setHealth] = useState(null);
   const [loadingHealth, setLoadingHealth] = useState(true);
@@ -244,6 +257,17 @@ function MainApp() {
 
         {activeTab === 'auth' && !isAuthenticated && (
           <AuthPage onSuccess={() => setActiveTab('profile')} />
+        )}
+
+        {activeTab === 'reset' && resetToken && (
+          <AuthPage
+            mode="reset"
+            resetToken={resetToken}
+            onSuccess={() => {
+              setResetToken(null);
+              setActiveTab('auth');
+            }}
+          />
         )}
 
         {activeTab === 'profile' && isAuthenticated && (
