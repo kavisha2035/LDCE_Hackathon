@@ -126,6 +126,13 @@ export default function Navbar({ currentTab, onNavigate }) {
             TOURS & ACTIVITIES
           </button>
 
+          <button
+            onClick={() => onNavigate('community')}
+            className={navItemClass('community')}
+          >
+            COMMUNITY
+          </button>
+
           {/* Trip Hub Dropdown */}
           <div className="relative">
             <button
@@ -210,10 +217,20 @@ export default function Navbar({ currentTab, onNavigate }) {
                     onNavigate('share');
                     setTripDropdownOpen(false);
                   }}
-                  className="w-full text-left px-5 py-2.5 text-xs sm:text-sm font-semibold hover:bg-white/10 hover:text-[#F5B800] flex items-center gap-2 cursor-pointer"
+                  className="w-full text-left px-5 py-2.5 text-xs sm:text-sm font-semibold hover:bg-white/10 hover:text-[#F5B800] flex items-center gap-2 cursor-pointer border-b border-white/5"
                 >
                   <Globe className="h-4 w-4 text-[#F5B800]" />
                   Public Share Pass
+                </button>
+                <button
+                  onClick={() => {
+                    onNavigate('community');
+                    setTripDropdownOpen(false);
+                  }}
+                  className="w-full text-left px-5 py-2.5 text-xs sm:text-sm font-semibold hover:bg-white/10 text-[#F5B800] flex items-center gap-2 cursor-pointer"
+                >
+                  <Sparkles className="h-4 w-4 text-[#F5B800]" />
+                  Explorer Community Hub
                 </button>
               </div>
             )}
