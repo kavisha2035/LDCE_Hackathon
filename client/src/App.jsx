@@ -434,7 +434,7 @@ function MainApp() {
         {activeTab === 'builder' && (
           isAuthenticated ? (
             <div className="w-full px-6 sm:px-12">
-              <ItineraryBuilder tripId={navParams.tripId || TRIP_ID} />
+              <ItineraryBuilder tripId={navParams.tripId} onNavigate={navigate} />
             </div>
           ) : (
             <AuthPage
@@ -447,13 +447,14 @@ function MainApp() {
 
         {activeTab === 'itinerary' && (
           <div className="w-full px-6 sm:px-12">
-            <ItineraryView tripId={navParams.tripId || TRIP_ID} />
+            <ItineraryView tripId={navParams.tripId} onNavigate={navigate} />
           </div>
         )}
 
         {activeTab === 'budget' && (
           <TripBudgetPage
             tripId={navParams.tripId || null}
+            onNavigate={navigate}
             onBack={() => navigate('home')}
             onNavigateToCalendar={() => navigate('calendar')}
           />
@@ -462,6 +463,7 @@ function MainApp() {
         {activeTab === 'calendar' && (
           <TripCalendarPage
             tripId={navParams.tripId || null}
+            onNavigate={navigate}
             onBack={() => navigate('home')}
             onNavigateToBudget={() => navigate('budget')}
             onNavigateToActivities={() => navigate('activities')}

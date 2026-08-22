@@ -1,14 +1,21 @@
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-export function formatDateShort(iso) {
-  if (!iso) return '';
-  const d = new Date(`${iso}T00:00:00`);
-  return `${MONTHS[d.getMonth()]} ${d.getDate()}`;
+export function formatDateShort(val) {
+  if (!val) return '';
+  try {
+    const d = typeof val === 'string' && val.length === 10 ? new Date(`${val}T00:00:00`) : new Date(val);
+    if (isNaN(d.getTime())) return String(val);
+    return `${MONTHS[d.getMonth()]} ${d.getDate()}`;
+  } catch (e) {
+    return String(val);
+  }
 }
 
-export function formatDateRange(startIso, endIso) {
-  if (!startIso || !endIso) return '';
-  return `${formatDateShort(startIso)} – ${formatDateShort(endIso)}`;
+export function formatDateRange(startVal, endVal) {
+  if (!startVal && !endVal) return '';
+  if (!startVal) return formatDateShort(endVal);
+  if (!endVal) return formatDateShort(startVal);
+  return `${formatDateShort(startVal)} – ${formatDateShort(endVal)}`;
 }
 
 export function formatCurrency(amount) {
@@ -22,6 +29,13 @@ export function formatDuration(hours) {
 }
 
 export function rangesOverlap(aStart, aEnd, bStart, bEnd) {
-  return new Date(`${aStart}T00:00:00`) <= new Date(`${bEnd}T00:00:00`)
-    && new Date(`${bStart}T00:00:00`) <= new Date(`${aEnd}T00:00:00`);
+  try {
+    const aS = typeof aStart === 'string' && aStart.length === 10 ? new Date(`${aStart}T00:00:00`) : new Date(aStart);
+    const aE = typeof aEnd === 'string' && aEnd.length === 10 ? new Date(`${aEnd}T00:00:00`) : new Date(aEnd);
+    const bS = typeof bStart === 'string' && bStart.length === 10 ? new Date(`${bStart}T00:00:00`) : new Date(bStart);
+    const bE = typeof bEnd === 'string' && bEnd.length === 10 ? new Date(`${bEnd}T00:00:00`) : new Date(bEnd);
+    return aS <= bE && bS <= aE;
+  } catch (e) {
+    return false;
+  }
 }

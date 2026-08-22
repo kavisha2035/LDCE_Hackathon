@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiFetch } from '../api/apiClient';
 import {
   Calendar as CalendarIcon, Clock, MapPin, DollarSign,
   ChevronLeft, ChevronRight, ArrowLeft, RefreshCw, LayoutGrid,
@@ -20,16 +21,18 @@ export default function TripCalendarPage({ tripId, onBack, onNavigateToBudget, o
 
   // Fetch available trips
   useEffect(() => {
-    fetch('/api/trips')
-      .then(res => res.json())
+    apiFetch('/trips')
       .then(data => {
-        const list = data.trips || [];
+        const list = data?.trips || [];
         setTrips(list);
         if (!selectedTripId && list.length > 0) {
           setSelectedTripId(list[0].id);
         }
       })
-      .catch(err => console.error('Trips list error:', err));
+      .catch(err => {
+        console.error('Trips list error:', err);
+        setTrips([]);
+      });
   }, []);
 
   // Fetch full trip details (including stops and activities)
@@ -38,13 +41,9 @@ export default function TripCalendarPage({ tripId, onBack, onNavigateToBudget, o
     setLoading(true);
     setError('');
 
-    fetch(`/api/trips/${selectedTripId}`)
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to fetch trip`);
-        return res.json();
-      })
+    apiFetch(`/trips/${selectedTripId}`)
       .then(data => {
-        if (data.trip) {
+        if (data?.trip) {
           setTrip(data.trip);
           // Default selected date to start date of trip
           if (data.trip.startDate) {
