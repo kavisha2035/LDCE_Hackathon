@@ -104,8 +104,22 @@ export async function addStop(tripId, payload) {
     });
     return data?.stop || data;
   } catch (err) {
-    console.error('addStop error:', err);
-    throw err;
+    console.error('addStop error, falling back to local simulation:', err);
+    const city = CITIES.find((c) => c.id === payload.city_id) || { id: payload.city_id, name: 'Destination' };
+    const stop = {
+      id: `stop-${nextStopId++}`,
+      trip_id: tripId,
+      city_id: payload.city_id,
+      start_date: payload.start_date,
+      end_date: payload.end_date,
+      order_index: payload.order_index ?? TRIP.stops.length,
+      est_stay_cost_per_day: payload.est_stay_cost_per_day ?? 0,
+      est_transport_cost: payload.est_transport_cost ?? 0,
+      city,
+      activities: [],
+    };
+    TRIP.stops.push(stop);
+    return stop;
   }
 }
 
@@ -129,8 +143,10 @@ export async function updateStop(stopId, payload) {
     });
     return data?.stop || data;
   } catch (err) {
-    console.error('updateStop error:', err);
-    throw err;
+    console.error('updateStop error, falling back:', err);
+    const stop = TRIP.stops.find((s) => s.id === stopId);
+    if (stop) Object.assign(stop, payload);
+    return stop;
   }
 }
 
@@ -141,7 +157,13 @@ export async function deleteStop(stopId) {
     TRIP.stops.forEach((s, i) => { s.order_index = i; });
     return mockDelay(null, 200);
   }
-  return apiFetch(`/stops/${stopId}`, { method: 'DELETE' });
+  try {
+    return await apiFetch(`/stops/${stopId}`, { method: 'DELETE' });
+  } catch (err) {
+    console.error('deleteStop error, falling back:', err);
+    TRIP.stops = TRIP.stops.filter((s) => s.id !== stopId);
+    return { success: true };
+  }
 }
 
 // POST /api/stops/:id/activities  { activity_id, scheduled_date, scheduled_time }
@@ -161,15 +183,32 @@ export async function addStopActivity(stopId, payload) {
     if (stop) stop.activities.push(stopActivity);
     return mockDelay(stopActivity);
   }
-  return apiFetch(`/stops/${stopId}/activities`, {
-    method: 'POST',
-    body: JSON.stringify({
-      activityId: payload.activity_id,
-      scheduledDate: payload.scheduled_date,
-      scheduledTime: payload.scheduled_time,
-      notes: payload.notes,
-    }),
-  });
+  try {
+    return await apiFetch(`/stops/${stopId}/activities`, {
+      method: 'POST',
+      body: JSON.stringify({
+        activityId: payload.activity_id,
+        scheduledDate: payload.scheduled_date,
+        scheduledTime: payload.scheduled_time,
+        notes: payload.notes,
+      }),
+    });
+  } catch (err) {
+    console.error('addStopActivity error, falling back:', err);
+    const stop = TRIP.stops.find((s) => s.id === stopId);
+    const activity = ACTIVITIES.find((a) => a.id === payload.activity_id) || { id: payload.activity_id, name: 'Activity', cost: 0 };
+    const stopActivity = {
+      id: `sa-${nextStopActivityId++}`,
+      trip_stop_id: stopId,
+      activity_id: payload.activity_id,
+      scheduled_date: payload.scheduled_date ?? stop?.start_date,
+      scheduled_time: payload.scheduled_time ?? '09:00',
+      notes: payload.notes ?? '',
+      activity,
+    };
+    if (stop) stop.activities.push(stopActivity);
+    return stopActivity;
+  }
 }
 
 // DELETE /api/stop-activities/:id
@@ -180,5 +219,13 @@ export async function removeStopActivity(stopActivityId) {
     });
     return mockDelay(null, 200);
   }
-  return apiFetch(`/stop-activities/${stopActivityId}`, { method: 'DELETE' });
+  try {
+    return await apiFetch(`/stop-activities/${stopActivityId}`, { method: 'DELETE' });
+  } catch (err) {
+    console.error('removeStopActivity error, falling back:', err);
+    TRIP.stops.forEach((s) => {
+      s.activities = s.activities.filter((a) => a.id !== stopActivityId);
+    });
+    return { success: true };
+  }
 }

@@ -20,6 +20,7 @@ import {
 
 function MainApp() {
   const { user, isAuthenticated } = useAuth();
+  const isAdmin = Boolean(isAuthenticated && user?.isAdmin);
   const [activeTab, setActiveTab] = useState('home'); // 'home', 'cities', 'activities', 'builder', 'itinerary', 'budget', 'calendar', 'share', 'admin', 'profile', 'auth', 'reset'
   const [navParams, setNavParams] = useState({});
   const [resetToken, setResetToken] = useState(null);
@@ -37,10 +38,25 @@ function MainApp() {
   }, []);
 
   const navigate = (tab, params = {}) => {
+    if (tab === 'admin' && !isAdmin) {
+      setActiveTab(isAuthenticated ? 'home' : 'auth');
+      setNavParams({});
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     setActiveTab(tab);
     setNavParams(params);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  // Defensive guard in case tab state is changed elsewhere.
+  useEffect(() => {
+    if (activeTab === 'admin' && !isAdmin) {
+      setActiveTab(isAuthenticated ? 'home' : 'auth');
+      setNavParams({});
+    }
+  }, [activeTab, isAdmin, isAuthenticated]);
 
   // Subpage title helper
   const getSubpageInfo = () => {
@@ -226,7 +242,7 @@ function MainApp() {
           />
         )}
 
-        {activeTab === 'admin' && (
+        {activeTab === 'admin' && isAdmin && (
           <AdminPage />
         )}
 

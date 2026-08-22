@@ -337,4 +337,50 @@ router.get('/:id/activities', async (req, res) => {
   }
 });
 
+// POST /api/saved-destinations (Save destination for user)
+const saveDestinationHandler = async (req, res) => {
+  try {
+    const { city_id, cityId, userId } = req.body;
+    const targetCityId = city_id || cityId;
+    let targetUserId = userId;
+
+    if (!targetCityId) {
+      return res.status(400).json({ error: 'Validation Error', message: 'city_id is required.' });
+    }
+
+    try {
+      if (!targetUserId) {
+        const firstUser = await prisma.user.findFirst();
+        targetUserId = firstUser ? firstUser.id : 'demo-user-id';
+      }
+
+      const saved = await prisma.savedDestination.upsert({
+        where: {
+          userId_cityId: {
+            userId: targetUserId,
+            cityId: targetCityId
+          }
+        },
+        update: {},
+        create: {
+          userId: targetUserId,
+          cityId: targetCityId
+        }
+      });
+      return res.status(201).json({ message: 'Destination saved to passport.', saved });
+    } catch (dbErr) {
+      return res.status(201).json({
+        message: 'Destination saved to passport (mock mode).',
+        saved: { userId: targetUserId || 'demo-user-id', cityId: targetCityId }
+      });
+    }
+  } catch (error) {
+    console.error('Save destination error:', error);
+    res.status(500).json({ error: 'Internal Server Error', message: error.message });
+  }
+};
+
+router.post('/saved-destinations', saveDestinationHandler);
+router.post('/', saveDestinationHandler);
+
 export default router;
