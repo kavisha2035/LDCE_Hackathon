@@ -11,15 +11,16 @@ import { TRIP_ID } from './api/mockData';
 import TripBudgetPage from './pages/TripBudgetPage';
 import TripCalendarPage from './pages/TripCalendarPage';
 import PublicItineraryPage from './pages/PublicItineraryPage';
+import AdminPage from './pages/AdminPage';
 import { 
   Compass, Server, CheckCircle2, ShieldCheck, MapPin, DollarSign, 
   Calendar, Users, RefreshCw, Sparkles, ArrowRight, User as UserIcon, 
-  LogOut, Database, Globe, Layers, Key, Search, PieChart
+  LogOut, Database, Globe, Layers, Key, Search, PieChart, Shield
 } from 'lucide-react';
 
 function MainApp() {
   const { user, logout, isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'activities', 'budget', 'calendar', 'profile', 'auth'
+  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'activities', 'budget', 'calendar', 'profile', 'auth', 'admin'
   
   // Health check & Cities data
   const [health, setHealth] = useState(null);
@@ -181,6 +182,17 @@ function MainApp() {
                   PROFILE (SCR 12)
                 </button>
               )}
+              {isAuthenticated && user?.isAdmin && (
+                <button
+                  onClick={() => setActiveTab('admin')}
+                  className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold transition flex items-center gap-1.5 ${
+                    activeTab === 'admin' ? 'bg-[#B84A3E] text-[#F6F3EC] border-[#B84A3E]' : 'bg-white text-[#B84A3E] hover:bg-[#F6F3EC]'
+                  }`}
+                >
+                  <Shield className="h-3.5 w-3.5" />
+                  ADMIN (SCR 13)
+                </button>
+              )}
             </nav>
           </div>
 
@@ -287,6 +299,10 @@ function MainApp() {
             onBack={() => setActiveTab('overview')}
             onNavigateToAuth={() => setActiveTab('auth')}
           />
+        )}
+
+        {activeTab === 'admin' && isAuthenticated && user?.isAdmin && (
+          <AdminPage />
         )}
 
         {(activeTab === 'overview' || (activeTab === 'auth' && isAuthenticated) || (activeTab === 'profile' && !isAuthenticated)) && (
