@@ -133,6 +133,18 @@ export default function Navbar({ currentTab, onNavigate }) {
             COMMUNITY
           </button>
 
+          <button
+            onClick={() => onNavigate('ai-planner')}
+            className={`px-4 py-2 uppercase font-extrabold text-xs sm:text-sm tracking-wider transition cursor-pointer flex items-center gap-1.5 ${
+              currentTab === 'ai-planner'
+                ? 'text-[#F5B800] border-b-2 border-[#F5B800]'
+                : 'text-[#F5B800] hover:text-white bg-[#1A1D23] px-3 py-1.5 rounded-full shadow'
+            }`}
+          >
+            <Sparkles className="h-4 w-4 text-[#F5B800]" />
+            AI PLANNER
+          </button>
+
           {/* Trip Hub Dropdown */}
           <div className="relative">
             <button

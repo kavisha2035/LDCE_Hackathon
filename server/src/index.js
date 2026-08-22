@@ -13,6 +13,7 @@ import tripsRoutes, {
 } from './routes/trips.js';
 import publicTripsRoutes from './routes/publicTrips.js';
 import adminRoutes from './routes/admin.js';
+import aiPlannerRoutes from './routes/aiPlanner.js';
 import { authenticateToken } from './middleware/auth.js';
 
 dotenv.config();
@@ -37,6 +38,7 @@ app.use('/api/cities', citiesRoutes);
 app.use('/api/trips', tripsRoutes);
 app.use('/api/public/trips', publicTripsRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/ai', aiPlannerRoutes);
 
 // Direct nested / helper routes to match client apiClient calls
 app.use('/api/saved-destinations', citiesRoutes);

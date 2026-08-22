@@ -14,6 +14,7 @@ import TripBudgetPage from './pages/TripBudgetPage';
 import TripCalendarPage from './pages/TripCalendarPage';
 import PublicItineraryPage from './pages/PublicItineraryPage';
 import CommunityPage from './pages/CommunityPage';
+import AITripPlannerPage from './pages/AITripPlannerPage';
 import AdminPage from './pages/AdminPage';
 import {
   Compass, ArrowLeft, Layers, Calendar, DollarSign,
@@ -24,7 +25,7 @@ const PROTECTED_TABS = ['create-trip', 'my-trips', 'builder', 'profile', 'admin'
 
 const VALID_TABS = [
   'home', 'create-trip', 'my-trips', 'cities', 'activities',
-  'builder', 'itinerary', 'budget', 'calendar', 'share', 'community',
+  'builder', 'itinerary', 'budget', 'calendar', 'share', 'community', 'ai-planner',
   'admin', 'profile', 'auth', 'reset'
 ];
 
@@ -256,6 +257,8 @@ function MainApp() {
         return { title: 'PUBLIC SHAREABLE ITINERARY PASS', screen: 'PUBLIC PASS', icon: Globe, color: 'text-[#7FA69C]' };
       case 'community':
         return { title: 'EXPLORER COMMUNITY FEED & REVIEWS', screen: 'COMMUNITY TAB', icon: MessageSquare, color: 'text-[#F5B800]' };
+      case 'ai-planner':
+        return { title: 'GROK AI ITINERARY & BUDGET GENERATOR', screen: 'AI TRIP PLANNER', icon: Sparkles, color: 'text-[#F5B800]' };
       case 'admin':
         return { title: 'SYSTEM & ANALYTICS DASHBOARD', screen: 'ADMIN PORTAL', icon: Shield, color: 'text-[#B84A3E]' };
       case 'profile':
@@ -498,6 +501,12 @@ function MainApp() {
           <CommunityPage
             onNavigate={navigate}
             initialShareTripId={navParams.tripId || null}
+          />
+        )}
+
+        {activeTab === 'ai-planner' && (
+          <AITripPlannerPage
+            onNavigate={navigate}
           />
         )}
 
