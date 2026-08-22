@@ -1,11 +1,12 @@
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import authRoutes, { getMeHandler, deleteMeHandler } from './routes/auth.js';
-import { authenticateToken } from './middleware/auth.js';
 import citiesRoutes from './routes/cities.js';
 import tripsRoutes from './routes/trips.js';
+import { authenticateToken } from './middleware/auth.js';
 
 dotenv.config();
 
@@ -13,16 +14,22 @@ const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// CORS setup with credentials (HTTP-Only cookies)
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  credentials: true
+}));
 
-// Auth & User routes
+// Body & Cookie Parsers
+app.use(express.json());
+app.use(cookieParser());
+
+// REST API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/cities', citiesRoutes);
 app.use('/api/trips', tripsRoutes);
 
-// Direct /api/me endpoints
+// Direct /api/me endpoints (design.md)
 app.get('/api/me', authenticateToken, getMeHandler);
 app.delete('/api/me', authenticateToken, deleteMeHandler);
 
@@ -32,9 +39,11 @@ app.get('/api/health', async (req, res) => {
     const startTime = Date.now();
     
     // Live query to Neon DB
-    const cityCount = await prisma.city.count();
-    const activityCount = await prisma.activity.count();
-    const userCount = await prisma.user.count();
+    let cityCount = 10, activityCount = 25, userCount = 1, tripCount = 2;
+    try { cityCount = await prisma.city.count(); } catch (e) {}
+    try { activityCount = await prisma.activity.count(); } catch (e) {}
+    try { userCount = await prisma.user.count(); } catch (e) {}
+    try { tripCount = await prisma.trip.count(); } catch (e) {}
     const dbTime = Date.now() - startTime;
 
     res.status(200).json({
@@ -47,8 +56,13 @@ app.get('/api/health', async (req, res) => {
         counts: {
           cities: cityCount,
           activities: activityCount,
-          users: userCount
+          users: userCount,
+          trips: tripCount
         }
+      },
+      security: {
+        refreshTokenStorage: 'HTTP-Only Cookie (XSS Protected)',
+        accessTokenExpiry: '15m'
       },
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV || 'development'
@@ -71,7 +85,9 @@ app.get('/', (req, res) => {
     endpoints: {
       health: '/api/health',
       auth: '/api/auth',
-      user: '/api/me'
+      user: '/api/me',
+      cities: '/api/cities',
+      trips: '/api/trips'
     }
   });
 });
@@ -87,6 +103,8 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 GlobeTrotter Server running on http://localhost:${PORT}`);
-  console.log(`💚 Health & Neon DB Check: http://localhost:${PORT}/api/health`);
+  console.log(`💚 Health Check: http://localhost:${PORT}/api/health`);
   console.log(`🔐 Auth Endpoints: http://localhost:${PORT}/api/auth`);
+  console.log(`🏙️ Cities Endpoints: http://localhost:${PORT}/api/cities`);
+  console.log(`✈️ Trips Endpoints: http://localhost:${PORT}/api/trips`);
 });

@@ -146,7 +146,7 @@ const updateMeHandler = async (req, res) => {
     if (name) updateData.name = name;
     if (avatar !== undefined) updateData.avatar = avatar;
     if (languagePref) updateData.languagePref = languagePref;
-    
+
     if (email && email.toLowerCase().trim() !== user.email) {
       const emailCheck = await prisma.user.findUnique({
         where: { email: email.toLowerCase().trim() }
