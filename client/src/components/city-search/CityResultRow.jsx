@@ -1,41 +1,74 @@
+import React from 'react';
 import CostDots from './CostDots';
+import { Plus, Bookmark, Loader2, Sparkles, MapPin } from 'lucide-react';
 
 export default function CityResultRow({ city, onAdd, onSave, saving = false }) {
+  const costIdx = city.cost_index ?? city.costIndex ?? 1;
+
   return (
-    <div className="flex items-center justify-between gap-4 py-3 px-4 border-b border-ink/15 last:border-b-0 hover:bg-paper transition-colors">
-      <div className="min-w-0 flex-1">
-        <p className="font-display font-bold text-lg text-ink truncate leading-none">{city.name}</p>
-        <p className="text-xs font-mono text-ink/60 truncate mt-1">{city.country?.toUpperCase()} &middot; {city.region?.toUpperCase() || 'UNSPECIFIED'}</p>
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 px-6 hover:bg-[#FAF9F6] transition-colors border-b border-gray-100 last:border-b-0 font-sans">
+      
+      {/* City & Region Info */}
+      <div className="min-w-0 flex-1 space-y-1">
+        <div className="flex items-center gap-2">
+          <h4 className="font-serif font-bold text-lg text-[#1E232A] truncate">
+            {city.name}
+          </h4>
+          {city.region && (
+            <span className="px-2.5 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-sans font-bold uppercase rounded-full border border-gray-200">
+              {city.region}
+            </span>
+          )}
+        </div>
+        <p className="text-xs text-gray-500 font-medium truncate flex items-center gap-1">
+          <MapPin className="h-3.5 w-3.5 text-[#F5B800]" />
+          <span>{city.country?.toUpperCase() || 'WORLD'}</span>
+        </p>
       </div>
 
-      <div className="shrink-0" title={`cost index ${city.cost_index}/5`}>
-        <CostDots costIndex={city.cost_index} />
+      {/* Cost Indicators */}
+      <div className="shrink-0 flex items-center gap-4">
+        <CostDots costIndex={costIdx} />
+
+        {/* Popularity Badge */}
+        <div className="shrink-0 text-right min-w-[70px]">
+          <span className="font-sans font-extrabold text-sm text-[#1E232A] block leading-none">
+            {city.popularity || 90}%
+          </span>
+          <span className="text-[10px] font-sans font-semibold text-gray-400 uppercase tracking-wider">
+            POPULARITY
+          </span>
+        </div>
       </div>
 
-      <div className="shrink-0 w-20 text-right">
-        <p className="font-mono text-sm text-ink font-bold">{city.popularity}</p>
-        <p className="text-[10px] font-mono text-ink/45 uppercase tracking-wide">popularity</p>
-      </div>
-
-      <div className="shrink-0 flex items-center gap-2">
+      {/* Action Buttons */}
+      <div className="shrink-0 flex items-center gap-2.5">
         <button
           type="button"
           onClick={() => onSave?.(city)}
           disabled={saving}
-          className="px-3 py-1.5 border border-ink text-xs font-mono font-bold uppercase text-ink hover:bg-ink hover:text-paper transition disabled:opacity-50"
+          className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-[#1E232A] text-xs font-bold uppercase tracking-wider rounded-full border border-gray-200 transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
         >
-          Save
+          {saving ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-[#F5B800]" />
+          ) : (
+            <Bookmark className="h-3.5 w-3.5 text-gray-500" />
+          )}
+          <span>Save</span>
         </button>
+
         {onAdd && (
           <button
             type="button"
             onClick={() => onAdd(city)}
-            className="px-3 py-1.5 bg-route-blue border border-ink text-paper text-xs font-mono font-bold uppercase hover:bg-ink transition shadow-[2px_2px_0px_0px_#1F2B2E]"
+            className="px-5 py-2 bg-[#F5B800] hover:bg-[#E0A600] text-[#1E232A] text-xs font-extrabold uppercase tracking-wider rounded-full transition shadow-md hover:shadow-lg flex items-center gap-1.5 cursor-pointer"
           >
-            Add to Trip
+            <Plus className="h-4 w-4" />
+            <span>Add to Trip</span>
           </button>
         )}
       </div>
+
     </div>
   );
 }

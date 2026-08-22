@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { apiFetch } from '../api/apiClient';
 import { formatCurrency, formatDateShort } from '../lib/format';
+import CategoryPieChart from '../components/budget/CategoryPieChart';
+import StopBarChart from '../components/budget/StopBarChart';
+import StatCard from '../components/budget/StatCard';
 import {
   DollarSign, PieChart as PieChartIcon, BarChart3, AlertTriangle,
   ArrowLeft, RefreshCw, Calendar, MapPin, BedDouble, Plane,
-  Ticket, CheckCircle2, ChevronRight, Sliders, Info, Plus, Compass, Edit3
+  Ticket, CheckCircle2, ChevronRight, Sliders, Info, Plus, Compass, Edit3, Sparkles
 } from 'lucide-react';
 
 export default function TripBudgetPage({ tripId: propTripId, onBack, onNavigateToCalendar, onNavigate }) {
@@ -15,8 +18,7 @@ export default function TripBudgetPage({ tripId: propTripId, onBack, onNavigateT
   const [error, setError] = useState('');
 
   // User-configurable budget threshold
-  const [budgetLimit, setBudgetLimit] = useState(2500);
-  const [perStopLimit, setPerStopLimit] = useState(1000);
+  const [budgetLimit, setBudgetLimit] = useState(25000);
   const [showLimitConfig, setShowLimitConfig] = useState(false);
 
   // Fetch all trips for switcher
@@ -54,7 +56,6 @@ export default function TripBudgetPage({ tripId: propTripId, onBack, onNavigateT
           setBudgetData(data.budget);
           if (data.budget.tripTotal > 0) {
             setBudgetLimit(Math.ceil(data.budget.tripTotal * 1.2));
-            setPerStopLimit(Math.ceil((data.budget.tripTotal / Math.max(1, data.budget.stops?.length || 1)) * 1.3));
           }
         } else {
           setError('No budget data found for this trip.');
@@ -83,34 +84,46 @@ export default function TripBudgetPage({ tripId: propTripId, onBack, onNavigateT
   const transportCost = budgetData?.breakdownByCategory?.transport || 0;
   const activitiesCost = budgetData?.breakdownByCategory?.activities || 0;
 
-  const stayPct = total > 0 ? Math.round((stayCost / total) * 100) : 0;
-  const transportPct = total > 0 ? Math.round((transportCost / total) * 100) : 0;
-  const activitiesPct = total > 0 ? Math.max(0, 100 - stayPct - transportPct) : 0;
+  const categoryBreakdown = [
+    { category: 'Accommodation', amount: stayCost },
+    { category: 'Transportation', amount: transportCost },
+    { category: 'Experiences', amount: activitiesCost },
+  ].filter(c => c.amount > 0);
 
-  const maxStopCost = budgetData?.stops?.reduce((max, s) => Math.max(max, s.stopTotal || 0), 1) || 1;
+  const perStopData = (budgetData?.stops || []).map(s => ({
+    city_name: s.cityName || s.city?.name || 'Stop',
+    amount: s.stopTotal || 0,
+  }));
 
   if (!loading && trips.length === 0) {
     return (
-      <div className="max-w-2xl mx-auto py-16 text-center bg-white border-2 border-[#1F2B2E] p-8 shadow-[4px_4px_0px_0px_#1F2B2E] space-y-4 font-sans">
-        <Compass className="h-12 w-12 text-[#2C5F7C] mx-auto animate-pulse" />
-        <h2 className="text-2xl font-serif font-bold text-[#1E232A]">NO ITINERARIES TO CALCULATE BUDGET</h2>
-        <p className="text-xs text-gray-600 max-w-md mx-auto">
-          Create an itinerary with destinations and activities to automatically compute accommodation rates, transit fares, and experience totals.
-        </p>
+      <div className="max-w-xl mx-auto py-16 px-8 text-center bg-white border border-gray-200 rounded-3xl shadow-xl space-y-6 font-sans">
+        <div className="h-16 w-16 bg-[#F5B800]/20 text-[#1E232A] rounded-full flex items-center justify-center mx-auto shadow-md">
+          <Compass className="h-8 w-8 text-[#F5B800]" />
+        </div>
+        <div className="space-y-2">
+          <span className="font-script text-[#F5B800] text-3xl block">financial ledger</span>
+          <h2 className="text-3xl font-serif font-black text-[#1E232A] uppercase">
+            No Itineraries to Calculate
+          </h2>
+          <p className="text-xs text-gray-500 leading-relaxed max-w-md mx-auto">
+            Create an itinerary with destinations and activities to automatically compute accommodation rates, transit fares, and experience totals.
+          </p>
+        </div>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
           {onNavigate && (
             <>
               <button
                 onClick={() => onNavigate('my-trips')}
-                className="w-full sm:w-auto px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-[#1E232A] font-bold text-xs uppercase tracking-wider transition cursor-pointer"
+                className="w-full sm:w-auto px-6 py-3 bg-gray-100 hover:bg-gray-200 text-[#1E232A] font-extrabold text-xs uppercase tracking-wider rounded-full transition cursor-pointer"
               >
                 OPEN MY TRIPS
               </button>
               <button
                 onClick={() => onNavigate('create-trip')}
-                className="w-full sm:w-auto px-5 py-2.5 bg-[#F5B800] hover:bg-[#E0A600] text-[#1E232A] font-bold text-xs uppercase tracking-wider transition cursor-pointer shadow-md flex items-center justify-center gap-1"
+                className="w-full sm:w-auto px-6 py-3 bg-[#F5B800] hover:bg-[#E0A600] text-[#1E232A] font-extrabold text-xs uppercase tracking-wider rounded-full transition cursor-pointer shadow-md flex items-center justify-center gap-1.5"
               >
-                <Plus className="h-3.5 w-3.5" />
+                <Plus className="h-4 w-4" />
                 CREATE NEW TRIP
               </button>
             </>
@@ -121,55 +134,42 @@ export default function TripBudgetPage({ tripId: propTripId, onBack, onNavigateT
   }
 
   return (
-    <div className="space-y-8 font-body">
+    <div className="max-w-5xl mx-auto space-y-8 pb-16 font-sans">
       
-      {/* Top Header & Trip Selector */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b-2 border-[#1F2B2E] pb-6">
-        <div>
-          {onBack && (
-            <button
-              onClick={onBack}
-              className="inline-flex items-center gap-1.5 font-mono text-xs text-[#2C5F7C] font-bold uppercase mb-2 hover:underline cursor-pointer"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              BACK TO OVERVIEW
-            </button>
-          )}
+      {/* Top Header Card */}
+      <div className="bg-white border border-gray-200 rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-2">
           <div className="flex items-center gap-3">
-            <span className="font-mono text-xs text-[#2C5F7C] uppercase tracking-widest font-bold">
-              FINANCIAL LEDGER & BREAKDOWN
+            <span className="font-script text-[#F5B800] text-3xl block leading-none">
+              financial ledger
             </span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold font-display tracking-tight text-[#1F2B2E] mt-1">
-            {budgetData?.tripName || 'TRIP BUDGET & COST BREAKDOWN'}
+          <h1 className="text-3xl sm:text-4xl font-serif font-black tracking-tight text-[#1E232A] leading-tight">
+            {budgetData?.tripName || 'Trip Budget & Cost Ledger'}
           </h1>
+          <p className="text-xs text-gray-500 font-sans">
+            Real-time financial reconciliation for accommodations, inter-city transport, and scheduled activities.
+          </p>
         </div>
 
-        {/* Trip Switcher Dropdown */}
-        <div className="flex items-center gap-2">
+        {/* Controls: Trip Switcher & Actions */}
+        <div className="flex flex-wrap items-center gap-3">
           {trips.length > 1 && (
-            <div className="bg-white border-2 border-[#1F2B2E] px-3 py-1.5 shadow-[2px_2px_0px_0px_#1F2B2E]">
-              <label className="block font-mono text-[9px] uppercase tracking-widest text-[#1F2B2E]/60 font-bold">
-                SELECT TRIP
-              </label>
-              <select
-                value={selectedTripId || ''}
-                onChange={(e) => setSelectedTripId(e.target.value)}
-                className="bg-transparent font-mono text-xs font-bold text-[#1F2B2E] focus:outline-none cursor-pointer"
-              >
-                {trips.map(t => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <select
+              value={selectedTripId || ''}
+              onChange={(e) => setSelectedTripId(e.target.value)}
+              className="px-4 py-2.5 bg-[#FAF9F6] border border-gray-300 rounded-full font-sans text-xs font-bold text-[#1E232A] focus:outline-none focus:ring-2 focus:ring-[#F5B800] transition cursor-pointer"
+            >
+              {trips.map(t => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
           )}
 
           {onNavigate && selectedTripId && (
             <button
               onClick={() => onNavigate('builder', { tripId: selectedTripId })}
-              className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-[#1E232A] border-2 border-[#1F2B2E] font-mono text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-[2px_2px_0px_0px_#1F2B2E]"
+              className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-[#1E232A] font-extrabold text-xs uppercase tracking-wider rounded-full transition flex items-center gap-1.5 cursor-pointer border border-gray-200"
             >
               <Edit3 className="w-3.5 h-3.5" />
               <span>EDIT STOPS</span>
@@ -180,487 +180,213 @@ export default function TripBudgetPage({ tripId: propTripId, onBack, onNavigateT
             onClick={fetchBudget}
             disabled={loading}
             title="Recalculate Budget"
-            className="p-2.5 bg-white border-2 border-[#1F2B2E] shadow-[2px_2px_0px_0px_#1F2B2E] hover:bg-[#F6F3EC] transition cursor-pointer"
+            className="p-2.5 bg-white border border-gray-300 rounded-full hover:bg-gray-100 transition cursor-pointer shadow-xs"
           >
-            <RefreshCw className={`w-4 h-4 text-[#1F2B2E] ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 text-[#1E232A] ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
 
       {/* Loading & Error States */}
       {loading && (
-        <div className="bg-white border-2 border-[#1F2B2E] p-12 text-center shadow-[4px_4px_0px_0px_#1F2B2E]">
-          <RefreshCw className="w-8 h-8 text-[#2C5F7C] animate-spin mx-auto mb-3" />
-          <p className="font-mono text-sm uppercase text-[#1F2B2E] font-bold">
-            CALCULATING ROUTE EXPENSES ACROSS NEON POSTGRESQL DB...
-          </p>
+        <div className="py-20 text-center space-y-3 bg-white border border-gray-200 rounded-3xl shadow-xl p-8">
+          <RefreshCw className="w-8 h-8 text-[#F5B800] animate-spin mx-auto" />
+          <h3 className="font-serif font-bold text-lg text-[#1E232A]">Computing Travel Ledger</h3>
+          <p className="text-xs text-gray-500 font-sans">Calculating route expenses, hotel averages, and activity tariffs…</p>
         </div>
       )}
 
       {error && !loading && (
-        <div className="bg-white border-2 border-[#B84A3E] p-6 shadow-[4px_4px_0px_0px_#B84A3E]">
-          <div className="flex items-center gap-3 text-[#B84A3E]">
-            <AlertTriangle className="w-5 h-5 shrink-0" />
-            <div className="font-mono text-xs font-bold uppercase">{error}</div>
+        <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-3xl shadow-md flex items-center gap-3">
+          <AlertTriangle className="w-6 h-6 shrink-0 text-red-500" />
+          <div>
+            <h4 className="font-bold text-sm">Ledger Computation Notice</h4>
+            <p className="text-xs text-red-600">{error}</p>
           </div>
         </div>
       )}
 
       {!loading && !error && budgetData && (
         <>
-          {/* Over-Budget Alert Banner */}
+          {/* Health & Ceiling Alert Banner */}
           {isOverBudget ? (
-            <div className="bg-[#B84A3E] text-white border-2 border-[#1F2B2E] p-4 shadow-[4px_4px_0px_0px_#1F2B2E] flex items-center justify-between flex-wrap gap-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-white text-[#B84A3E] rounded-sm font-bold">
-                  <AlertTriangle className="w-5 h-5" />
+            <div className="bg-[#1A1D23] text-white border-2 border-red-500 rounded-3xl p-6 sm:p-7 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="w-6 h-6 text-red-400" />
                 </div>
-                <div>
-                  <div className="font-display font-bold text-lg uppercase tracking-wide">
-                    OVER-BUDGET ALERT: EXCEEDED BY {formatCurrency(budgetDifference)}
-                  </div>
-                  <div className="font-mono text-xs text-white/90">
-                    Total expenses ({formatCurrency(total)}) exceed your target ceiling of {formatCurrency(budgetLimit)}.
-                  </div>
+                <div className="space-y-1">
+                  <span className="font-bold text-sm text-red-400 uppercase tracking-widest block">
+                    OVER-BUDGET ALERT &bull; EXCEEDED BY {formatCurrency(budgetDifference)}
+                  </span>
+                  <p className="text-xs text-gray-300 font-sans">
+                    Total expenses of <strong>{formatCurrency(total)}</strong> exceed your target ceiling of {formatCurrency(budgetLimit)}.
+                  </p>
                 </div>
               </div>
               <button
                 onClick={() => setShowLimitConfig(!showLimitConfig)}
-                className="px-3 py-1.5 bg-white text-[#B84A3E] font-mono text-xs font-bold uppercase border border-[#1F2B2E] hover:bg-[#F6F3EC] cursor-pointer"
+                className="px-5 py-2.5 bg-red-600 hover:bg-red-500 text-white font-extrabold text-xs uppercase tracking-wider rounded-full transition shadow cursor-pointer shrink-0"
               >
                 ADJUST CEILING
               </button>
             </div>
           ) : (
-            <div className="bg-white border-2 border-[#1F2B2E] p-3 shadow-[3px_3px_0px_0px_#1F2B2E] flex items-center justify-between flex-wrap gap-3">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-[#7FA69C]" />
-                <span className="font-mono text-xs text-[#1F2B2E] font-bold uppercase">
-                  BUDGET HEALTHY: {formatCurrency(budgetLimit - total)} REMAINING UNDER {formatCurrency(budgetLimit)} CEILING ({percentUsed}% COMMITTED)
-                </span>
+            <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="h-10 w-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div>
+                  <span className="font-serif font-bold text-base text-[#1E232A] block">
+                    Budget Healthy &bull; {formatCurrency(budgetLimit - total)} Remaining
+                  </span>
+                  <p className="text-xs text-gray-500 font-sans">
+                    {percentUsed}% committed against {formatCurrency(budgetLimit)} target ceiling.
+                  </p>
+                </div>
               </div>
               <button
                 onClick={() => setShowLimitConfig(!showLimitConfig)}
-                className="font-mono text-[11px] text-[#2C5F7C] font-bold uppercase underline hover:text-[#1F2B2E] cursor-pointer"
+                className="px-4 py-2 bg-[#FAF9F6] hover:bg-gray-100 border border-gray-300 text-[#1E232A] font-bold text-xs uppercase tracking-wider rounded-full transition cursor-pointer"
               >
-                {showLimitConfig ? 'HIDE THRESHOLD SETTINGS' : 'SET BUDGET CEILING'}
+                {showLimitConfig ? 'Hide Settings' : 'Adjust Ceiling'}
               </button>
             </div>
           )}
 
-          {/* Interactive Ceiling Config Drawer */}
+          {/* Configurable Threshold Drawer */}
           {showLimitConfig && (
-            <div className="bg-[#F6F3EC] border-2 border-[#1F2B2E] p-4 shadow-[3px_3px_0px_0px_#1F2B2E] space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-xs font-bold uppercase text-[#1F2B2E] flex items-center gap-1.5">
-                  <Sliders className="w-3.5 h-3.5 text-[#2C5F7C]" />
-                  CLIENT-SIDE THRESHOLD CONFIGURATION
-                </span>
-                <span className="font-mono text-[10px] text-[#1F2B2E]/60">
-                  (TRIGGERS STAMP-RED ALERT STATE)
-                </span>
+            <div className="bg-white border border-gray-200 rounded-3xl p-6 sm:p-8 shadow-xl space-y-4 animate-in fade-in zoom-in-95 duration-200">
+              <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
+                <Sliders className="h-5 w-5 text-[#F5B800]" />
+                <h3 className="font-serif font-bold text-lg text-[#1E232A]">Set Budget Ceiling Target</h3>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-mono text-[10px] uppercase font-bold text-[#1F2B2E]/70 mb-1">
-                    OVERALL TRIP BUDGET TARGET
-                  </label>
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-xs font-bold text-gray-600 uppercase">Target Trip Maximum (₹)</span>
                   <input
                     type="number"
                     value={budgetLimit}
-                    onChange={(e) => setBudgetLimit(Math.max(0, parseFloat(e.target.value) || 0))}
-                    className="w-full bg-white border border-[#1F2B2E] px-3 py-1.5 font-mono text-sm font-bold text-[#1F2B2E] focus:outline-none focus:ring-1 focus:ring-[#2C5F7C]"
+                    onChange={(e) => setBudgetLimit(Number(e.target.value) || 0)}
+                    className="px-4 py-2.5 rounded-full border border-gray-300 bg-[#FAF9F6] font-sans text-sm font-bold text-[#1E232A] focus:outline-none focus:ring-2 focus:ring-[#F5B800]"
                   />
-                </div>
-                <div>
-                  <label className="block font-mono text-[10px] uppercase font-bold text-[#1F2B2E]/70 mb-1">
-                    MAX CEILING PER STOP
-                  </label>
-                  <input
-                    type="number"
-                    value={perStopLimit}
-                    onChange={(e) => setPerStopLimit(Math.max(0, parseFloat(e.target.value) || 0))}
-                    className="w-full bg-white border border-[#1F2B2E] px-3 py-1.5 font-mono text-sm font-bold text-[#1F2B2E] focus:outline-none focus:ring-1 focus:ring-[#2C5F7C]"
-                  />
-                </div>
+                </label>
               </div>
             </div>
           )}
 
-          {/* Primary Figures Header: Prominent Big Display Data */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
-            {/* Total Trip Cost */}
-            <div className="bg-white border-2 border-[#1F2B2E] p-6 shadow-[4px_4px_0px_0px_#1F2B2E] flex flex-col justify-between">
-              <div>
-                <span className="font-mono text-[10px] uppercase tracking-widest text-[#1F2B2E]/60 font-bold block mb-1">
-                  TOTAL ESTIMATED COST
-                </span>
-                <div className="text-4xl sm:text-5xl font-extrabold font-display tracking-tight text-[#1F2B2E]">
-                  {formatCurrency(budgetData.tripTotal)}
-                </div>
-              </div>
-              <div className="mt-4 pt-3 border-t border-[#1F2B2E]/20 flex items-center justify-between font-mono text-xs">
-                <span className="text-[#1F2B2E]/70">Route Duration:</span>
-                <span className="font-bold text-[#1F2B2E]">{budgetData.totalTripDays} DAYS</span>
-              </div>
-            </div>
-
-            {/* Average Daily Expense */}
-            <div className="bg-white border-2 border-[#1F2B2E] p-6 shadow-[4px_4px_0px_0px_#1F2B2E] flex flex-col justify-between">
-              <div>
-                <span className="font-mono text-[10px] uppercase tracking-widest text-[#B8823A] font-bold block mb-1">
-                  DAILY RUN RATE
-                </span>
-                <div className="text-4xl sm:text-5xl font-extrabold font-display tracking-tight text-[#B8823A]">
-                  {formatCurrency(budgetData.avgPerDay)}
-                  <span className="text-lg font-mono text-[#1F2B2E]/60 font-normal"> /day</span>
-                </div>
-              </div>
-              <div className="mt-4 pt-3 border-t border-[#1F2B2E]/20 flex items-center justify-between font-mono text-xs">
-                <span className="text-[#1F2B2E]/70">Calculated Across:</span>
-                <span className="font-bold text-[#2C5F7C]">{budgetData.stops?.length || 0} STOPS</span>
-              </div>
-            </div>
-
-            {/* Category Split Highlights */}
-            <div className="bg-white border-2 border-[#1F2B2E] p-6 shadow-[4px_4px_0px_0px_#1F2B2E] flex flex-col justify-between">
-              <span className="font-mono text-[10px] uppercase tracking-widest text-[#2C5F7C] font-bold block mb-2">
-                EXPENSE ALLOCATION
-              </span>
-              <div className="space-y-2 font-mono text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 text-[#1F2B2E]">
-                    <span className="w-2.5 h-2.5 bg-[#2C5F7C]"></span>
-                    Accommodations:
-                  </span>
-                  <span className="font-bold text-[#1F2B2E]">{formatCurrency(stayCost)} ({stayPct}%)</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 text-[#1F2B2E]">
-                    <span className="w-2.5 h-2.5 bg-[#B8823A]"></span>
-                    Transport:
-                  </span>
-                  <span className="font-bold text-[#1F2B2E]">{formatCurrency(transportCost)} ({transportPct}%)</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 text-[#1F2B2E]">
-                    <span className="w-2.5 h-2.5 bg-[#7FA69C]"></span>
-                    Activities:
-                  </span>
-                  <span className="font-bold text-[#1F2B2E]">{formatCurrency(activitiesCost)} ({activitiesPct}%)</span>
-                </div>
-              </div>
-              <div className="w-full bg-[#F6F3EC] h-2.5 border border-[#1F2B2E] mt-3 flex overflow-hidden">
-                <div style={{ width: `${stayPct}%` }} className="bg-[#2C5F7C] h-full" title={`Stay: ${stayPct}%`} />
-                <div style={{ width: `${transportPct}%` }} className="bg-[#B8823A] h-full" title={`Transport: ${transportPct}%`} />
-                <div style={{ width: `${activitiesPct}%` }} className="bg-[#7FA69C] h-full" title={`Activities: ${activitiesPct}%`} />
-              </div>
-            </div>
-
+          {/* 4 Top KPI Stat Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard
+              label="TOTAL TRIP ESTIMATE"
+              value={formatCurrency(total)}
+              accent="text-[#1E232A]"
+              icon={DollarSign}
+              subtext="Sum of all segments"
+            />
+            <StatCard
+              label="ACCOMMODATION"
+              value={formatCurrency(stayCost)}
+              accent="text-[#F5B800]"
+              icon={BedDouble}
+              subtext={`${stayCost > 0 ? Math.round((stayCost / total) * 100) : 0}% of budget`}
+            />
+            <StatCard
+              label="TRANSPORTATION"
+              value={formatCurrency(transportCost)}
+              accent="text-[#10B981]"
+              icon={Plane}
+              subtext={`${transportCost > 0 ? Math.round((transportCost / total) * 100) : 0}% of budget`}
+            />
+            <StatCard
+              label="EXPERIENCES"
+              value={formatCurrency(activitiesCost)}
+              accent="text-[#6366F1]"
+              icon={Ticket}
+              subtext={`${activitiesCost > 0 ? Math.round((activitiesCost / total) * 100) : 0}% of budget`}
+            />
           </div>
 
-          {/* Section 2: Visual Charts */}
-          {budgetData.stops?.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              
-              {/* Bar Chart: Cost per Stop */}
-              <div className="lg:col-span-2 bg-white border-2 border-[#1F2B2E] p-6 shadow-[4px_4px_0px_0px_#1F2B2E] space-y-5">
-                <div className="flex items-center justify-between border-b border-[#1F2B2E]/20 pb-3">
-                  <div className="flex items-center gap-2 font-display text-xl font-bold text-[#1F2B2E] uppercase">
-                    <BarChart3 className="w-5 h-5 text-[#2C5F7C]" />
-                    EXPENDITURE PER DESTINATION STOP
-                  </div>
-                  <span className="font-mono text-[10px] text-[#1F2B2E]/60 uppercase">
-                    STAY + TRANSPORT + ACTIVITIES
-                  </span>
-                </div>
+          {/* Charts Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <CategoryPieChart breakdown={categoryBreakdown} />
+            <StopBarChart perStop={perStopData} />
+          </div>
 
-                {/* Bar Chart Bars */}
-                <div className="space-y-4 pt-2">
-                  {budgetData.stops.map((stop, index) => {
-                    const isStopOverLimit = perStopLimit > 0 && stop.stopTotal > perStopLimit;
-
-                    return (
-                      <div key={stop.stopId || index} className="space-y-1.5">
-                        <div className="flex items-center justify-between font-mono text-xs">
-                          <span className="font-bold text-[#1F2B2E] uppercase flex items-center gap-2">
-                            <span className="h-5 w-5 bg-[#1F2B2E] text-[#F6F3EC] flex items-center justify-center text-[10px]">
-                              {index + 1}
-                            </span>
-                            {stop.cityName}, {stop.country}
-                            <span className="text-[#1F2B2E]/50 font-normal">({stop.nights} nights)</span>
-                          </span>
-                          
-                          <div className="flex items-center gap-2 font-bold">
-                            {isStopOverLimit && (
-                              <span className="text-[#B84A3E] text-[10px] bg-[#B84A3E]/10 px-1.5 py-0.5 border border-[#B84A3E]">
-                                EXCEEDS {formatCurrency(perStopLimit)} CEILING
-                              </span>
-                            )}
-                            <span className={isStopOverLimit ? 'text-[#B84A3E]' : 'text-[#1F2B2E]'}>
-                              {formatCurrency(stop.stopTotal)}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Stacked Segmented Bar */}
-                        <div className="w-full bg-[#F6F3EC] h-6 border border-[#1F2B2E] flex overflow-hidden relative">
-                          {/* Stay Segment */}
-                          <div
-                            style={{ width: `${(stop.stayCost / maxStopCost) * 100}%` }}
-                            className="bg-[#2C5F7C] h-full flex items-center justify-center text-[10px] font-mono text-white font-bold"
-                            title={`Stay: ${formatCurrency(stop.stayCost)}`}
-                          >
-                            {stop.stayCost > 0 && formatCurrency(stop.stayCost)}
-                          </div>
-                          {/* Transport Segment */}
-                          <div
-                            style={{ width: `${(stop.transportCost / maxStopCost) * 100}%` }}
-                            className="bg-[#B8823A] h-full flex items-center justify-center text-[10px] font-mono text-white font-bold"
-                            title={`Transport: ${formatCurrency(stop.transportCost)}`}
-                          >
-                            {stop.transportCost > 0 && formatCurrency(stop.transportCost)}
-                          </div>
-                          {/* Activities Segment */}
-                          <div
-                            style={{ width: `${(stop.activitiesCost / maxStopCost) * 100}%` }}
-                            className="bg-[#7FA69C] h-full flex items-center justify-center text-[10px] font-mono text-[#1F2B2E] font-bold"
-                            title={`Activities: ${formatCurrency(stop.activitiesCost)}`}
-                          >
-                            {stop.activitiesCost > 0 && formatCurrency(stop.activitiesCost)}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Chart Legend */}
-                <div className="pt-3 border-t border-[#1F2B2E]/10 flex flex-wrap items-center gap-5 font-mono text-xs">
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-3 h-3 bg-[#2C5F7C]"></span>
-                    Accommodations ({formatCurrency(stayCost)})
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-3 h-3 bg-[#B8823A]"></span>
-                    Transit ({formatCurrency(transportCost)})
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-3 h-3 bg-[#7FA69C]"></span>
-                    Activities ({formatCurrency(activitiesCost)})
-                  </span>
-                </div>
+          {/* Detailed Destination Stop Ledger */}
+          <div className="bg-white border border-gray-200 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+              <div>
+                <h3 className="font-serif font-black text-2xl text-[#1E232A]">
+                  Destination Stop Breakdown
+                </h3>
+                <p className="text-xs text-gray-500 font-sans">
+                  Itemized rates for hotel stays, transit connections, and scheduled activities per city.
+                </p>
               </div>
-
-              {/* Category Donut & Proportional Share */}
-              <div className="bg-white border-2 border-[#1F2B2E] p-6 shadow-[4px_4px_0px_0px_#1F2B2E] flex flex-col justify-between space-y-4">
-                <div className="flex items-center gap-2 font-display text-xl font-bold text-[#1F2B2E] uppercase border-b border-[#1F2B2E]/20 pb-3">
-                  <PieChartIcon className="w-5 h-5 text-[#B8823A]" />
-                  CATEGORY WEIGHTS
-                </div>
-
-                {/* SVG Donut Graphic */}
-                <div className="flex items-center justify-center py-2">
-                  <svg viewBox="0 0 100 100" className="w-40 h-40 transform -rotate-90">
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="38"
-                      fill="transparent"
-                      stroke="#F6F3EC"
-                      strokeWidth="16"
-                    />
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="38"
-                      fill="transparent"
-                      stroke="#2C5F7C"
-                      strokeWidth="16"
-                      strokeDasharray={`${stayPct * 2.388} 238.8`}
-                      strokeDashoffset="0"
-                    />
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="38"
-                      fill="transparent"
-                      stroke="#B8823A"
-                      strokeWidth="16"
-                      strokeDasharray={`${transportPct * 2.388} 238.8`}
-                      strokeDashoffset={`-${stayPct * 2.388}`}
-                    />
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="38"
-                      fill="transparent"
-                      stroke="#7FA69C"
-                      strokeWidth="16"
-                      strokeDasharray={`${activitiesPct * 2.388} 238.8`}
-                      strokeDashoffset={`-${(stayPct + transportPct) * 2.388}`}
-                    />
-                  </svg>
-                </div>
-
-                {/* Category Breakdown Cards */}
-                <div className="space-y-2 font-mono text-xs">
-                  <div className="p-2.5 bg-[#2C5F7C]/10 border border-[#2C5F7C]/40 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <BedDouble className="w-4 h-4 text-[#2C5F7C]" />
-                      <span className="font-bold text-[#1F2B2E]">LODGING</span>
-                    </div>
-                    <span className="font-bold text-[#2C5F7C]">{formatCurrency(stayCost)}</span>
-                  </div>
-
-                  <div className="p-2.5 bg-[#B8823A]/10 border border-[#B8823A]/40 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Plane className="w-4 h-4 text-[#B8823A]" />
-                      <span className="font-bold text-[#1F2B2E]">TRANSIT</span>
-                    </div>
-                    <span className="font-bold text-[#B8823A]">{formatCurrency(transportCost)}</span>
-                  </div>
-
-                  <div className="p-2.5 bg-[#7FA69C]/10 border border-[#7FA69C]/40 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Ticket className="w-4 h-4 text-[#7FA69C]" />
-                      <span className="font-bold text-[#1F2B2E]">EXPERIENCES</span>
-                    </div>
-                    <span className="font-bold text-[#7FA69C]">{formatCurrency(activitiesCost)}</span>
-                  </div>
-                </div>
-              </div>
-
             </div>
-          ) : (
-            <div className="bg-white border-2 border-[#1F2B2E] p-8 text-center shadow-[4px_4px_0px_0px_#1F2B2E] space-y-3 font-sans">
-              <MapPin className="h-8 w-8 text-[#2C5F7C] mx-auto" />
-              <h3 className="font-serif font-bold text-lg text-[#1E232A]">NO DESTINATION STOPS IN THIS ITINERARY</h3>
-              <p className="text-xs text-gray-500">
-                Add cities, hotel accommodations, and transport legs in the Itinerary Builder to compute stop-by-stop expenses.
-              </p>
-              {onNavigate && selectedTripId && (
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left font-sans text-xs">
+                <thead>
+                  <tr className="border-b border-gray-200 text-gray-400 font-extrabold uppercase tracking-wider">
+                    <th className="pb-3 px-2">Destination Stop</th>
+                    <th className="pb-3 px-2">Dates</th>
+                    <th className="pb-3 px-2">Stay Subtotal</th>
+                    <th className="pb-3 px-2">Transit</th>
+                    <th className="pb-3 px-2">Activities</th>
+                    <th className="pb-3 px-2 text-right">Stop Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {(budgetData.stops || []).map((s, idx) => (
+                    <tr key={s.id || idx} className="hover:bg-[#FAF9F6] transition">
+                      <td className="py-4 px-2 font-bold text-sm text-[#1E232A] flex items-center gap-2">
+                        <span className="h-6 w-6 rounded-full bg-[#1E232A] text-[#F5B800] font-serif font-black text-xs flex items-center justify-center shrink-0">
+                          {idx + 1}
+                        </span>
+                        {s.cityName || s.city?.name || 'Stop'}
+                      </td>
+                      <td className="py-4 px-2 text-gray-500">
+                        {formatDateShort(s.startDate || s.start_date)} &ndash; {formatDateShort(s.endDate || s.end_date)}
+                      </td>
+                      <td className="py-4 px-2 font-semibold text-[#1E232A]">
+                        {formatCurrency(s.stayCost || 0)}
+                      </td>
+                      <td className="py-4 px-2 font-semibold text-[#1E232A]">
+                        {formatCurrency(s.transportCost || 0)}
+                      </td>
+                      <td className="py-4 px-2 font-semibold text-[#1E232A]">
+                        {formatCurrency(s.activitiesCost || 0)} ({s.activities?.length || 0})
+                      </td>
+                      <td className="py-4 px-2 text-right font-serif font-black text-sm text-[#F5B800]">
+                        {formatCurrency(s.stopTotal || 0)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Bottom Action Footer */}
+          <div className="bg-[#1A1D23] text-white p-6 sm:p-8 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+              <h4 className="font-serif font-bold text-lg text-white">Ready to Schedule Timeline?</h4>
+              <p className="text-xs text-gray-400 font-sans">View daily activity calendars or return to the itinerary builder.</p>
+            </div>
+            <div className="flex items-center gap-3">
+              {onNavigateToCalendar && (
                 <button
-                  onClick={() => onNavigate('builder', { tripId: selectedTripId })}
-                  className="px-4 py-2 bg-[#F5B800] hover:bg-[#E0A600] text-[#1E232A] font-bold text-xs uppercase tracking-wider transition cursor-pointer shadow-sm"
+                  onClick={onNavigateToCalendar}
+                  className="px-6 py-3 bg-[#F5B800] hover:bg-[#E0A600] text-[#1E232A] font-extrabold text-xs uppercase tracking-wider rounded-full transition shadow-md cursor-pointer"
                 >
-                  ADD STOPS IN BUILDER
+                  VIEW TIMELINE CALENDAR &gt;
                 </button>
               )}
             </div>
-          )}
-
-          {/* Section 3: Itemized Stop-by-Stop Ledger Table */}
-          {budgetData.stops?.length > 0 && (
-            <div className="bg-white border-2 border-[#1F2B2E] p-6 shadow-[4px_4px_0px_0px_#1F2B2E] space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#1F2B2E]/20 pb-3">
-                <h3 className="font-display text-xl font-bold text-[#1F2B2E] uppercase">
-                  ITEMIZED ROUTE ACCOUNTING LEDGER
-                </h3>
-                {onNavigateToCalendar && (
-                  <button
-                    onClick={onNavigateToCalendar}
-                    className="font-mono text-xs font-bold text-[#2C5F7C] uppercase flex items-center gap-1 hover:underline cursor-pointer"
-                  >
-                    VIEW ON TRIP CALENDAR <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-left font-mono text-xs border-collapse">
-                  <thead>
-                    <tr className="bg-[#1F2B2E] text-[#F6F3EC] uppercase">
-                      <th className="p-3">#</th>
-                      <th className="p-3">DESTINATION</th>
-                      <th className="p-3">DATES</th>
-                      <th className="p-3 text-right">STAY RATE</th>
-                      <th className="p-3 text-right">LODGING</th>
-                      <th className="p-3 text-right">TRANSIT</th>
-                      <th className="p-3 text-right">EXPERIENCES</th>
-                      <th className="p-3 text-right">SUBTOTAL</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#1F2B2E]/20">
-                    {budgetData.stops.map((stop, idx) => {
-                      const isStopOverLimit = perStopLimit > 0 && stop.stopTotal > perStopLimit;
-                      return (
-                        <React.Fragment key={stop.stopId || idx}>
-                          <tr className={`hover:bg-[#F6F3EC] transition ${isStopOverLimit ? 'bg-[#B84A3E]/5' : ''}`}>
-                            <td className="p-3 font-bold">{idx + 1}</td>
-                            <td className="p-3 font-bold text-[#1F2B2E]">
-                              {stop.cityName}, {stop.country}
-                              {isStopOverLimit && (
-                                <span className="ml-2 text-[10px] text-[#B84A3E] font-bold uppercase">
-                                  [! CEILING EXCEEDED]
-                                </span>
-                              )}
-                            </td>
-                            <td className="p-3 text-[#1F2B2E]/70">
-                              {formatDateShort(stop.startDate)}
-                              {' — '}
-                              {formatDateShort(stop.endDate)}
-                              <span className="text-[10px] text-[#1F2B2E]/50 block">({stop.nights} nights)</span>
-                            </td>
-                            <td className="p-3 text-right text-[#1F2B2E]">
-                              {formatCurrency(stop.estStayCostPerDay)}/night
-                            </td>
-                            <td className="p-3 text-right font-bold text-[#2C5F7C]">
-                              {formatCurrency(stop.stayCost)}
-                            </td>
-                            <td className="p-3 text-right font-bold text-[#B8823A]">
-                              {formatCurrency(stop.transportCost)}
-                            </td>
-                            <td className="p-3 text-right font-bold text-[#7FA69C]">
-                              {formatCurrency(stop.activitiesCost)}
-                            </td>
-                            <td className={`p-3 text-right font-bold text-sm ${isStopOverLimit ? 'text-[#B84A3E]' : 'text-[#1F2B2E]'}`}>
-                              {formatCurrency(stop.stopTotal)}
-                            </td>
-                          </tr>
-
-                          {/* Expandable Activities Detail Rows */}
-                          {stop.activities?.length > 0 && (
-                            <tr className="bg-[#F6F3EC]/50">
-                              <td colSpan={8} className="px-6 py-2">
-                                <div className="space-y-1">
-                                  <span className="text-[10px] uppercase font-bold text-[#1F2B2E]/50">
-                                    Itemized Scheduled Activities:
-                                  </span>
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                                    {stop.activities.map((act) => (
-                                      <div key={act.id} className="p-1.5 bg-white border border-[#1F2B2E]/20 text-[11px] flex items-center justify-between">
-                                        <span className="truncate pr-2">{act.name}</span>
-                                        <span className="font-bold text-[#7FA69C] shrink-0">
-                                          {act.cost > 0 ? formatCurrency(act.cost) : 'Free'}
-                                        </span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              </td>
-                            </tr>
-                          )}
-                        </React.Fragment>
-                      );
-                    })}
-                  </tbody>
-                  <tfoot>
-                    <tr className="bg-[#1F2B2E] text-[#F6F3EC] font-bold text-sm">
-                      <td colSpan={4} className="p-3 uppercase">TOTAL COMMITTED EXPENSES:</td>
-                      <td className="p-3 text-right">{formatCurrency(stayCost)}</td>
-                      <td className="p-3 text-right">{formatCurrency(transportCost)}</td>
-                      <td className="p-3 text-right">{formatCurrency(activitiesCost)}</td>
-                      <td className="p-3 text-right text-base text-[#B8823A]">
-                        {formatCurrency(total)}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-            </div>
-          )}
+          </div>
         </>
       )}
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { formatCurrency, formatDuration } from '../../lib/format';
-import { Loader2 } from 'lucide-react';
+import { Loader2, X, Clock, Tag } from 'lucide-react';
 
 export default function ActivityChip({ stopActivity, onRemove, isRemoving = false }) {
   const activity = stopActivity?.activity || {
@@ -13,21 +13,38 @@ export default function ActivityChip({ stopActivity, onRemove, isRemoving = fals
   const duration = activity.duration_hours ?? activity.durationHours ?? 2;
 
   return (
-    <span className={`inline-flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-sm border border-[#1F2B2E]/25 bg-[#1F2B2E]/[0.03] text-xs font-mono transition shadow-xs ${
-      isRemoving ? 'opacity-50 pointer-events-none' : ''
-    }`}>
-      <span className="font-body text-[#1F2B2E] text-xs font-bold">{activity.name}</span>
-      <span className="font-mono text-caption text-[#B8823A] font-bold">{formatCurrency(cost)}</span>
-      <span className="font-mono text-caption text-[#1F2B2E]/50">{formatDuration(duration)}</span>
+    <span
+      className={`inline-flex items-center gap-2.5 pl-3.5 pr-2.5 py-1.5 rounded-full border border-gray-200 bg-gray-50 hover:bg-white hover:border-[#F5B800] text-xs font-sans font-medium text-[#1E232A] transition shadow-xs group ${
+        isRemoving ? 'opacity-50 pointer-events-none' : ''
+      }`}
+    >
+      <span className="font-bold text-[#1E232A] text-xs truncate max-w-[180px] sm:max-w-[240px]">
+        {activity.name}
+      </span>
+
+      {cost > 0 && (
+        <span className="inline-flex items-center gap-1 font-sans text-[11px] font-bold text-[#B8823A] bg-[#F5B800]/15 px-2 py-0.5 rounded-full">
+          {formatCurrency(cost)}
+        </span>
+      )}
+
+      <span className="text-gray-400 text-[10px] font-sans font-semibold">
+        {formatDuration(duration)}
+      </span>
+
       {onRemove && (
         <button
           type="button"
           disabled={isRemoving}
           onClick={() => onRemove(stopActivity.id)}
           aria-label={`Remove ${activity.name}`}
-          className="text-[#1F2B2E]/40 hover:text-[#B84A3E] transition leading-none text-sm font-bold cursor-pointer ml-1"
+          className="p-1 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 transition cursor-pointer"
         >
-          {isRemoving ? <Loader2 className="h-3 w-3 animate-spin text-[#B84A3E]" /> : '×'}
+          {isRemoving ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-red-500" />
+          ) : (
+            <X className="h-3.5 w-3.5" />
+          )}
         </button>
       )}
     </span>

@@ -4,17 +4,17 @@ import { formatDateShort, formatCurrency } from '../lib/format';
 import {
   Calendar as CalendarIcon, Clock, MapPin, DollarSign,
   ChevronLeft, ChevronRight, ArrowLeft, RefreshCw,
-  Plus, Eye, Edit3, Compass, CheckCircle2, Sparkles, Globe
+  Plus, Eye, Edit3, Compass, CheckCircle2, Sparkles, Globe, Tag
 } from 'lucide-react';
 
 const WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
 const TRIP_COLOR_PALETTES = [
-  { bg: 'bg-[#1F2B2E] text-[#F6F3EC] border-[#1F2B2E]', cellBg: 'bg-gray-200/90', tag: 'bg-[#1F2B2E]' },
-  { bg: 'bg-[#2C5F7C] text-white border-[#2C5F7C]', cellBg: 'bg-blue-100/70', tag: 'bg-[#2C5F7C]' },
-  { bg: 'bg-[#B8823A] text-white border-[#B8823A]', cellBg: 'bg-amber-100/70', tag: 'bg-[#B8823A]' },
-  { bg: 'bg-[#7FA69C] text-[#1F2B2E] border-[#7FA69C]', cellBg: 'bg-emerald-100/70', tag: 'bg-[#7FA69C]' },
-  { bg: 'bg-purple-800 text-white border-purple-800', cellBg: 'bg-purple-100/70', tag: 'bg-purple-800' },
+  { bg: 'bg-[#1E232A] text-[#F5B800] border-[#1E232A]', cellBg: 'bg-[#FAF9F6]', tag: 'bg-[#1E232A]' },
+  { bg: 'bg-[#F5B800] text-[#1E232A] border-[#F5B800]', cellBg: 'bg-amber-50/70', tag: 'bg-[#F5B800]' },
+  { bg: 'bg-[#10B981] text-white border-[#10B981]', cellBg: 'bg-emerald-50/70', tag: 'bg-[#10B981]' },
+  { bg: 'bg-[#6366F1] text-white border-[#6366F1]', cellBg: 'bg-indigo-50/70', tag: 'bg-[#6366F1]' },
+  { bg: 'bg-[#EC4899] text-white border-[#EC4899]', cellBg: 'bg-pink-50/70', tag: 'bg-[#EC4899]' },
 ];
 
 export default function TripCalendarPage({ tripId: propTripId, onBack, onNavigate, onNavigateToBudget, onNavigateToActivities }) {
@@ -230,51 +230,40 @@ export default function TripCalendarPage({ tripId: propTripId, onBack, onNavigat
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 font-sans">
+    <div className="max-w-6xl mx-auto space-y-8 pb-16 font-sans">
       
-      {/* Top Header & Trip Filter Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 pb-4">
-        <div>
-          {onBack && (
-            <button
-              onClick={onBack}
-              className="inline-flex items-center gap-1.5 font-mono text-xs text-[#2C5F7C] font-bold uppercase mb-2 hover:underline cursor-pointer"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              BACK TO OVERVIEW
-            </button>
-          )}
-          <h1 className="text-2xl sm:text-3xl font-bold font-serif text-[#1E232A] uppercase tracking-wide">
-            TRIP CALENDAR & SCHEDULE
+      {/* Top Header Card */}
+      <div className="bg-white border border-gray-200 rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-2">
+          <span className="font-script text-[#F5B800] text-3xl block leading-none">
+            schedule timeline
+          </span>
+          <h1 className="text-3xl sm:text-4xl font-serif font-black tracking-tight text-[#1E232A] leading-tight">
+            Trip Calendar & Timeline
           </h1>
-          <p className="text-xs text-gray-500 mt-1 font-sans">
-            Visual month grid showing all voyage dates, stopovers, and scheduled experiences.
+          <p className="text-xs text-gray-500 font-sans">
+            Visual month grid tracking voyage dates, stopover segments, and daily scheduled experiences.
           </p>
         </div>
 
-        {/* Action Buttons & Trip Filter */}
-        <div className="flex flex-wrap items-center gap-2">
+        {/* Action Controls & Trip Filter */}
+        <div className="flex flex-wrap items-center gap-3">
           {trips.length > 0 && (
-            <div className="bg-white border border-gray-300 px-3 py-1.5 shadow-xs">
-              <label className="block font-mono text-[9px] uppercase tracking-widest text-gray-500 font-bold">
-                FILTER TRIP
-              </label>
-              <select
-                value={selectedTripFilter}
-                onChange={(e) => handleTripFilterChange(e.target.value)}
-                className="bg-transparent text-xs font-bold text-[#1E232A] focus:outline-none cursor-pointer"
-              >
-                <option value="all">All Trips ({trips.length})</option>
-                {trips.map(t => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
-                ))}
-              </select>
-            </div>
+            <select
+              value={selectedTripFilter}
+              onChange={(e) => handleTripFilterChange(e.target.value)}
+              className="px-4 py-2.5 bg-[#FAF9F6] border border-gray-300 rounded-full font-sans text-xs font-bold text-[#1E232A] focus:outline-none focus:ring-2 focus:ring-[#F5B800] transition cursor-pointer"
+            >
+              <option value="all">All Trips ({trips.length})</option>
+              {trips.map(t => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
           )}
 
           <button
             onClick={goToToday}
-            className="px-3 py-2 bg-white border border-gray-300 hover:bg-gray-100 text-xs font-bold uppercase tracking-wider text-[#1E232A] transition cursor-pointer"
+            className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-[#1E232A] font-extrabold text-xs uppercase tracking-wider rounded-full transition cursor-pointer border border-gray-200"
           >
             TODAY
           </button>
@@ -283,50 +272,50 @@ export default function TripCalendarPage({ tripId: propTripId, onBack, onNavigat
             onClick={loadTrips}
             disabled={loading}
             title="Reload Calendar"
-            className="p-2.5 bg-white border border-gray-300 shadow-xs hover:bg-gray-100 transition cursor-pointer"
+            className="p-2.5 bg-white border border-gray-300 rounded-full hover:bg-gray-100 transition cursor-pointer shadow-xs"
           >
             <RefreshCw className={`w-4 h-4 text-[#1E232A] ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
 
-      {/* Main Calendar Card Matching Screenshot Design */}
-      <div className="bg-white border-2 border-gray-300 shadow-lg rounded-sm overflow-hidden">
+      {/* Main Calendar Card */}
+      <div className="bg-white border border-gray-200 rounded-3xl shadow-xl overflow-hidden">
         
-        {/* Month Navigation Banner (← Month Year →) */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
+        {/* Month Navigation Banner */}
+        <div className="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-gray-100 bg-white">
           <button
             onClick={prevMonth}
-            className="p-2 hover:bg-gray-100 rounded-full transition cursor-pointer text-[#1E232A]"
+            className="p-2.5 hover:bg-gray-100 rounded-full transition cursor-pointer text-[#1E232A]"
             title="Previous Month"
           >
-            <ChevronLeft className="w-6 h-6 stroke-[2.5]" />
+            <ChevronLeft className="w-6 h-6" />
           </button>
 
-          <h2 className="text-2xl sm:text-3xl font-bold font-sans text-[#1E232A] tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-serif font-black text-[#1E232A] tracking-tight">
             {monthYearLabel}
           </h2>
 
           <button
             onClick={nextMonth}
-            className="p-2 hover:bg-gray-100 rounded-full transition cursor-pointer text-[#1E232A]"
+            className="p-2.5 hover:bg-gray-100 rounded-full transition cursor-pointer text-[#1E232A]"
             title="Next Month"
           >
-            <ChevronRight className="w-6 h-6 stroke-[2.5]" />
+            <ChevronRight className="w-6 h-6" />
           </button>
         </div>
 
-        {/* Days of Week Header (SUM, MON, TUE, WED, THU, FRI, SAT) */}
-        <div className="grid grid-cols-7 border-b border-gray-300 bg-gray-50 text-center">
+        {/* Days of Week Header */}
+        <div className="grid grid-cols-7 border-b border-gray-100 bg-[#FAF9F6] text-center">
           {WEEKDAYS.map((day) => (
-            <div key={day} className="py-2.5 text-xs font-mono font-bold uppercase tracking-wider text-gray-700">
+            <div key={day} className="py-3 text-xs font-sans font-extrabold uppercase tracking-widest text-gray-500">
               {day}
             </div>
           ))}
         </div>
 
         {/* 7-Column Calendar Days Grid */}
-        <div className="grid grid-cols-7 border-collapse">
+        <div className="grid grid-cols-7 divide-x divide-y divide-gray-100">
           {calendarCells.map((cell, index) => {
             const isSelected =
               selectedDate &&
@@ -343,26 +332,26 @@ export default function TripCalendarPage({ tripId: propTripId, onBack, onNavigat
                 key={index}
                 onClick={() => setSelectedDate(cell.dateObj)}
                 className={`
-                  min-h-[90px] sm:min-h-[105px] border-r border-b border-gray-200 p-1.5 sm:p-2 flex flex-col justify-between transition-colors duration-150 relative cursor-pointer
-                  ${!cell.isCurrentMonth ? 'bg-gray-50/50 text-gray-400' : 'bg-white text-gray-900'}
-                  ${hasTrips && cell.isCurrentMonth ? (primaryTripMatch?.color?.cellBg || 'bg-gray-100') : ''}
-                  ${isSelected ? 'ring-2 ring-inset ring-[#2C5F7C] z-10' : 'hover:bg-gray-100/60'}
+                  min-h-[100px] sm:min-h-[120px] p-2 sm:p-3 flex flex-col justify-between transition-all duration-150 relative cursor-pointer
+                  ${!cell.isCurrentMonth ? 'bg-gray-50/40 text-gray-300' : 'bg-white text-gray-900'}
+                  ${hasTrips && cell.isCurrentMonth ? (primaryTripMatch?.color?.cellBg || 'bg-[#FAF9F6]') : ''}
+                  ${isSelected ? 'ring-2 ring-inset ring-[#F5B800] bg-[#FAF9F6] z-10' : 'hover:bg-gray-50'}
                 `}
               >
                 {/* Day Number Header */}
                 <div className="flex items-center justify-between">
                   <span
                     className={`
-                      text-xs sm:text-sm font-semibold font-sans inline-block leading-none
-                      ${isCurrentToday ? 'bg-[#1E232A] text-white rounded-full w-5 h-5 flex items-center justify-center font-bold text-[11px]' : ''}
-                      ${!cell.isCurrentMonth ? 'text-gray-400' : 'text-gray-900'}
+                      text-xs sm:text-sm font-bold font-sans inline-block
+                      ${isCurrentToday ? 'bg-[#F5B800] text-[#1E232A] rounded-full w-6 h-6 flex items-center justify-center font-extrabold text-xs shadow-xs' : ''}
+                      ${!cell.isCurrentMonth ? 'text-gray-300' : 'text-[#1E232A]'}
                     `}
                   >
                     {cell.dayNum}
                   </span>
 
                   {cell.tripsOnDay.length > 1 && (
-                    <span className="text-[9px] font-mono font-bold bg-[#1E232A] text-white px-1 rounded-xs">
+                    <span className="text-[10px] font-sans font-extrabold bg-[#1E232A] text-[#F5B800] px-1.5 py-0.5 rounded-full">
                       +{cell.tripsOnDay.length}
                     </span>
                   )}
@@ -370,26 +359,24 @@ export default function TripCalendarPage({ tripId: propTripId, onBack, onNavigat
 
                 {/* Trip Event Badges / Banners inside the Cell */}
                 <div className="mt-1 space-y-1 flex-1 flex flex-col justify-end">
-                  {cell.tripsOnDay.map((tMatch, tIdx) => {
-                    return (
-                      <div
-                        key={tIdx}
-                        className={`
-                          px-1.5 py-0.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider truncate rounded-xs border shadow-2xs leading-tight
-                          ${tMatch.color.bg}
-                        `}
-                        title={`${tMatch.trip.name} (${tMatch.stop?.cityName || tMatch.stop?.city?.name || 'Stop'})`}
-                      >
-                        {tMatch.isStart ? (
-                          <span>{tMatch.trip.name}</span>
-                        ) : tMatch.stop?.cityName || tMatch.stop?.city?.name ? (
-                          <span>{tMatch.stop?.cityName || tMatch.stop?.city?.name}</span>
-                        ) : (
-                          <span>{tMatch.trip.name}</span>
-                        )}
-                      </div>
-                    );
-                  })}
+                  {cell.tripsOnDay.map((tMatch, tIdx) => (
+                    <div
+                      key={tIdx}
+                      className={`
+                        px-2 py-1 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider truncate rounded-full shadow-xs leading-tight
+                        ${tMatch.color.bg}
+                      `}
+                      title={`${tMatch.trip.name} (${tMatch.stop?.cityName || tMatch.stop?.city?.name || 'Stop'})`}
+                    >
+                      {tMatch.isStart ? (
+                        <span>{tMatch.trip.name}</span>
+                      ) : tMatch.stop?.cityName || tMatch.stop?.city?.name ? (
+                        <span>{tMatch.stop?.cityName || tMatch.stop?.city?.name}</span>
+                      ) : (
+                        <span>{tMatch.trip.name}</span>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             );
@@ -398,15 +385,17 @@ export default function TripCalendarPage({ tripId: propTripId, onBack, onNavigat
       </div>
 
       {/* Selected Day Itinerary Details Inspector */}
-      <div className="bg-white border-2 border-gray-300 p-6 shadow-md rounded-sm space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-200 pb-3">
-          <div className="flex items-center gap-2.5">
-            <CalendarIcon className="w-5 h-5 text-[#2C5F7C]" />
+      <div className="bg-white border border-gray-200 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-[#F5B800]/20 text-[#1E232A] flex items-center justify-center font-bold">
+              <CalendarIcon className="w-5 h-5 text-[#F5B800]" />
+            </div>
             <div>
-              <span className="font-mono text-[10px] uppercase font-bold text-gray-500 tracking-wider block">
-                SELECTED DATE INSPECTION
+              <span className="text-[10px] uppercase font-extrabold text-[#F5B800] tracking-widest block">
+                SELECTED DATE INSPECTOR
               </span>
-              <h3 className="text-xl font-bold font-serif text-[#1E232A]">
+              <h3 className="text-xl sm:text-2xl font-serif font-black text-[#1E232A]">
                 {selectedDate.toLocaleDateString('en-US', {
                   weekday: 'long',
                   month: 'long',
@@ -417,11 +406,11 @@ export default function TripCalendarPage({ tripId: propTripId, onBack, onNavigat
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             {selectedTrips.length > 0 && onNavigate && (
               <button
                 onClick={() => onNavigate('builder', { tripId: selectedTrips[0].trip.id })}
-                className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-[#1E232A] font-bold text-xs uppercase tracking-wider border border-gray-300 transition flex items-center gap-1 cursor-pointer"
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-[#1E232A] font-extrabold text-xs uppercase tracking-wider rounded-full border border-gray-200 transition flex items-center gap-1.5 cursor-pointer"
               >
                 <Edit3 className="w-3.5 h-3.5" />
                 EDIT IN BUILDER
@@ -430,7 +419,7 @@ export default function TripCalendarPage({ tripId: propTripId, onBack, onNavigat
             {selectedTrips.length > 0 && onNavigate && (
               <button
                 onClick={() => onNavigate('itinerary', { tripId: selectedTrips[0].trip.id })}
-                className="px-3 py-1.5 bg-[#F5B800] hover:bg-[#E0A600] text-[#1E232A] font-bold text-xs uppercase tracking-wider transition flex items-center gap-1 cursor-pointer shadow-xs"
+                className="px-5 py-2 bg-[#F5B800] hover:bg-[#E0A600] text-[#1E232A] font-extrabold text-xs uppercase tracking-wider rounded-full transition flex items-center gap-1.5 cursor-pointer shadow-md"
               >
                 <Eye className="w-3.5 h-3.5" />
                 VIEW ITINERARY
@@ -441,66 +430,69 @@ export default function TripCalendarPage({ tripId: propTripId, onBack, onNavigat
 
         {/* Selected Date Content */}
         {selectedTrips.length === 0 ? (
-          <div className="p-8 bg-gray-50 border border-dashed border-gray-300 text-center space-y-2">
-            <Compass className="w-8 h-8 text-gray-400 mx-auto" />
-            <p className="text-xs font-semibold text-gray-600 uppercase">
+          <div className="p-10 bg-[#FAF9F6] rounded-3xl border border-dashed border-gray-300 text-center space-y-2">
+            <Compass className="w-8 h-8 text-gray-400 mx-auto animate-pulse" />
+            <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">
               No trips or stopovers scheduled for this date.
             </p>
             <p className="text-xs text-gray-400">
-              Click on any highlighted calendar day with a voyage banner to view itemized stops and experiences.
+              Click on any highlighted calendar day with a voyage pill to view itemized stops and experiences.
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {selectedTrips.map((match, idx) => (
-              <div key={idx} className="border border-gray-200 p-4 bg-gray-50/50 space-y-3 rounded-sm">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-200 pb-2">
+              <div key={idx} className="border border-gray-200 p-6 bg-[#FAF9F6] rounded-3xl space-y-4 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-200 pb-3">
                   <div>
-                    <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#2C5F7C] block">
+                    <span className="text-[10px] font-sans font-extrabold uppercase tracking-widest text-[#F5B800] block">
                       ACTIVE EXPEDITION
                     </span>
-                    <h4 className="text-lg font-bold text-[#1E232A] font-serif">
+                    <h4 className="text-xl font-serif font-black text-[#1E232A]">
                       {match.trip.name}
                     </h4>
                   </div>
-                  <span className="text-xs font-mono font-semibold text-gray-600 bg-white px-2.5 py-1 border border-gray-300">
-                    🗓 {formatDateShort(match.trip.startDate || match.trip.start_date)} — {formatDateShort(match.trip.endDate || match.trip.end_date)}
+                  <span className="text-xs font-sans font-bold text-gray-700 bg-white px-3.5 py-1.5 rounded-full border border-gray-200">
+                    🗓 {formatDateShort(match.trip.startDate || match.trip.start_date)} &ndash; {formatDateShort(match.trip.endDate || match.trip.end_date)}
                   </span>
                 </div>
 
                 {/* Stop Info */}
                 {match.stop && (
-                  <div className="flex items-center gap-2 text-xs font-bold text-gray-800">
-                    <MapPin className="w-4 h-4 text-[#B8823A]" />
-                    <span>Destination Stop: {match.stop.cityName || match.stop.city?.name}, {match.stop.city?.country || ''}</span>
+                  <div className="flex items-center gap-2 text-xs font-bold text-[#1E232A]">
+                    <MapPin className="w-4 h-4 text-[#F5B800]" />
+                    <span>Destination Stop: <strong>{match.stop.cityName || match.stop.city?.name}</strong>, {match.stop.city?.country || ''}</span>
                   </div>
                 )}
 
                 {/* Activities on this Day */}
                 {match.activities?.length > 0 ? (
-                  <div className="space-y-2 pt-2">
-                    <span className="text-[10px] uppercase font-bold text-gray-500 tracking-wider block">
-                      Scheduled Experiences on this Date:
+                  <div className="space-y-3 pt-2">
+                    <span className="text-[10px] uppercase font-extrabold text-gray-400 tracking-widest block">
+                      SCHEDULED EXPERIENCES ({match.activities.length}):
                     </span>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                       {match.activities.map((act, aIdx) => (
                         <div
                           key={act.id || aIdx}
-                          className="bg-white border border-gray-300 p-3 shadow-2xs flex flex-col justify-between space-y-2"
+                          className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-3"
                         >
                           <div>
-                            <div className="flex items-center justify-between text-[10px] font-mono text-gray-500 mb-1">
-                              <span className="uppercase font-bold text-[#2C5F7C]">{act.category || 'Experience'}</span>
-                              <span>{act.timeSlot || '10:00 AM'}</span>
+                            <div className="flex items-center justify-between text-[10px] font-sans text-gray-500 mb-1">
+                              <span className="uppercase font-extrabold text-[#F5B800] bg-[#F5B800]/15 px-2 py-0.5 rounded-full">
+                                {act.category || 'Experience'}
+                              </span>
+                              <span className="font-medium">{act.timeSlot || '10:00 AM'}</span>
                             </div>
-                            <h5 className="font-bold text-xs text-[#1E232A] line-clamp-1">{act.name}</h5>
+                            <h5 className="font-bold text-xs text-[#1E232A] line-clamp-2">{act.name}</h5>
                           </div>
-                          <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-xs font-mono">
+                          <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-xs font-sans">
                             <span className="font-bold text-emerald-600">
                               {act.cost > 0 ? formatCurrency(act.cost) : 'Free'}
                             </span>
-                            <span className="text-gray-500 text-[10px]">
-                              📍 {act.stopCity || 'City'}
+                            <span className="text-gray-400 text-[11px] flex items-center gap-1">
+                              <MapPin className="h-3 w-3 text-gray-400" />
+                              {act.stopCity || 'City'}
                             </span>
                           </div>
                         </div>
