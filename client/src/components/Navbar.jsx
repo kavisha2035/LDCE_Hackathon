@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Compass, User as UserIcon, LogOut, MapPin, Compass as CompassIcon } from 'lucide-react';
+import { Compass, User as UserIcon, LogOut, Search } from 'lucide-react';
 
 export default function Navbar() {
   const { user, logout, isAuthenticated } = useAuth();
@@ -44,26 +44,25 @@ export default function Navbar() {
               DASHBOARD
             </Link>
 
-            {isAuthenticated && (
-              <>
-                <Link
-                  to="/trips"
-                  className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold transition ${
-                    location.pathname.startsWith('/trips') ? 'bg-[#1F2B2E] text-[#F6F3EC]' : 'bg-white text-[#1F2B2E] hover:bg-[#F6F3EC]'
-                  }`}
-                >
-                  MY TRIPS
-                </Link>
+            <Link
+              to="/activities"
+              className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold transition flex items-center gap-1.5 ${
+                location.pathname === '/activities' ? 'bg-[#1F2B2E] text-[#F6F3EC]' : 'bg-white text-[#1F2B2E] hover:bg-[#F6F3EC]'
+              }`}
+            >
+              <Search className="h-3.5 w-3.5" />
+              ACTIVITIES (SCR 8)
+            </Link>
 
-                <Link
-                  to="/profile"
-                  className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold transition ${
-                    location.pathname === '/profile' ? 'bg-[#1F2B2E] text-[#F6F3EC]' : 'bg-white text-[#1F2B2E] hover:bg-[#F6F3EC]'
-                  }`}
-                >
-                  PROFILE
-                </Link>
-              </>
+            {isAuthenticated && (
+              <Link
+                to="/profile"
+                className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold transition ${
+                  location.pathname === '/profile' ? 'bg-[#1F2B2E] text-[#F6F3EC]' : 'bg-white text-[#1F2B2E] hover:bg-[#F6F3EC]'
+                }`}
+              >
+                PROFILE (SCR 12)
+              </Link>
             )}
           </nav>
         </div>

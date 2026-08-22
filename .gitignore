@@ -30,8 +30,7 @@ yarn-error.log*
 *.sln
 *.sw?
 .DS_Store
+.fallow
 
 # Prisma generated outputs if any custom
 # prisma/migrations
-
-GlobeTrotter_Hackathon_Plan.md

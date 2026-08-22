@@ -4,6 +4,8 @@ import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import authRoutes, { getMeHandler, deleteMeHandler } from './routes/auth.js';
+import citiesRoutes from './routes/cities.js';
+import tripsRoutes from './routes/trips.js';
 import { authenticateToken } from './middleware/auth.js';
 
 dotenv.config();
@@ -22,10 +24,12 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-// Auth & User routes
+// REST API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/cities', citiesRoutes);
+app.use('/api/trips', tripsRoutes);
 
-// Direct /api/me endpoints
+// Direct /api/me endpoints (design.md)
 app.get('/api/me', authenticateToken, getMeHandler);
 app.delete('/api/me', authenticateToken, deleteMeHandler);
 
@@ -38,6 +42,7 @@ app.get('/api/health', async (req, res) => {
     const cityCount = await prisma.city.count();
     const activityCount = await prisma.activity.count();
     const userCount = await prisma.user.count();
+    const tripCount = await prisma.trip.count();
     const dbTime = Date.now() - startTime;
 
     res.status(200).json({
@@ -50,7 +55,8 @@ app.get('/api/health', async (req, res) => {
         counts: {
           cities: cityCount,
           activities: activityCount,
-          users: userCount
+          users: userCount,
+          trips: tripCount
         }
       },
       security: {
@@ -78,7 +84,9 @@ app.get('/', (req, res) => {
     endpoints: {
       health: '/api/health',
       auth: '/api/auth',
-      user: '/api/me'
+      user: '/api/me',
+      cities: '/api/cities',
+      trips: '/api/trips'
     }
   });
 });
@@ -96,4 +104,6 @@ app.listen(PORT, () => {
   console.log(`🚀 GlobeTrotter Server running on http://localhost:${PORT}`);
   console.log(`💚 Health Check: http://localhost:${PORT}/api/health`);
   console.log(`🔐 Auth Endpoints: http://localhost:${PORT}/api/auth`);
+  console.log(`🏙️ Cities Endpoints: http://localhost:${PORT}/api/cities`);
+  console.log(`✈️ Trips Endpoints: http://localhost:${PORT}/api/trips`);
 });
