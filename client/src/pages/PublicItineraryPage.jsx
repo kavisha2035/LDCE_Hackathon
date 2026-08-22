@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import {
   Share2, Copy, Check, ExternalLink, Calendar, MapPin,
   Clock, DollarSign, ArrowLeft, BookmarkPlus, Sparkles,
-  Printer, MessageCircle, Send, Globe, ChevronRight, User, Eye
+  Printer, MessageCircle, Send, Globe, ChevronRight, User, Eye, Ticket
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import StopTicketCard from '../components/ticket/StopTicketCard';
+import InstagramBoardingPassModal from '../components/ticket/InstagramBoardingPassModal';
 
 export default function PublicItineraryPage({ shareSlug = 'europe-grand-2026-x8f1', onBack, onNavigateToAuth }) {
   const { isAuthenticated, user } = useAuth();
@@ -19,6 +20,7 @@ export default function PublicItineraryPage({ shareSlug = 'europe-grand-2026-x8f
   const [copyingTrip, setCopyingTrip] = useState(false);
   const [tripClonedSuccess, setTripClonedSuccess] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showPassModal, setShowPassModal] = useState(false);
 
   // Available public trips to explore in demo
   const [selectedSlug, setSelectedSlug] = useState(shareSlug);
@@ -256,22 +258,22 @@ export default function PublicItineraryPage({ shareSlug = 'europe-grand-2026-x8f
                   )}
                 </button>
 
-                {/* Share Utilities Row */}
-                <div className="flex items-center gap-2">
+                {/* Share & Instagram Pass Row */}
+                <div className="flex flex-col sm:flex-row items-center gap-2">
                   <button
-                    onClick={handleCopyLink}
-                    className="flex-1 px-3 py-2 bg-white border-2 border-[#1F2B2E] font-mono text-xs font-bold text-[#1F2B2E] uppercase hover:bg-[#F6F3EC] transition flex items-center justify-center gap-1.5 shadow-[2px_2px_0px_0px_#1F2B2E]"
+                    onClick={() => setShowPassModal(true)}
+                    className="w-full sm:flex-1 px-3 py-2 bg-[#F5B800] hover:bg-[#E0A600] border-2 border-[#1F2B2E] font-mono text-xs font-bold text-[#1E232A] uppercase transition flex items-center justify-center gap-1.5 shadow-[2px_2px_0px_0px_#1F2B2E] cursor-pointer"
                   >
-                    {copiedLink ? <Check className="w-3.5 h-3.5 text-[#7FA69C]" /> : <Copy className="w-3.5 h-3.5 text-[#2C5F7C]" />}
-                    {copiedLink ? 'LINK COPIED' : 'SHARE LINK'}
+                    <Ticket className="w-4 h-4" />
+                    <span>INSTA PASS & PDF</span>
                   </button>
 
                   <button
-                    onClick={handlePrint}
-                    title="Print / Save as PDF"
-                    className="p-2 bg-white border-2 border-[#1F2B2E] font-mono text-xs font-bold text-[#1F2B2E] hover:bg-[#F6F3EC] transition shadow-[2px_2px_0px_0px_#1F2B2E]"
+                    onClick={handleCopyLink}
+                    className="w-full sm:flex-1 px-3 py-2 bg-white border-2 border-[#1F2B2E] font-mono text-xs font-bold text-[#1F2B2E] uppercase hover:bg-[#F6F3EC] transition flex items-center justify-center gap-1.5 shadow-[2px_2px_0px_0px_#1F2B2E] cursor-pointer"
                   >
-                    <Printer className="w-4 h-4 text-[#1F2B2E]" />
+                    {copiedLink ? <Check className="w-3.5 h-3.5 text-[#7FA69C]" /> : <Copy className="w-3.5 h-3.5 text-[#2C5F7C]" />}
+                    {copiedLink ? 'LINK COPIED' : 'SHARE LINK'}
                   </button>
                 </div>
 
@@ -434,6 +436,16 @@ export default function PublicItineraryPage({ shareSlug = 'europe-grand-2026-x8f
             </div>
           </div>
         </>
+      )}
+
+      {/* Instagram & PDF Boarding Pass Modal */}
+      {showPassModal && trip && (
+        <InstagramBoardingPassModal
+          trip={trip}
+          user={user}
+          isOpen={showPassModal}
+          onClose={() => setShowPassModal(false)}
+        />
       )}
 
     </div>
