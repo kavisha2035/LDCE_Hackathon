@@ -14,24 +14,22 @@ const JWT_SECRET = process.env.JWT_SECRET || 'globetrotter_super_secret_jwt_key_
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || 'globetrotter_refresh_token_secret_7d_2026';
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
-// Gmail SMTP transporter (created lazily)
-let mailTransporter = null;
+// Gmail SMTP transporter
 const getMailTransporter = () => {
-  if (!mailTransporter) {
-    const gmailUser = process.env.GMAIL_USER;
-    const gmailPass = process.env.GMAIL_APP_PASSWORD;
-    if (!gmailUser || !gmailPass || gmailUser === 'YOUR_GMAIL@gmail.com') {
-      console.warn('⚠️ GMAIL_USER / GMAIL_APP_PASSWORD not configured in server/.env');
-    }
-    mailTransporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: gmailUser,
-        pass: gmailPass
-      }
-    });
+  const gmailUser = (process.env.GMAIL_USER || '').trim();
+  const gmailPass = (process.env.GMAIL_APP_PASSWORD || '').replace(/\s+/g, '');
+  
+  if (!gmailUser || !gmailPass || gmailUser === 'YOUR_GMAIL@gmail.com') {
+    console.warn('⚠️ GMAIL_USER / GMAIL_APP_PASSWORD not configured properly in server/.env');
   }
-  return mailTransporter;
+  
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: gmailUser,
+      pass: gmailPass
+    }
+  });
 };
 
 // Email validation helper
@@ -229,21 +227,6 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// POST /api/auth/forgot-password
-router.post('/forgot-password', async (req, res) => {
-  try {
-    const { email } = req.body;
-    if (!email || !isValidEmail(email)) {
-      return res.status(400).json({ error: 'Validation Error', message: 'Please provide a valid email address.' });
-    }
-    return res.status(200).json({
-      message: `Password reset instructions have been dispatched to ${email.toLowerCase().trim()}.`
-    });
-  } catch (error) {
-    console.error('Forgot password error:', error);
-    res.status(500).json({ error: 'Internal Server Error', message: error.message });
-  }
-});
 
 // POST /api/auth/refresh (Reads HTTP-Only Cookie or request body)
 router.post('/refresh', async (req, res) => {
@@ -333,8 +316,11 @@ router.post('/forgot-password', async (req, res) => {
     });
 
     if (!user) {
-      console.log(`⚠️ [Forgot Password] No user found in database with email: "${email}". Note: An account must be signed up first.`);
-      return res.status(200).json({ message: successMessage });
+      console.log(`⚠️ [Forgot Password] No user found in database with email: "${email}".`);
+      return res.status(404).json({
+        error: 'Not Found',
+        message: `No passenger account found with email "${email}". Please sign up for an account first or check for typos.`
+      });
     }
 
     console.log(`✅ [Forgot Password] User found: ${user.name} (${user.id})`);
@@ -408,11 +394,16 @@ router.post('/forgot-password', async (req, res) => {
       });
 
       console.log('✅ [Gmail] Email sent! Message ID:', info.messageId);
+      return res.status(200).json({
+        message: `Password reset link has been dispatched to ${user.email}. Please check your inbox and spam folder.`
+      });
     } catch (emailErr) {
       console.error('❌ [Gmail Error]:', emailErr.message);
+      return res.status(500).json({
+        error: 'Email Delivery Error',
+        message: `Failed to send reset email: ${emailErr.message}. You can also use the link printed in the server console.`
+      });
     }
-
-    res.status(200).json({ message: successMessage });
   } catch (error) {
     console.error('Forgot Password Error:', error);
     res.status(500).json({ error: 'Internal Server Error', message: error.message });

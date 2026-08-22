@@ -31,7 +31,7 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-// REST API Routes
+// REST API Routes - Nodemailer Active
 app.use('/api/auth', authRoutes);
 app.use('/api/cities', citiesRoutes);
 app.use('/api/trips', tripsRoutes);
