@@ -111,9 +111,14 @@ function MainApp() {
     }
   }, []);
 
-  // Defensive guard in case tab state is changed elsewhere for admin (runs after auth check finishes)
+  // Defensive guard: redirect authenticated user away from auth/reset pages, and guard admin routes
   useEffect(() => {
     if (loading) return;
+
+    if (isAuthenticated && (activeTab === 'auth' || activeTab === 'reset')) {
+      navigate('home');
+      return;
+    }
 
     if (activeTab === 'admin' && !isAdmin) {
       if (!isAuthenticated) {
@@ -127,6 +132,18 @@ function MainApp() {
   }, [activeTab, isAdmin, isAuthenticated, loading]);
 
   const navigate = (tab, params = {}) => {
+    // If already authenticated and trying to access auth/reset page, redirect to home
+    if (!loading && isAuthenticated && (tab === 'auth' || tab === 'reset')) {
+      const url = buildUrl('home');
+      if (window.location.pathname + window.location.search !== url) {
+        window.history.pushState({ tab: 'home', params: {} }, '', url);
+      }
+      setActiveTab('home');
+      setNavParams({});
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     // 1. If unauthenticated user tries to access a protected page, remember the target and redirect to signup
     if (!loading && PROTECTED_TABS.includes(tab) && !isAuthenticated) {
       setRedirectTarget({ tab, params });
@@ -202,15 +219,17 @@ function MainApp() {
 
   // Called after successful login or signup
   const handleAuthSuccess = () => {
-    // Determine destination: intended target -> previous page -> default 'home'
-    const target = redirectTarget || (previousPage.tab !== 'auth' && previousPage.tab !== 'reset' ? previousPage : { tab: 'home', params: {} });
+    // Determine destination: intended target -> previous page -> default 'home' (never stay on auth)
+    const target = (redirectTarget && redirectTarget.tab !== 'auth' && redirectTarget.tab !== 'reset')
+      ? redirectTarget
+      : (previousPage.tab && previousPage.tab !== 'auth' && previousPage.tab !== 'reset' ? previousPage : { tab: 'home', params: {} });
     
     // Clear auth memory
     setRedirectTarget(null);
     setAuthReason('');
     setAuthMode('login');
     
-    // Redirect to the remembered page
+    // Redirect to destination (or default to home)
     navigate(target.tab || 'home', target.params || {});
   };
 
@@ -483,11 +502,19 @@ function MainApp() {
         )}
 
         {activeTab === 'auth' && (
-          <AuthPage
-            mode={authMode}
-            reason={authReason}
-            onSuccess={handleAuthSuccess}
-          />
+          isAuthenticated ? (
+            <HomePage
+              onNavigate={navigate}
+              onSelectCity={(cityName) => navigate('cities', { search: cityName })}
+              onSelectActivity={(actName) => navigate('activities', { search: actName })}
+            />
+          ) : (
+            <AuthPage
+              mode={authMode}
+              reason={authReason}
+              onSuccess={handleAuthSuccess}
+            />
+          )
         )}
 
         {activeTab === 'reset' && resetToken && (
