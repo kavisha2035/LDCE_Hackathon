@@ -276,94 +276,100 @@ function MainApp() {
       <Navbar currentTab={activeTab} onNavigate={navigate} />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-6 w-full">
+      <main className="flex-1 w-full">
+        {activeTab !== 'home' && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
+          </div>
+        )}
         
         {/* Breadcrumb / Subpage Header if not on Home */}
         {activeTab !== 'home' && (
-          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border-2 border-[#1F2B2E] p-4 shadow-[3px_3px_0px_0px_#1F2B2E]">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => navigate('home')}
-                className="px-3 py-1.5 bg-[#F6F3EC] hover:bg-[#1F2B2E] hover:text-white border border-[#1F2B2E] font-mono text-xs font-bold uppercase transition flex items-center gap-1.5 cursor-pointer shadow-sm"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                DASHBOARD
-              </button>
+          <div className="w-full px-6 sm:px-12 pt-6 mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-gray-200 rounded-3xl p-6 shadow-xl">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => navigate('home')}
+                  className="px-4 py-2 bg-gray-100 hover:bg-[#1E232A] hover:text-white border border-gray-300 text-[#1E232A] font-sans text-xs font-extrabold uppercase transition flex items-center gap-2 cursor-pointer rounded-full shadow-sm"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  DASHBOARD
+                </button>
 
-              {subpageInfo && (
-                <div>
-                  <div className="font-mono text-[10px] uppercase font-bold text-[#2C5F7C] leading-none">
-                    {subpageInfo.screen}
+                {subpageInfo && (
+                  <div>
+                    <div className="font-sans text-[10px] uppercase font-bold text-[#F5B800] leading-none">
+                      {subpageInfo.screen}
+                    </div>
+                    <h2 className="text-xl sm:text-2xl font-bold font-serif tracking-tight text-[#1E232A] leading-tight flex items-center gap-2">
+                      <subpageInfo.icon className={`h-5 w-5 ${subpageInfo.color}`} />
+                      {subpageInfo.title}
+                    </h2>
                   </div>
-                  <h2 className="text-xl sm:text-2xl font-bold font-display tracking-tight text-[#1F2B2E] leading-tight flex items-center gap-2">
-                    <subpageInfo.icon className={`h-5 w-5 ${subpageInfo.color}`} />
-                    {subpageInfo.title}
-                  </h2>
+                )}
+              </div>
+
+              {/* Quick Trip Workspace Switchers for Itinerary / Builder / Budget / Calendar / Share */}
+              {['builder', 'itinerary', 'budget', 'calendar', 'share', 'my-trips', 'create-trip'].includes(activeTab) && (
+                <div className="flex flex-wrap items-center gap-1.5 font-sans text-xs">
+                  <button
+                    onClick={() => navigate('my-trips')}
+                    className={`px-3 py-1.5 rounded-full font-extrabold uppercase transition cursor-pointer ${
+                      activeTab === 'my-trips' ? 'bg-[#1E232A] text-[#F5B800]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    My Trips
+                  </button>
+                  <button
+                    onClick={() => navigate('create-trip')}
+                    className={`px-3 py-1.5 rounded-full font-extrabold uppercase transition cursor-pointer ${
+                      activeTab === 'create-trip' ? 'bg-[#1E232A] text-[#F5B800]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    + New
+                  </button>
+                  <button
+                    onClick={() => navigate('itinerary')}
+                    className={`px-3 py-1.5 rounded-full font-extrabold uppercase transition cursor-pointer ${
+                      activeTab === 'itinerary' ? 'bg-[#1E232A] text-[#F5B800]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    View
+                  </button>
+                  <button
+                    onClick={() => navigate('builder')}
+                    className={`px-3 py-1.5 rounded-full font-extrabold uppercase transition cursor-pointer ${
+                      activeTab === 'builder' ? 'bg-[#1E232A] text-[#F5B800]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    Builder
+                  </button>
+                  <button
+                    onClick={() => navigate('budget')}
+                    className={`px-3 py-1.5 rounded-full font-extrabold uppercase transition cursor-pointer ${
+                      activeTab === 'budget' ? 'bg-[#1E232A] text-[#F5B800]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    Budget
+                  </button>
+                  <button
+                    onClick={() => navigate('calendar')}
+                    className={`px-3 py-1.5 rounded-full font-extrabold uppercase transition cursor-pointer ${
+                      activeTab === 'calendar' ? 'bg-[#1E232A] text-[#F5B800]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    Calendar
+                  </button>
+                  <button
+                    onClick={() => navigate('share')}
+                    className={`px-3 py-1.5 rounded-full font-extrabold uppercase transition cursor-pointer ${
+                      activeTab === 'share' ? 'bg-[#F5B800] text-[#1E232A]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    Share
+                  </button>
                 </div>
               )}
             </div>
-
-            {/* Quick Trip Workspace Switchers for Itinerary / Builder / Budget / Calendar / Share */}
-            {['builder', 'itinerary', 'budget', 'calendar', 'share', 'my-trips', 'create-trip'].includes(activeTab) && (
-              <div className="flex flex-wrap items-center gap-1 font-mono text-[11px]">
-                <button
-                  onClick={() => navigate('my-trips')}
-                  className={`px-2.5 py-1 border border-[#1F2B2E] uppercase font-bold transition cursor-pointer ${
-                    activeTab === 'my-trips' ? 'bg-[#1F2B2E] text-white' : 'bg-white hover:bg-[#F6F3EC]'
-                  }`}
-                >
-                  My Trips
-                </button>
-                <button
-                  onClick={() => navigate('create-trip')}
-                  className={`px-2.5 py-1 border border-[#1F2B2E] uppercase font-bold transition cursor-pointer ${
-                    activeTab === 'create-trip' ? 'bg-[#1F2B2E] text-white' : 'bg-white hover:bg-[#F6F3EC]'
-                  }`}
-                >
-                  + New
-                </button>
-                <button
-                  onClick={() => navigate('itinerary')}
-                  className={`px-2.5 py-1 border border-[#1F2B2E] uppercase font-bold transition cursor-pointer ${
-                    activeTab === 'itinerary' ? 'bg-[#1F2B2E] text-white' : 'bg-white hover:bg-[#F6F3EC]'
-                  }`}
-                >
-                  View
-                </button>
-                <button
-                  onClick={() => navigate('builder')}
-                  className={`px-2.5 py-1 border border-[#1F2B2E] uppercase font-bold transition cursor-pointer ${
-                    activeTab === 'builder' ? 'bg-[#1F2B2E] text-white' : 'bg-white hover:bg-[#F6F3EC]'
-                  }`}
-                >
-                  Builder
-                </button>
-                <button
-                  onClick={() => navigate('budget')}
-                  className={`px-2.5 py-1 border border-[#1F2B2E] uppercase font-bold transition cursor-pointer ${
-                    activeTab === 'budget' ? 'bg-[#1F2B2E] text-white' : 'bg-white hover:bg-[#F6F3EC]'
-                  }`}
-                >
-                  Budget
-                </button>
-                <button
-                  onClick={() => navigate('calendar')}
-                  className={`px-2.5 py-1 border border-[#1F2B2E] uppercase font-bold transition cursor-pointer ${
-                    activeTab === 'calendar' ? 'bg-[#1F2B2E] text-white' : 'bg-white hover:bg-[#F6F3EC]'
-                  }`}
-                >
-                  Calendar
-                </button>
-                <button
-                  onClick={() => navigate('share')}
-                  className={`px-2.5 py-1 border border-[#1F2B2E] uppercase font-bold transition cursor-pointer ${
-                    activeTab === 'share' ? 'bg-[#7FA69C] text-white' : 'bg-white hover:bg-[#F6F3EC]'
-                  }`}
-                >
-                  Share
-                </button>
-              </div>
-            )}
           </div>
         )}
 
@@ -404,7 +410,7 @@ function MainApp() {
         )}
 
         {activeTab === 'cities' && (
-          <div className="bg-white border-2 border-[#1F2B2E] p-6 shadow-[4px_4px_0px_0px_#1F2B2E]">
+          <div className="w-full px-6 sm:px-12">
             <CitySearch
               initialSearch={navParams.search || ''}
               onAddToTrip={(city) => {
@@ -415,7 +421,7 @@ function MainApp() {
         )}
 
         {activeTab === 'activities' && (
-          <div className="bg-white border-2 border-[#1F2B2E] p-6 shadow-[4px_4px_0px_0px_#1F2B2E]">
+          <div className="w-full px-6 sm:px-12">
             <ActivitySearchPage
               initialCityName={navParams.city}
               initialSearch={navParams.search || ''}
@@ -429,7 +435,7 @@ function MainApp() {
 
         {activeTab === 'builder' && (
           isAuthenticated ? (
-            <div className="bg-white border-2 border-[#1F2B2E] p-6 shadow-[4px_4px_0px_0px_#1F2B2E]">
+            <div className="w-full px-6 sm:px-12">
               <ItineraryBuilder tripId={navParams.tripId || TRIP_ID} />
             </div>
           ) : (
@@ -442,7 +448,7 @@ function MainApp() {
         )}
 
         {activeTab === 'itinerary' && (
-          <div className="bg-white border-2 border-[#1F2B2E] p-6 shadow-[4px_4px_0px_0px_#1F2B2E]">
+          <div className="w-full px-6 sm:px-12">
             <ItineraryView tripId={navParams.tripId || TRIP_ID} />
           </div>
         )}
@@ -532,13 +538,13 @@ function MainApp() {
       </main>
 
       {/* Footer Inked Seal */}
-      <footer className="border-t-2 border-[#1F2B2E] bg-white py-6 mt-12">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-xs text-[#1F2B2E]">
-          <div className="flex items-center gap-2">
-            <span className="h-6 w-6 bg-[#1F2B2E] text-[#F6F3EC] flex items-center justify-center font-bold text-xs">GT</span>
-            <span className="font-bold">GLOBETROTTER &bull; INKED MAP ROUTE SYSTEM</span>
+      <footer className="border-t border-gray-200 bg-[#1A1D23] text-white py-8 mt-12">
+        <div className="w-full px-6 sm:px-12 flex flex-col sm:flex-row items-center justify-between gap-4 font-sans text-xs">
+          <div className="flex items-center gap-3">
+            <span className="h-8 w-8 bg-[#F5B800] text-[#1E232A] rounded-full flex items-center justify-center font-extrabold text-xs">GT</span>
+            <span className="font-serif text-base font-bold text-white tracking-wide">GLOBETROTTER ADVENTURES</span>
           </div>
-          <div className="text-[#1F2B2E]/70 text-center sm:text-right text-[11px]">
+          <div className="text-gray-400 text-center sm:text-right text-xs">
             REACT VITE &bull; NEON POSTGRESQL &bull; EXPRESS API &bull; JWT SECURED
           </div>
         </div>

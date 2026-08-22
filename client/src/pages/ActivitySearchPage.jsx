@@ -1,71 +1,55 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Search, Filter, MapPin, Clock, DollarSign, Eye, Camera,
   Utensils, Mountain, Palette, Moon, ShoppingBag, ChevronDown,
   X, Plus, Minus, ArrowLeft, Sparkles, Loader2
 } from 'lucide-react';
 
-// Category config — reuse palette tokens per frontend-design.md:
-// sea (#7FA69C), ochre (#B8823A), route-blue (#2C5F7C). No new hues.
 const CATEGORY_CONFIG = {
   sightseeing: {
     label: 'Sightseeing',
     icon: Camera,
-    bg: 'bg-[#2C5F7C]/15',
-    border: 'border-[#2C5F7C]/40',
-    text: 'text-[#2C5F7C]',
-    dot: 'bg-[#2C5F7C]',
+    bg: 'bg-[#F5B800]',
+    text: 'text-[#1E232A]',
   },
   food: {
     label: 'Food & Drink',
     icon: Utensils,
-    bg: 'bg-[#B8823A]/15',
-    border: 'border-[#B8823A]/40',
-    text: 'text-[#B8823A]',
-    dot: 'bg-[#B8823A]',
+    bg: 'bg-[#1E232A]',
+    text: 'text-white',
   },
   adventure: {
     label: 'Adventure',
     icon: Mountain,
-    bg: 'bg-[#7FA69C]/15',
-    border: 'border-[#7FA69C]/40',
-    text: 'text-[#7FA69C]',
-    dot: 'bg-[#7FA69C]',
+    bg: 'bg-emerald-600',
+    text: 'text-white',
   },
   culture: {
     label: 'Culture',
     icon: Palette,
-    bg: 'bg-[#2C5F7C]/15',
-    border: 'border-[#2C5F7C]/40',
-    text: 'text-[#2C5F7C]',
-    dot: 'bg-[#2C5F7C]',
+    bg: 'bg-purple-700',
+    text: 'text-white',
   },
   nightlife: {
     label: 'Nightlife',
     icon: Moon,
-    bg: 'bg-[#B8823A]/15',
-    border: 'border-[#B8823A]/40',
-    text: 'text-[#B8823A]',
-    dot: 'bg-[#B8823A]',
+    bg: 'bg-indigo-700',
+    text: 'text-white',
   },
   shopping: {
     label: 'Shopping',
     icon: ShoppingBag,
-    bg: 'bg-[#7FA69C]/15',
-    border: 'border-[#7FA69C]/40',
-    text: 'text-[#7FA69C]',
-    dot: 'bg-[#7FA69C]',
+    bg: 'bg-rose-600',
+    text: 'text-white',
   },
 };
 
 function getCategoryConfig(category) {
   return CATEGORY_CONFIG[category?.toLowerCase()] || {
-    label: category || 'Other',
+    label: category || 'Experience',
     icon: Sparkles,
-    bg: 'bg-slate-500/15',
-    border: 'border-slate-500/40',
-    text: 'text-slate-400',
-    dot: 'bg-slate-500',
+    bg: 'bg-[#F5B800]',
+    text: 'text-[#1E232A]',
   };
 }
 
@@ -74,16 +58,16 @@ function formatDuration(hours) {
   const num = parseFloat(hours);
   if (isNaN(num)) return '';
   if (num < 1) {
-    return `${Math.round(num * 60)}min`;
+    return `${Math.round(num * 60)} mins`;
   }
   const fullHours = Math.floor(num);
   const minutes = Math.round((num - fullHours) * 60);
-  if (minutes === 0) return `${fullHours}h`;
+  if (minutes === 0) return `${fullHours} hrs`;
   return `${fullHours}h ${minutes}m`;
 }
 
 function formatCost(cost) {
-  if (cost === 0 || cost === null || cost === undefined) return 'Free';
+  if (cost === 0 || cost === null || cost === undefined) return 'Included (Free)';
   return `$${cost.toFixed(0)}`;
 }
 
@@ -95,92 +79,78 @@ function ActivityCard({ activity, isSelected, onToggle, onPreview }) {
   return (
     <div
       className={`
-        group relative rounded-sm border overflow-hidden transition-all duration-200
-        ${isSelected
-          ? 'border-[#2C5F7C] bg-[#2C5F7C]/5 ring-1 ring-[#2C5F7C]/30'
-          : 'border-[#1F2B2E]/15 bg-white hover:border-[#1F2B2E]/30 hover:shadow-sm'
-        }
+        group relative rounded-3xl border border-gray-200 overflow-hidden bg-white shadow-xl hover:shadow-2xl transition duration-300 flex flex-col justify-between min-h-[480px]
+        ${isSelected ? 'ring-2 ring-[#F5B800]' : ''}
       `}
-      style={{ fontFamily: "'Inter', 'IBM Plex Sans', sans-serif" }}
     >
-      {/* Image strip */}
-      {activity.imageUrl && (
-        <div className="relative h-36 overflow-hidden">
+      <div>
+        {/* Image Banner */}
+        <div className="relative h-64 sm:h-72 overflow-hidden">
           <img
-            src={activity.imageUrl}
+            src={activity.imageUrl || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=800&q=80'}
             alt={activity.name}
-            className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
+            className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
             loading="lazy"
           />
-          {/* Category tag - overlaid on image */}
-          <div className={`absolute top-2.5 left-2.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-[10px] font-semibold uppercase tracking-wider border ${cat.bg} ${cat.border} ${cat.text} backdrop-blur-sm`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${cat.dot}`}></span>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
+
+          {/* Category Pill */}
+          <div className={`absolute top-4 left-4 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${cat.bg} ${cat.text} shadow-md`}>
+            <CatIcon className="w-3.5 h-3.5" />
             {cat.label}
           </div>
-          {/* Quick preview button */}
+
+          {/* Quick Preview Button */}
           <button
             onClick={(e) => { e.stopPropagation(); onPreview(activity); }}
-            className="absolute top-2.5 right-2.5 p-1.5 rounded-sm bg-white/80 backdrop-blur-sm border border-[#1F2B2E]/10 text-[#1F2B2E]/60 hover:text-[#2C5F7C] hover:bg-white transition opacity-0 group-hover:opacity-100"
+            className="absolute top-4 right-4 p-3 rounded-full bg-white/90 hover:bg-white text-[#1E232A] shadow-md transition cursor-pointer"
             title="Quick view"
           >
-            <Eye className="w-3.5 h-3.5" />
+            <Eye className="w-4 h-4" />
           </button>
-        </div>
-      )}
 
-      {/* Content body */}
-      <div className="p-3.5 space-y-2.5">
-        {/* Name */}
-        <h4
-          className="font-semibold text-[#1F2B2E] text-sm leading-snug line-clamp-2"
-          style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif", fontWeight: 600 }}
-        >
-          {activity.name}
-        </h4>
-
-        {/* Description */}
-        {activity.description && (
-          <p className="text-[#1F2B2E]/55 text-xs leading-relaxed line-clamp-2">
-            {activity.description}
-          </p>
-        )}
-
-        {/* Meta row: cost + duration */}
-        <div className="flex items-center gap-3 pt-0.5">
-          <span
-            className="inline-flex items-center gap-1 text-xs font-bold"
-            style={{
-              fontFamily: "'IBM Plex Mono', 'JetBrains Mono', monospace",
-              color: activity.cost > 0 ? '#B8823A' : '#7FA69C',
-            }}
-          >
-            <DollarSign className="w-3 h-3" />
-            {formatCost(activity.cost)}
-          </span>
-          {(activity.durationHours !== undefined || activity.duration !== undefined) && (
-            <span
-              className="inline-flex items-center gap-1 text-xs text-[#1F2B2E]/50"
-              style={{ fontFamily: "'IBM Plex Mono', 'JetBrains Mono', monospace" }}
-            >
-              <Clock className="w-3 h-3" />
-              {formatDuration(activity.durationHours ?? activity.duration)}
+          {/* Cost & Duration Badges on Image */}
+          <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-white">
+            <span className="px-3.5 py-1.5 bg-black/60 backdrop-blur-md rounded-full text-xs font-extrabold font-sans text-[#F5B800]">
+              {formatCost(activity.cost)}
             </span>
+            {(activity.durationHours !== undefined || activity.duration !== undefined) && (
+              <span className="px-3.5 py-1.5 bg-black/60 backdrop-blur-md rounded-full text-xs font-bold font-sans text-gray-200 flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-[#F5B800]" />
+                {formatDuration(activity.durationHours ?? activity.duration)}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Card Body */}
+        <div className="p-7 space-y-3">
+          <h4 className="font-serif font-black text-[#1E232A] text-2xl leading-snug line-clamp-2">
+            {activity.name}
+          </h4>
+
+          {activity.description && (
+            <p className="text-gray-600 text-sm font-sans leading-relaxed line-clamp-3">
+              {activity.description}
+            </p>
           )}
         </div>
+      </div>
 
-        {/* Add / Remove button */}
+      {/* Curvy Action Button */}
+      <div className="p-7 pt-0">
         <button
           onClick={() => onToggle(activity)}
           className={`
-            w-full mt-1 py-2 rounded-sm text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-150 border
+            w-full py-3.5 px-6 rounded-full text-xs font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 transition duration-200 cursor-pointer shadow-md
             ${isSelected
-              ? 'border-[#B84A3E]/30 bg-[#B84A3E]/5 text-[#B84A3E] hover:bg-[#B84A3E]/10'
-              : 'border-[#2C5F7C]/30 bg-[#2C5F7C]/5 text-[#2C5F7C] hover:bg-[#2C5F7C]/10'
+              ? 'bg-red-500 hover:bg-red-600 text-white'
+              : 'bg-[#F5B800] hover:bg-[#E0A600] text-[#1E232A]'
             }
           `}
         >
-          {isSelected ? <Minus className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
-          {isSelected ? 'Remove from stop' : 'Add to stop'}
+          {isSelected ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+          {isSelected ? 'Remove Stop' : 'Add to Journey'}
         </button>
       </div>
     </div>
@@ -195,102 +165,69 @@ function ActivityDetailModal({ activity, onClose, isSelected, onToggle }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-[#1F2B2E]/40 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
 
-      {/* Modal */}
       <div
-        className="relative bg-[#F6F3EC] border border-[#1F2B2E]/15 rounded-sm max-w-lg w-full max-h-[85vh] overflow-y-auto shadow-xl"
+        className="relative bg-white rounded-3xl max-w-xl w-full max-h-[85vh] overflow-y-auto shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
-        style={{ fontFamily: "'Inter', 'IBM Plex Sans', sans-serif" }}
       >
-        {/* Close */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 z-10 p-1.5 rounded-sm bg-white/80 backdrop-blur-sm border border-[#1F2B2E]/10 text-[#1F2B2E]/60 hover:text-[#1F2B2E] transition"
+          className="absolute top-4 right-4 z-10 p-2.5 rounded-full bg-white/90 text-[#1E232A] hover:bg-white transition cursor-pointer shadow"
         >
-          <X className="w-4 h-4" />
+          <X className="w-5 h-5" />
         </button>
 
-        {/* Image */}
         {activity.imageUrl && (
-          <div className="h-52 overflow-hidden">
+          <div className="h-64 overflow-hidden relative">
             <img
               src={activity.imageUrl}
               alt={activity.name}
               className="w-full h-full object-cover"
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
           </div>
         )}
 
-        <div className="p-6 space-y-4">
-          {/* Category tag */}
-          <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[11px] font-semibold uppercase tracking-wider border ${cat.bg} ${cat.border} ${cat.text}`}>
-            <CatIcon className="w-3.5 h-3.5" />
+        <div className="p-8 space-y-5">
+          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${cat.bg} ${cat.text}`}>
+            <CatIcon className="w-4 h-4" />
             {cat.label}
           </div>
 
-          {/* Title */}
-          <h3
-            className="text-xl font-bold text-[#1F2B2E] leading-tight"
-            style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif" }}
-          >
+          <h3 className="text-3xl font-serif font-bold text-[#1E232A]">
             {activity.name}
           </h3>
 
-          {/* Description */}
           {activity.description && (
-            <p className="text-[#1F2B2E]/65 text-sm leading-relaxed">
+            <p className="text-gray-600 text-sm font-sans leading-relaxed">
               {activity.description}
             </p>
           )}
 
-          {/* Stats row */}
-          <div className="flex items-center gap-5 py-2 border-y border-[#1F2B2E]/10">
-            <div className="flex items-center gap-2">
-              <DollarSign className="w-4 h-4 text-[#B8823A]" />
-              <div>
-                <div className="text-[10px] uppercase tracking-wider text-[#1F2B2E]/40 font-semibold">Cost</div>
-                <div
-                  className="text-sm font-bold"
-                  style={{
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    color: activity.cost > 0 ? '#B8823A' : '#7FA69C'
-                  }}
-                >
-                  {formatCost(activity.cost)}
-                </div>
-              </div>
+          <div className="flex items-center justify-between py-4 border-y border-gray-100 font-sans">
+            <div>
+              <span className="text-[10px] uppercase font-bold text-gray-400 block">Est. Cost</span>
+              <span className="text-lg font-extrabold text-[#F5B800]">{formatCost(activity.cost)}</span>
             </div>
-            {(activity.durationHours !== undefined || activity.duration !== undefined) && (
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-[#2C5F7C]" />
-                <div>
-                  <div className="text-[10px] uppercase tracking-wider text-[#1F2B2E]/40 font-semibold">Duration</div>
-                  <div
-                    className="text-sm font-bold text-[#1F2B2E]"
-                    style={{ fontFamily: "'IBM Plex Mono', monospace" }}
-                  >
-                    {formatDuration(activity.durationHours ?? activity.duration)}
-                  </div>
-                </div>
-              </div>
-            )}
+            <div>
+              <span className="text-[10px] uppercase font-bold text-gray-400 block">Duration</span>
+              <span className="text-base font-bold text-[#1E232A]">{formatDuration(activity.durationHours ?? activity.duration)}</span>
+            </div>
           </div>
 
-          {/* Action */}
           <button
             onClick={() => { onToggle(activity); onClose(); }}
             className={`
-              w-full py-2.5 rounded-sm text-sm font-semibold flex items-center justify-center gap-2 transition border
+              w-full py-4 rounded-full text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition cursor-pointer shadow-lg
               ${isSelected
-                ? 'border-[#B84A3E]/30 bg-[#B84A3E]/8 text-[#B84A3E] hover:bg-[#B84A3E]/15'
-                : 'border-[#2C5F7C] bg-[#2C5F7C] text-white hover:bg-[#2C5F7C]/90'
+                ? 'bg-red-500 hover:bg-red-600 text-white'
+                : 'bg-[#F5B800] hover:bg-[#E0A600] text-[#1E232A]'
               }
             `}
           >
             {isSelected ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-            {isSelected ? 'Remove from stop' : 'Add to stop'}
+            {isSelected ? 'Remove from Stop' : 'Add to Journey'}
           </button>
         </div>
       </div>
@@ -314,25 +251,15 @@ export default function ActivitySearchPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Filters
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [maxCost, setMaxCost] = useState('');
-  const [maxDuration, setMaxDuration] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
-
-  // Detail modal
   const [previewActivity, setPreviewActivity] = useState(null);
 
-  // Cities list for standalone mode (when no cityId prop given)
   const [cities, setCities] = useState([]);
   const [activeCityId, setActiveCityId] = useState(cityId || null);
-  const [loadingCities, setLoadingCities] = useState(!cityId);
 
-  // Fetch cities list if no cityId passed
   useEffect(() => {
     if (!cityId) {
-      setLoadingCities(true);
       fetch('/api/cities')
         .then(res => res.json())
         .then(data => {
@@ -349,39 +276,29 @@ export default function ActivitySearchPage({
             setActiveCityId(list[0].id);
           }
         })
-        .catch(() => setError('Failed to load cities'))
-        .finally(() => setLoadingCities(false));
+        .catch(() => setError('Failed to load cities'));
     }
   }, [cityId, initialCityName]);
 
-  // Fetch activities when city or filters change
   useEffect(() => {
     if (!activeCityId) return;
-
     setLoading(true);
-    setError('');
 
     const params = new URLSearchParams();
     if (selectedCategory !== 'all') params.set('category', selectedCategory);
-    if (maxCost) params.set('maxCost', maxCost);
-    if (maxDuration) params.set('maxDuration', maxDuration);
     if (searchQuery) params.set('search', searchQuery);
 
     fetch(`/api/cities/${activeCityId}/activities?${params}`)
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to load activities');
-        return res.json();
-      })
-      .then((data) => {
+      .then(res => res.json())
+      .then(data => {
         setCity(data.city);
         setActivities(data.activities || []);
         setCategories(data.categories || []);
       })
-      .catch((err) => setError(err.message))
+      .catch(err => setError(err.message))
       .finally(() => setLoading(false));
-  }, [activeCityId, selectedCategory, maxCost, maxDuration, searchQuery]);
+  }, [activeCityId, selectedCategory, searchQuery]);
 
-  // Debounce search
   const [searchInput, setSearchInput] = useState('');
   useEffect(() => {
     const timer = setTimeout(() => setSearchQuery(searchInput), 300);
@@ -396,275 +313,106 @@ export default function ActivitySearchPage({
     }
   };
 
-  const activeFilterCount = [
-    selectedCategory !== 'all',
-    maxCost !== '',
-    maxDuration !== '',
-  ].filter(Boolean).length;
-
-  const clearFilters = () => {
-    setSelectedCategory('all');
-    setMaxCost('');
-    setMaxDuration('');
-    setSearchInput('');
-    setSearchQuery('');
-  };
-
   return (
-    <div
-      className="min-h-[80vh]"
-      style={{ fontFamily: "'Inter', 'IBM Plex Sans', sans-serif" }}
-    >
-      {/* Header */}
-      <div className="mb-6">
+    <div className="w-full max-w-[1600px] mx-auto px-6 sm:px-12 py-8 space-y-8 font-sans bg-[#FAF9F6] text-[#1E232A]">
+      
+      {/* Page Header */}
+      <div className="bg-white border border-gray-200 p-8 rounded-3xl shadow-xl space-y-4">
         {onBack && (
           <button
             onClick={onBack}
-            className="flex items-center gap-1.5 text-xs font-semibold text-[#2C5F7C] hover:text-[#2C5F7C]/80 mb-3 transition"
+            className="flex items-center gap-2 text-xs font-bold text-[#1E232A] hover:text-[#F5B800] transition cursor-pointer"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Back to itinerary
+            <ArrowLeft className="w-4 h-4" />
+            Back to Itinerary
           </button>
         )}
 
-        <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <h2
-              className="text-2xl font-bold text-[#1F2B2E] tracking-tight"
-              style={{ fontFamily: "'Barlow Condensed', 'Inter', sans-serif", fontWeight: 700 }}
-            >
-              Activity Search
-            </h2>
+            <span className="font-script text-[#F5B800] text-3xl block">discover tours</span>
+            <h1 className="text-4xl font-serif font-bold text-[#1E232A] uppercase">
+              TOURS & ACTIVITIES CATALOG
+            </h1>
             {city && (
-              <p className="flex items-center gap-1.5 text-sm text-[#1F2B2E]/50 mt-1">
-                <MapPin className="w-3.5 h-3.5" />
-                <span style={{ fontFamily: "'IBM Plex Mono', monospace" }}>
-                  {city.name}, {city.country}
-                </span>
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-gray-500 mt-1">
+                <MapPin className="w-4 h-4 text-[#F5B800]" />
+                {city.name}, {city.country}
               </p>
             )}
           </div>
-          {selectedActivityIds.length > 0 && (
-            <div
-              className="px-3 py-1.5 rounded-sm border border-[#7FA69C]/30 bg-[#7FA69C]/8 text-[#7FA69C] text-xs font-semibold"
-              style={{ fontFamily: "'IBM Plex Mono', monospace" }}
-            >
-              {selectedActivityIds.length} selected
-            </div>
-          )}
         </div>
+
+        {/* City Filter Pills */}
+        {!cityId && cities.length > 0 && (
+          <div className="pt-2 border-t border-gray-100">
+            <span className="text-xs font-bold uppercase tracking-wider text-gray-400 block mb-2">Select Destination:</span>
+            <div className="flex flex-wrap gap-2">
+              {cities.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => setActiveCityId(c.id)}
+                  className={`
+                    px-5 py-2.5 rounded-full text-xs font-bold uppercase transition cursor-pointer shadow-sm
+                    ${activeCityId === c.id
+                      ? 'bg-[#1E232A] text-[#F5B800]'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }
+                  `}
+                >
+                  {c.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* City selector (standalone mode) */}
-      {!cityId && cities.length > 0 && (
-        <div className="mb-5">
-          <label className="text-[10px] uppercase tracking-wider text-[#1F2B2E]/40 font-semibold mb-1.5 block">
-            Select city
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {cities.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => setActiveCityId(c.id)}
-                className={`
-                  px-3 py-1.5 rounded-sm text-xs font-semibold border transition
-                  ${activeCityId === c.id
-                    ? 'border-[#2C5F7C] bg-[#2C5F7C] text-white'
-                    : 'border-[#1F2B2E]/15 text-[#1F2B2E]/60 hover:border-[#2C5F7C]/40 hover:text-[#2C5F7C]'
-                  }
-                `}
-              >
-                {c.name}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Search bar + filter toggle */}
-      <div className="flex items-center gap-2 mb-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#1F2B2E]/30" />
-          <input
-            type="text"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="e.g. Eiffel Tower, sushi tasting…"
-            className="w-full bg-white border border-[#1F2B2E]/15 rounded-sm pl-9 pr-4 py-2.5 text-sm text-[#1F2B2E] placeholder-[#1F2B2E]/30 focus:outline-none focus:border-[#2C5F7C] focus:ring-1 focus:ring-[#2C5F7C]/20 transition"
-            style={{ fontFamily: "'IBM Plex Mono', 'Inter', monospace" }}
-          />
-          {searchInput && (
-            <button
-              onClick={() => { setSearchInput(''); setSearchQuery(''); }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#1F2B2E]/30 hover:text-[#1F2B2E]/60 transition"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className={`
-            relative flex items-center gap-1.5 px-3.5 py-2.5 rounded-sm text-xs font-semibold border transition
-            ${showFilters || activeFilterCount > 0
-              ? 'border-[#2C5F7C] bg-[#2C5F7C]/5 text-[#2C5F7C]'
-              : 'border-[#1F2B2E]/15 text-[#1F2B2E]/50 hover:border-[#1F2B2E]/30'
-            }
-          `}
-        >
-          <Filter className="w-3.5 h-3.5" />
-          Filters
-          {activeFilterCount > 0 && (
-            <span className="ml-1 w-4.5 h-4.5 rounded-full bg-[#2C5F7C] text-white text-[10px] flex items-center justify-center font-bold leading-none px-1.5 py-0.5">
-              {activeFilterCount}
-            </span>
-          )}
-        </button>
+      {/* Search Input Bar */}
+      <div className="relative w-full">
+        <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <input
+          type="text"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          placeholder="Search tours by title (e.g. Eiffel Tower, Senso-ji, Colosseum)..."
+          className="w-full bg-white border border-gray-300 rounded-full pl-14 pr-12 py-4 text-sm font-semibold text-[#1E232A] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#F5B800] shadow-md"
+        />
+        {searchInput && (
+          <button
+            onClick={() => { setSearchInput(''); setSearchQuery(''); }}
+            className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
-      {/* Filter panel */}
-      {showFilters && (
-        <div className="mb-5 p-4 bg-white border border-[#1F2B2E]/10 rounded-sm space-y-4 animate-in slide-in-from-top-1">
-          {/* Category pills */}
-          <div>
-            <label className="text-[10px] uppercase tracking-wider text-[#1F2B2E]/40 font-semibold mb-2 block">
-              Category
-            </label>
-            <div className="flex flex-wrap gap-1.5">
-              <button
-                onClick={() => setSelectedCategory('all')}
-                className={`px-2.5 py-1 rounded-sm text-[11px] font-semibold border transition ${
-                  selectedCategory === 'all'
-                    ? 'border-[#1F2B2E] bg-[#1F2B2E] text-[#F6F3EC]'
-                    : 'border-[#1F2B2E]/15 text-[#1F2B2E]/50 hover:border-[#1F2B2E]/30'
-                }`}
-              >
-                All
-              </button>
-              {categories.map((cat) => {
-                const cfg = getCategoryConfig(cat);
-                return (
-                  <button
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-sm text-[11px] font-semibold border transition ${
-                      selectedCategory === cat
-                        ? `${cfg.bg} ${cfg.border} ${cfg.text}`
-                        : 'border-[#1F2B2E]/15 text-[#1F2B2E]/50 hover:border-[#1F2B2E]/30'
-                    }`}
-                  >
-                    <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`}></span>
-                    {cfg.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Cost + Duration range */}
-          <div className="flex gap-4 flex-wrap">
-            <div className="flex-1 min-w-[140px]">
-              <label className="text-[10px] uppercase tracking-wider text-[#1F2B2E]/40 font-semibold mb-1.5 block">
-                Max cost ($)
-              </label>
-              <input
-                type="number"
-                value={maxCost}
-                onChange={(e) => setMaxCost(e.target.value)}
-                placeholder="No limit"
-                min={0}
-                className="w-full bg-[#F6F3EC] border border-[#1F2B2E]/15 rounded-sm px-3 py-2 text-xs text-[#1F2B2E] placeholder-[#1F2B2E]/30 focus:outline-none focus:border-[#2C5F7C] transition"
-                style={{ fontFamily: "'IBM Plex Mono', monospace" }}
-              />
-            </div>
-            <div className="flex-1 min-w-[140px]">
-              <label className="text-[10px] uppercase tracking-wider text-[#1F2B2E]/40 font-semibold mb-1.5 block">
-                Max duration (hours)
-              </label>
-              <input
-                type="number"
-                value={maxDuration}
-                onChange={(e) => setMaxDuration(e.target.value)}
-                placeholder="No limit"
-                min={0}
-                step={0.5}
-                className="w-full bg-[#F6F3EC] border border-[#1F2B2E]/15 rounded-sm px-3 py-2 text-xs text-[#1F2B2E] placeholder-[#1F2B2E]/30 focus:outline-none focus:border-[#2C5F7C] transition"
-                style={{ fontFamily: "'IBM Plex Mono', monospace" }}
-              />
-            </div>
-          </div>
-
-          {/* Clear all */}
-          {activeFilterCount > 0 && (
-            <button
-              onClick={clearFilters}
-              className="text-xs text-[#B84A3E] font-semibold hover:underline"
-            >
-              Clear all filters
-            </button>
-          )}
+      {/* Activity Grid */}
+      {loading ? (
+        <div className="flex items-center justify-center py-20 bg-white rounded-3xl border border-gray-200">
+          <Loader2 className="w-8 h-8 text-[#F5B800] animate-spin" />
+          <span className="ml-3 text-sm font-bold text-gray-500 uppercase">Loading Activities Catalog...</span>
+        </div>
+      ) : activities.length === 0 ? (
+        <div className="text-center py-20 bg-white rounded-3xl border border-gray-200 space-y-3">
+          <Search className="w-12 h-12 text-gray-300 mx-auto" />
+          <p className="text-gray-500 font-semibold text-sm">No experiences found for this selection.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          {activities.map((activity) => (
+            <ActivityCard
+              key={activity.id}
+              activity={activity}
+              isSelected={selectedActivityIds.includes(activity.id)}
+              onToggle={handleToggle}
+              onPreview={setPreviewActivity}
+            />
+          ))}
         </div>
       )}
 
-      {/* Loading state */}
-      {loading && (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-6 h-6 text-[#2C5F7C] animate-spin" />
-          <span className="ml-2 text-sm text-[#1F2B2E]/40">Loading activities…</span>
-        </div>
-      )}
-
-      {/* Error state */}
-      {error && !loading && (
-        <div className="p-4 rounded-sm border border-[#B84A3E]/20 bg-[#B84A3E]/5 text-[#B84A3E] text-sm">
-          {error}
-        </div>
-      )}
-
-      {/* Empty state */}
-      {!loading && !error && activities.length === 0 && (
-        <div className="text-center py-16 space-y-3">
-          <div className="w-14 h-14 rounded-full bg-[#1F2B2E]/5 flex items-center justify-center mx-auto">
-            <Search className="w-6 h-6 text-[#1F2B2E]/25" />
-          </div>
-          <p className="text-[#1F2B2E]/50 text-sm">
-            {searchQuery || selectedCategory !== 'all' || maxCost || maxDuration
-              ? 'No activities match your filters. Try broadening your search.'
-              : 'No activities found for this city.'
-            }
-          </p>
-          {(searchQuery || selectedCategory !== 'all' || maxCost || maxDuration) && (
-            <button
-              onClick={clearFilters}
-              className="text-xs text-[#2C5F7C] font-semibold hover:underline"
-            >
-              Clear filters
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Activity grid */}
-      {!loading && !error && activities.length > 0 && (
-        <>
-          <p className="text-[10px] uppercase tracking-wider text-[#1F2B2E]/35 font-semibold mb-3">
-            {activities.length} {activities.length === 1 ? 'activity' : 'activities'} found
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {activities.map((activity) => (
-              <ActivityCard
-                key={activity.id}
-                activity={activity}
-                isSelected={selectedActivityIds.includes(activity.id)}
-                onToggle={handleToggle}
-                onPreview={setPreviewActivity}
-              />
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* Detail modal */}
       {previewActivity && (
         <ActivityDetailModal
           activity={previewActivity}

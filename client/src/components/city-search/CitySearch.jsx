@@ -2,15 +2,11 @@ import React, { useState } from 'react';
 import { useCities } from '../../hooks/useCities';
 import { useSaveDestination } from '../../hooks/useSaveDestination';
 import CityResultRow from './CityResultRow';
+import { Search, MapPin, Globe } from 'lucide-react';
 
 const REGIONS = ['Europe', 'Asia', 'Africa', 'North America', 'South America', 'Oceania'];
 const COST_LEVELS = [1, 2, 3, 4, 5];
 
-/**
- * Screen 7 — City Search. Standalone: any screen that needs city discovery
- * (Screen 5's Add Stop flow, Dashboard's recommendations) imports and
- * embeds this directly rather than duplicating it.
- */
 export default function CitySearch({ onAddToTrip, embedded = false, initialSearch = '' }) {
   const [search, setSearch] = useState(initialSearch);
   const [region, setRegion] = useState('');
@@ -20,48 +16,62 @@ export default function CitySearch({ onAddToTrip, embedded = false, initialSearc
   const saveMutation = useSaveDestination();
 
   return (
-    <div className={embedded ? '' : 'max-w-3xl mx-auto'}>
+    <div className={embedded ? 'w-full' : 'w-full max-w-[1600px] mx-auto px-6 sm:px-12 py-8 font-sans space-y-6'}>
       {!embedded && (
-        <div className="flex items-center justify-between border-b-2 border-dashed border-ink pb-4 mb-6">
-          <div>
-            <h1 className="text-3xl font-extrabold font-display tracking-tight text-ink leading-none">CITY SEARCH</h1>
-            <span className="text-[10px] font-mono uppercase tracking-widest text-route-blue">Screen 7 &bull; Discovery</span>
-          </div>
+        <div className="bg-white border border-gray-200 p-8 rounded-3xl shadow-xl space-y-2">
+          <span className="font-script text-[#F5B800] text-3xl block">explore destinations</span>
+          <h1 className="text-4xl font-serif font-bold text-[#1E232A] uppercase tracking-wide">
+            CITY DISCOVERY & SEARCH
+          </h1>
+          <p className="text-xs text-gray-500 font-sans">
+            Filter reference cities with cost indices, popularity ratings, and activity catalogs.
+          </p>
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row gap-2 mb-3">
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="e.g. Lisbon, Portugal"
-          className="flex-1 bg-paper border border-ink px-3 py-2 font-mono text-sm text-ink placeholder-ink/40 focus:outline-none focus:ring-2 focus:ring-route-blue"
-        />
-        <select
-          value={region}
-          onChange={(e) => setRegion(e.target.value)}
-          className="bg-paper border border-ink px-3 py-2 text-sm font-mono text-ink focus:outline-none focus:ring-2 focus:ring-route-blue"
-        >
-          <option value="">All regions</option>
-          {REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}
-        </select>
-        <select
-          value={costIndex}
-          onChange={(e) => setCostIndex(e.target.value)}
-          className="bg-paper border border-ink px-3 py-2 text-sm font-mono text-ink focus:outline-none focus:ring-2 focus:ring-route-blue"
-        >
-          <option value="">Any cost</option>
-          {COST_LEVELS.map((c) => <option key={c} value={c}>Cost index {c}</option>)}
-        </select>
+      {/* Curvy Search & Filter Controls */}
+      <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+        <div className="sm:col-span-6 relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by city or country (e.g. Paris, Tokyo, Italy)..."
+            className="w-full bg-white border border-gray-300 rounded-full pl-11 pr-4 py-3 text-sm font-semibold text-[#1E232A] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#F5B800] shadow-sm"
+          />
+        </div>
+
+        <div className="sm:col-span-3">
+          <select
+            value={region}
+            onChange={(e) => setRegion(e.target.value)}
+            className="w-full bg-white border border-gray-300 rounded-full px-5 py-3 text-sm font-semibold text-[#1E232A] focus:outline-none focus:ring-2 focus:ring-[#F5B800] shadow-sm cursor-pointer"
+          >
+            <option value="">All Regions</option>
+            {REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}
+          </select>
+        </div>
+
+        <div className="sm:col-span-3">
+          <select
+            value={costIndex}
+            onChange={(e) => setCostIndex(e.target.value)}
+            className="w-full bg-white border border-gray-300 rounded-full px-5 py-3 text-sm font-semibold text-[#1E232A] focus:outline-none focus:ring-2 focus:ring-[#F5B800] shadow-sm cursor-pointer"
+          >
+            <option value="">Any Cost Index</option>
+            {COST_LEVELS.map((c) => <option key={c} value={c}>Cost Index {c} / 5</option>)}
+          </select>
+        </div>
       </div>
 
-      <div className="border border-ink bg-white shadow-[3px_3px_0px_0px_#1F2B2E]">
+      {/* Results Container */}
+      <div className="bg-white border border-gray-200 rounded-3xl shadow-xl overflow-hidden divide-y divide-gray-100">
         {isLoading ? (
-          <p className="py-8 text-center text-sm font-mono text-ink/50">Searching…</p>
+          <p className="py-16 text-center text-sm font-bold uppercase tracking-wider text-gray-400">Searching destinations...</p>
         ) : cities.length === 0 ? (
-          <p className="py-8 text-center text-sm font-mono text-ink/50">
-            No cities found — try a different search.
+          <p className="py-16 text-center text-sm font-semibold text-gray-500">
+            No cities match your search filter — try a different city name.
           </p>
         ) : (
           cities.map((city) => (

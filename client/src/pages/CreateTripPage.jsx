@@ -127,59 +127,62 @@ export default function CreateTripPage({ onNavigate, onTripCreated }) {
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-4 space-y-8">
+    <div className="w-full max-w-[1600px] mx-auto px-6 sm:px-12 py-6 space-y-8 font-sans">
       
       {/* Header Document Notice */}
-      <div className="bg-white border-2 border-[#1F2B2E] p-6 sm:p-8 shadow-[4px_4px_0px_0px_#1F2B2E] space-y-3 relative overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-dashed border-[#1F2B2E]/20 pb-3">
+      <div className="bg-white border border-gray-200 rounded-3xl p-8 sm:p-10 shadow-xl space-y-4 relative overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 pb-4">
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 bg-[#2C5F7C] text-[#F6F3EC] font-mono text-xs font-bold uppercase">
-              SCREEN 03 &bull; ROUTE INITIATION
+            <span className="px-3 py-1 bg-[#1E232A] text-[#F5B800] rounded-full text-xs font-extrabold uppercase tracking-widest shadow">
+              ROUTE INITIATION
             </span>
-            <span className="px-2.5 py-0.5 bg-[#F6F3EC] border border-[#1F2B2E] font-mono text-xs text-[#1F2B2E] font-bold uppercase">
+            <span className="px-3 py-1 bg-gray-100 border border-gray-300 text-[#1E232A] rounded-full text-xs font-extrabold uppercase">
               NEW ITINERARY DRAFT
             </span>
           </div>
 
           <button
             onClick={() => onNavigate('my-trips')}
-            className="font-mono text-xs text-[#2C5F7C] hover:text-[#1F2B2E] font-bold flex items-center gap-1 cursor-pointer"
+            className="text-xs text-gray-600 hover:text-[#1E232A] font-extrabold uppercase flex items-center gap-1.5 cursor-pointer bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full transition"
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
+            <ArrowLeft className="h-4 w-4" />
             Back to My Trips
           </button>
         </div>
 
-        <h1 className="text-3xl sm:text-4xl font-extrabold font-display tracking-tight text-[#1F2B2E]">
-          PLAN A NEW JOURNEY
-        </h1>
-        <p className="text-sm text-[#1F2B2E]/80 font-body max-w-2xl">
-          Initialize your itinerary route sheet with dates and notes. You will assemble individual ticket stubs, stops, and activities in the Itinerary Builder next.
-        </p>
+        <div>
+          <span className="font-script text-[#F5B800] text-4xl block">craft your itinerary</span>
+          <h1 className="text-4xl sm:text-5xl font-black font-serif tracking-wide text-[#1E232A]">
+            PLAN A NEW JOURNEY
+          </h1>
+          <p className="text-sm text-gray-600 font-sans font-medium max-w-2xl mt-2 leading-relaxed">
+            Initialize your itinerary route sheet with dates and notes. You will assemble individual ticket stubs, stops, and activities in the Itinerary Builder next.
+          </p>
+        </div>
       </div>
 
-      {/* Main Creation Form (Document Styled per frontend-design.md) */}
-      <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Main Creation Form */}
+      <form onSubmit={handleSubmit} className="space-y-8">
         
         {error && (
-          <div className="p-4 bg-[#B84A3E]/10 border-2 border-[#B84A3E] text-[#B84A3E] font-mono text-xs flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 shrink-0" />
+          <div className="p-5 bg-red-50 border border-red-200 text-red-700 font-sans text-xs font-bold rounded-2xl flex items-center gap-3 shadow">
+            <AlertCircle className="h-5 w-5 shrink-0 text-red-500" />
             <span>{error}</span>
           </div>
         )}
 
         {/* Section 1: Trip Identity */}
-        <div className="bg-white border-2 border-[#1F2B2E] p-6 sm:p-8 shadow-[4px_4px_0px_0px_#1F2B2E] space-y-6">
-          <div className="border-b border-[#1F2B2E]/20 pb-2">
-            <h2 className="text-xl font-bold font-display text-[#1F2B2E] uppercase">
+        <div className="bg-white border border-gray-200 rounded-3xl p-8 sm:p-10 shadow-xl space-y-6">
+          <div className="border-b border-gray-200 pb-3">
+            <h2 className="text-2xl font-serif font-black text-[#1E232A] uppercase tracking-wide">
               1. JOURNEY IDENTITY & DATES
             </h2>
           </div>
 
           {/* Title */}
-          <div className="space-y-1.5">
-            <label className="block font-mono text-xs font-bold text-[#1F2B2E] uppercase">
-              Route Name / Trip Title <span className="text-[#B84A3E]">*</span>
+          <div className="space-y-2">
+            <label className="block font-sans text-xs font-extrabold text-[#1E232A] uppercase tracking-wider">
+              Route Name / Trip Title <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -187,10 +190,10 @@ export default function CreateTripPage({ onNavigate, onTripCreated }) {
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="e.g. European Grand Journey — Paris & Rome"
-              className="w-full bg-[#F6F3EC] border-2 border-[#1F2B2E] px-4 py-3 font-mono text-sm text-[#1F2B2E] placeholder-[#1F2B2E]/40 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#2C5F7C] transition"
+              className="w-full bg-gray-50 border border-gray-300 rounded-full px-6 py-3.5 font-sans text-sm text-[#1E232A] placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#F5B800] transition shadow-inner"
             />
-            <div className="flex flex-wrap gap-2 pt-1 font-mono text-[11px] text-[#1F2B2E]/60">
-              <span>Suggestions:</span>
+            <div className="flex flex-wrap items-center gap-2 pt-1 font-sans text-xs text-gray-500">
+              <span className="font-bold">Suggestions:</span>
               {[
                 'Autumn in Kyoto & Tokyo',
                 'Mediterranean Coastal Escapade',
@@ -201,7 +204,7 @@ export default function CreateTripPage({ onNavigate, onTripCreated }) {
                   type="button"
                   key={s}
                   onClick={() => setFormData({ ...formData, name: s })}
-                  className="underline hover:text-[#2C5F7C] cursor-pointer"
+                  className="px-3 py-1 bg-gray-100 hover:bg-[#F5B800] hover:text-[#1E232A] rounded-full text-xs font-semibold transition cursor-pointer"
                 >
                   {s}
                 </button>
@@ -210,51 +213,47 @@ export default function CreateTripPage({ onNavigate, onTripCreated }) {
           </div>
 
           {/* Dates Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="block font-mono text-xs font-bold text-[#1F2B2E] uppercase">
-                Departure Date <span className="text-[#B84A3E]">*</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="block font-sans text-xs font-extrabold text-[#1E232A] uppercase tracking-wider">
+                Departure Date <span className="text-red-500">*</span>
               </label>
-              <div className="relative">
-                <input
-                  type="date"
-                  required
-                  value={formData.startDate}
-                  onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                  className="w-full bg-[#F6F3EC] border-2 border-[#1F2B2E] px-4 py-2.5 font-mono text-sm text-[#1F2B2E] focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#2C5F7C] transition"
-                />
-              </div>
+              <input
+                type="date"
+                required
+                value={formData.startDate}
+                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                className="w-full bg-gray-50 border border-gray-300 rounded-full px-6 py-3.5 font-sans text-sm text-[#1E232A] focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#F5B800] transition shadow-inner"
+              />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="block font-mono text-xs font-bold text-[#1F2B2E] uppercase">
-                Return Date <span className="text-[#B84A3E]">*</span>
+            <div className="space-y-2">
+              <label className="block font-sans text-xs font-extrabold text-[#1E232A] uppercase tracking-wider">
+                Return Date <span className="text-red-500">*</span>
               </label>
-              <div className="relative">
-                <input
-                  type="date"
-                  required
-                  value={formData.endDate}
-                  onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                  className="w-full bg-[#F6F3EC] border-2 border-[#1F2B2E] px-4 py-2.5 font-mono text-sm text-[#1F2B2E] focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#2C5F7C] transition"
-                />
-              </div>
+              <input
+                type="date"
+                required
+                value={formData.endDate}
+                onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                className="w-full bg-gray-50 border border-gray-300 rounded-full px-6 py-3.5 font-sans text-sm text-[#1E232A] focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#F5B800] transition shadow-inner"
+              />
             </div>
           </div>
 
           {/* Computed Duration Banner */}
           {duration && (
-            <div className="p-3 bg-[#F6F3EC] border border-[#1F2B2E] flex items-center justify-between font-mono text-xs">
-              <span className="text-[#1F2B2E]/80">Calculated Route Duration:</span>
-              <span className="font-bold text-[#2C5F7C]">
+            <div className="p-4 bg-gray-50 border border-gray-200 rounded-2xl flex items-center justify-between font-sans text-xs font-bold">
+              <span className="text-gray-600">Calculated Route Duration:</span>
+              <span className="px-3 py-1 bg-[#1E232A] text-[#F5B800] rounded-full uppercase tracking-wider shadow">
                 {duration.days} DAYS &bull; {duration.nights} NIGHTS
               </span>
             </div>
           )}
 
           {/* Description */}
-          <div className="space-y-1.5">
-            <label className="block font-mono text-xs font-bold text-[#1F2B2E] uppercase">
+          <div className="space-y-2">
+            <label className="block font-sans text-xs font-extrabold text-[#1E232A] uppercase tracking-wider">
               Trip Mission & Overview Notes (Optional)
             </label>
             <textarea
@@ -262,47 +261,47 @@ export default function CreateTripPage({ onNavigate, onTripCreated }) {
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="e.g. Cultural tour focusing on classical monuments, local gastronomy, and high-speed rail connections."
-              className="w-full bg-[#F6F3EC] border-2 border-[#1F2B2E] px-4 py-2.5 font-mono text-sm text-[#1F2B2E] placeholder-[#1F2B2E]/40 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#2C5F7C] transition"
+              className="w-full bg-gray-50 border border-gray-300 rounded-2xl p-5 font-sans text-sm text-[#1E232A] placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#F5B800] transition shadow-inner"
             />
           </div>
         </div>
 
         {/* Section 2: Cover Imagery Presets */}
-        <div className="bg-white border-2 border-[#1F2B2E] p-6 sm:p-8 shadow-[4px_4px_0px_0px_#1F2B2E] space-y-4">
-          <div className="border-b border-[#1F2B2E]/20 pb-2">
-            <h2 className="text-xl font-bold font-display text-[#1F2B2E] uppercase">
+        <div className="bg-white border border-gray-200 rounded-3xl p-8 sm:p-10 shadow-xl space-y-6">
+          <div className="border-b border-gray-200 pb-3">
+            <h2 className="text-2xl font-serif font-black text-[#1E232A] uppercase tracking-wide">
               2. COVER PHOTOGRAPH PRESET
             </h2>
-            <p className="text-xs text-[#1F2B2E]/70 font-body">
+            <p className="text-xs text-gray-500 font-sans font-medium mt-1">
               Select a destination cover theme or enter a direct image URL.
             </p>
           </div>
 
           {/* Preset Chips Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
             {COVER_PRESETS.map((preset) => {
               const isSelected = formData.coverPhoto === preset.url;
               return (
                 <div
                   key={preset.name}
                   onClick={() => setFormData({ ...formData, coverPhoto: preset.url })}
-                  className={`border-2 cursor-pointer transition relative group overflow-hidden ${
+                  className={`rounded-2xl border-2 cursor-pointer transition relative group overflow-hidden shadow-md ${
                     isSelected
-                      ? 'border-[#2C5F7C] shadow-[3px_3px_0px_0px_#2C5F7C]'
-                      : 'border-[#1F2B2E]/30 hover:border-[#1F2B2E]'
+                      ? 'border-[#F5B800] ring-4 ring-[#F5B800]/20'
+                      : 'border-gray-200 hover:border-gray-400'
                   }`}
                 >
                   <img
                     src={preset.url}
                     alt={preset.name}
-                    className="h-20 w-full object-cover"
+                    className="h-24 w-full object-cover group-hover:scale-105 transition duration-500"
                   />
-                  <div className="p-1.5 bg-white font-mono text-[10px] font-bold text-[#1F2B2E] truncate text-center">
+                  <div className="p-2 bg-white font-sans text-xs font-bold text-[#1E232A] truncate text-center">
                     {preset.name}
                   </div>
                   {isSelected && (
-                    <div className="absolute top-1 right-1 bg-[#2C5F7C] text-white p-0.5 rounded-full">
-                      <Check className="h-3 w-3" />
+                    <div className="absolute top-2 right-2 bg-[#F5B800] text-[#1E232A] p-1 rounded-full shadow">
+                      <Check className="h-3.5 w-3.5" />
                     </div>
                   )}
                 </div>
@@ -311,8 +310,8 @@ export default function CreateTripPage({ onNavigate, onTripCreated }) {
           </div>
 
           {/* Custom URL Input */}
-          <div className="space-y-1 pt-2">
-            <label className="block font-mono text-[11px] font-bold text-[#1F2B2E]/80 uppercase">
+          <div className="space-y-2 pt-2">
+            <label className="block font-sans text-xs font-extrabold text-gray-700 uppercase tracking-wider">
               Custom Image URL:
             </label>
             <input
@@ -320,34 +319,34 @@ export default function CreateTripPage({ onNavigate, onTripCreated }) {
               value={formData.coverPhoto}
               onChange={(e) => setFormData({ ...formData, coverPhoto: e.target.value })}
               placeholder="https://images.unsplash.com/..."
-              className="w-full bg-[#F6F3EC] border border-[#1F2B2E] px-3 py-2 font-mono text-xs text-[#1F2B2E] focus:outline-none focus:bg-white"
+              className="w-full bg-gray-50 border border-gray-300 rounded-full px-6 py-3 font-sans text-xs text-[#1E232A] focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#F5B800] transition"
             />
           </div>
         </div>
 
         {/* Section 3: Optional Initial Stop */}
-        <div className="bg-white border-2 border-[#1F2B2E] p-6 sm:p-8 shadow-[4px_4px_0px_0px_#1F2B2E] space-y-4">
-          <div className="border-b border-[#1F2B2E]/20 pb-2">
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-[#2C5F7C]" />
-              <h2 className="text-xl font-bold font-display text-[#1F2B2E] uppercase">
+        <div className="bg-white border border-gray-200 rounded-3xl p-8 sm:p-10 shadow-xl space-y-6">
+          <div className="border-b border-gray-200 pb-3">
+            <div className="flex items-center gap-3">
+              <MapPin className="h-6 w-6 text-[#F5B800]" />
+              <h2 className="text-2xl font-serif font-black text-[#1E232A] uppercase tracking-wide">
                 3. INITIAL DESTINATION STOP (OPTIONAL)
               </h2>
             </div>
-            <p className="text-xs text-[#1F2B2E]/70 font-body">
+            <p className="text-xs text-gray-500 font-sans font-medium mt-1">
               Optionally kickstart your route with your first destination city.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="space-y-1.5">
-              <label className="block font-mono text-xs font-bold text-[#1F2B2E] uppercase">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="space-y-2">
+              <label className="block font-sans text-xs font-extrabold text-[#1E232A] uppercase tracking-wider">
                 Starting City
               </label>
               <select
                 value={formData.initialCityId}
                 onChange={(e) => setFormData({ ...formData, initialCityId: e.target.value })}
-                className="w-full bg-[#F6F3EC] border-2 border-[#1F2B2E] px-3 py-2.5 font-mono text-xs text-[#1F2B2E] focus:outline-none focus:bg-white"
+                className="w-full bg-gray-50 border border-gray-300 rounded-full px-6 py-3.5 font-sans text-xs font-bold text-[#1E232A] focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#F5B800] transition shadow-inner"
               >
                 <option value="">-- Add later in Builder --</option>
                 {cities.map((c) => (
@@ -360,8 +359,8 @@ export default function CreateTripPage({ onNavigate, onTripCreated }) {
 
             {formData.initialCityId && (
               <>
-                <div className="space-y-1.5">
-                  <label className="block font-mono text-xs font-bold text-[#1F2B2E] uppercase">
+                <div className="space-y-2">
+                  <label className="block font-sans text-xs font-extrabold text-[#1E232A] uppercase tracking-wider">
                     Est. Stay / Day (₹)
                   </label>
                   <input
@@ -369,12 +368,12 @@ export default function CreateTripPage({ onNavigate, onTripCreated }) {
                     min="0"
                     value={formData.estStayCostPerDay}
                     onChange={(e) => setFormData({ ...formData, estStayCostPerDay: e.target.value })}
-                    className="w-full bg-[#F6F3EC] border-2 border-[#1F2B2E] px-3 py-2.5 font-mono text-xs text-[#1F2B2E] focus:outline-none focus:bg-white"
+                    className="w-full bg-gray-50 border border-gray-300 rounded-full px-6 py-3.5 font-sans text-xs font-bold text-[#1E232A] focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#F5B800] transition shadow-inner"
                   />
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="block font-mono text-xs font-bold text-[#1F2B2E] uppercase">
+                <div className="space-y-2">
+                  <label className="block font-sans text-xs font-extrabold text-[#1E232A] uppercase tracking-wider">
                     Est. Transport (₹)
                   </label>
                   <input
@@ -382,7 +381,7 @@ export default function CreateTripPage({ onNavigate, onTripCreated }) {
                     min="0"
                     value={formData.estTransportCost}
                     onChange={(e) => setFormData({ ...formData, estTransportCost: e.target.value })}
-                    className="w-full bg-[#F6F3EC] border-2 border-[#1F2B2E] px-3 py-2.5 font-mono text-xs text-[#1F2B2E] focus:outline-none focus:bg-white"
+                    className="w-full bg-gray-50 border border-gray-300 rounded-full px-6 py-3.5 font-sans text-xs font-bold text-[#1E232A] focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#F5B800] transition shadow-inner"
                   />
                 </div>
               </>
@@ -391,11 +390,11 @@ export default function CreateTripPage({ onNavigate, onTripCreated }) {
         </div>
 
         {/* Action Footer */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
           <button
             type="button"
             onClick={() => onNavigate('my-trips')}
-            className="w-full sm:w-auto px-6 py-3 bg-white hover:bg-[#F6F3EC] text-[#1F2B2E] border-2 border-[#1F2B2E] font-mono text-xs font-bold uppercase transition cursor-pointer"
+            className="w-full sm:w-auto px-8 py-3.5 bg-gray-100 hover:bg-gray-200 text-[#1E232A] border border-gray-300 font-sans text-xs font-extrabold uppercase transition rounded-full cursor-pointer"
           >
             Cancel
           </button>
@@ -403,7 +402,7 @@ export default function CreateTripPage({ onNavigate, onTripCreated }) {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full sm:w-auto px-8 py-3 bg-[#2C5F7C] hover:bg-[#1F2B2E] text-white border-2 border-[#1F2B2E] font-mono text-xs font-bold uppercase transition shadow-[4px_4px_0px_0px_#1F2B2E] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            className="w-full sm:w-auto px-10 py-4 bg-[#F5B800] hover:bg-[#E0A600] text-[#1E232A] font-sans text-xs font-extrabold uppercase transition rounded-full shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
           >
             {isSubmitting ? (
               <>

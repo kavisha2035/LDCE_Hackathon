@@ -3,70 +3,115 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --gold: #F5B800;
+    --gold-hover: #E5A800;
+    --gold-light: #FFF9E6;
+    --dark: #1E232A;
+    --dark-card: #252B33;
+    --cream: #FAF9F6;
+    --text-dark: #1E232A;
+    --text-muted: #6C757D;
+  }
+
   body {
-    background-color: #F6F3EC;
-    color: #1F2B2E;
-    font-family: 'Inter', sans-serif;
+    background-color: var(--cream);
+    color: var(--text-dark);
+    font-family: 'Montserrat', sans-serif;
     ::selection {
-      background-color: #2C5F7C;
-      color: #F6F3EC;
+      background-color: #F5B800;
+      color: #1E232A;
     }
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Barlow Condensed', sans-serif;
-    letter-spacing: -0.01em;
+    font-family: 'Playfair Display', Georgia, serif;
   }
 }
 
-/* Custom Inked Scrollbar */
+.font-serif {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+.font-script {
+  font-family: 'Satisfy', cursive;
+}
+
+.font-sans {
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* Wanderers Map Watermark Background */
+.bg-map-pattern {
+  background-image: radial-gradient(#F5B800 0.75px, transparent 0.75px), radial-gradient(#1E232A 0.75px, #FAF9F6 0.75px);
+  background-size: 30px 30px;
+  background-position: 0 0, 15px 15px;
+  opacity: 0.95;
+}
+
+.bg-map-dark {
+  background-color: #1A1D23;
+  background-image: radial-gradient(rgba(245, 184, 0, 0.15) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Custom Gold Button */
+.btn-gold {
+  background-color: #F5B800;
+  color: #1E232A;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-gold:hover {
+  background-color: #E0A600;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(245, 184, 0, 0.35);
+}
+
+/* Custom Wanderers Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #EAE6DB;
+  background: #F1EFEA;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1F2B2E;
-  border-radius: 2px;
+  background: #F5B800;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #2C5F7C;
+  background: #D9A000;
+}
+
+/* Video Container styling */
+.hero-video-container {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+}
+
+.hero-video-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(15, 20, 28, 0.45) 0%, rgba(15, 20, 28, 0.65) 100%);
 }
 
 /* Perforated edge line generator */
 .border-perforated {
-  border-right: 2px dashed #1F2B2E;
+  border-right: 2px dashed #F5B800;
 }
 
 .border-perforated-v {
-  border-bottom: 2px dashed #1F2B2E;
+  border-bottom: 2px dashed #F5B800;
 }
 
-/* Ticket Notch Effects */
-.ticket-stub {
-  position: relative;
-  background: #FFFFFF;
-  border: 1.5px solid #1F2B2E;
-  border-radius: 2px;
-}
-
-/* Timeline Left Rule */
-.timeline-rule {
-  position: relative;
-}
-
-.timeline-rule::before {
-  content: '';
-  position: absolute;
-  left: 20px;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background-color: #1F2B2E;
-  z-index: 0;
-}

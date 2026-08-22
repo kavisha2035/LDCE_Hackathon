@@ -58,309 +58,252 @@ export default function MyTripsPage({ onNavigate }) {
     try {
       const newStatus = !trip.isPublic;
       const res = await shareTrip(trip.id, newStatus);
-      setTrips(prev => prev.map(t => {
-        if (t.id === trip.id) {
-          return { ...t, isPublic: newStatus, shareSlug: res.shareSlug || t.shareSlug };
-        }
-        return t;
-      }));
+      setTrips(prev => prev.map(t => t.id === trip.id ? { ...t, isPublic: newStatus } : t));
     } catch (err) {
       console.error('Share toggle error:', err);
-      alert('Failed to update share setting');
+      alert(err.message || 'Failed to update share status');
     } finally {
       setSharingId(null);
     }
   };
 
-  // Filter trips
   const filteredTrips = trips.filter(trip => {
-    const matchesSearch = trip.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    const matchesSearch =
+      trip.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (trip.description && trip.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (trip.stops && trip.stops.some(s => s.city?.name?.toLowerCase().includes(searchQuery.toLowerCase())));
+      (trip.stops && trip.stops.some(s => s.cityName.toLowerCase().includes(searchQuery.toLowerCase())));
 
     if (!matchesSearch) return false;
+
     if (filterStatus === 'public') return trip.isPublic;
     if (filterStatus === 'private') return !trip.isPublic;
     return true;
   });
 
-  // Calculate summary metrics
   const totalTrips = trips.length;
-  const totalStops = trips.reduce((acc, t) => acc + (t.stops?.length || 0), 0);
+  const totalStops = trips.reduce((acc, t) => acc + (t.stops ? t.stops.length : 0), 0);
   const totalPublic = trips.filter(t => t.isPublic).length;
 
   return (
-    <div className="space-y-8 py-4">
-
-      {/* Header & Wallet Banner */}
-      <div className="bg-white border-2 border-[#1F2B2E] p-6 sm:p-8 shadow-[4px_4px_0px_0px_#1F2B2E] space-y-4 relative overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-dashed border-[#1F2B2E]/20 pb-3">
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 bg-[#2C5F7C] text-[#F6F3EC] font-mono text-xs font-bold uppercase">
-              SCREEN 04 &bull; TICKET WALLET
-            </span>
-            <span className="px-2.5 py-0.5 bg-[#F6F3EC] border border-[#1F2B2E] font-mono text-xs text-[#1F2B2E] font-bold uppercase">
-              {isAuthenticated ? `${user?.name?.toUpperCase()}'S ITINERARIES` : 'PASSENGER ITINERARIES'}
-            </span>
-          </div>
-
-          <button
-            onClick={() => onNavigate('create-trip')}
-            className="px-4 py-2 bg-[#2C5F7C] hover:bg-[#1F2B2E] text-white border-2 border-[#1F2B2E] font-mono text-xs font-bold uppercase transition shadow-[3px_3px_0px_0px_#1F2B2E] flex items-center gap-1.5 cursor-pointer"
-          >
-            <Plus className="h-4 w-4" />
-            + PLAN NEW TRIP
-          </button>
-        </div>
-
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div className="w-full px-6 sm:px-12 lg:px-16 py-6 space-y-8 font-sans bg-[#FAF9F6] text-[#1E232A]">
+      
+      {/* Header Section */}
+      <div className="bg-white border border-gray-200 p-8 shadow-xl relative overflow-hidden bg-map-pattern">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold font-display tracking-tight text-[#1F2B2E]">
-              MY ROUTE SHEETS & ITINERARIES
+            <span className="font-script text-[#F5B800] text-3xl block">my journeys</span>
+            <h1 className="text-4xl sm:text-5xl font-serif font-bold text-[#1E232A] uppercase tracking-wide">
+              MY TRIPS WALLET
             </h1>
-            <p className="text-sm text-[#1F2B2E]/80 font-body max-w-2xl mt-1">
-              Your collection of travel route documents, ticket stubs, budget calculations, and shareable boarding passes.
+            <p className="text-sm text-gray-600 font-sans max-w-2xl mt-1">
+              Your personal collection of travel itineraries, ticket stubs, budget ledgers, and shareable boarding passes.
             </p>
           </div>
 
           {/* Quick Stats */}
           <div className="flex items-center gap-3 shrink-0">
-            <div className="p-3 bg-[#F6F3EC] border border-[#1F2B2E] text-center font-mono min-w-[90px]">
-              <span className="text-[10px] text-[#1F2B2E]/60 uppercase block">TRIPS</span>
-              <strong className="text-lg text-[#2C5F7C]">{totalTrips}</strong>
+            <div className="p-4 bg-gray-50 border border-gray-200 text-center min-w-[100px]">
+              <span className="text-[10px] text-gray-500 uppercase font-bold block">TRIPS</span>
+              <strong className="text-2xl font-serif font-bold text-[#1E232A]">{totalTrips}</strong>
             </div>
-            <div className="p-3 bg-[#F6F3EC] border border-[#1F2B2E] text-center font-mono min-w-[90px]">
-              <span className="text-[10px] text-[#1F2B2E]/60 uppercase block">TOTAL STOPS</span>
-              <strong className="text-lg text-[#1F2B2E]">{totalStops}</strong>
+            <div className="p-4 bg-gray-50 border border-gray-200 text-center min-w-[100px]">
+              <span className="text-[10px] text-gray-500 uppercase font-bold block">TOTAL STOPS</span>
+              <strong className="text-2xl font-serif font-bold text-[#F5B800]">{totalStops}</strong>
             </div>
-            <div className="p-3 bg-[#F6F3EC] border border-[#1F2B2E] text-center font-mono min-w-[90px]">
-              <span className="text-[10px] text-[#1F2B2E]/60 uppercase block">PUBLIC</span>
-              <strong className="text-lg text-[#7FA69C]">{totalPublic}</strong>
+            <div className="p-4 bg-gray-50 border border-gray-200 text-center min-w-[100px]">
+              <span className="text-[10px] text-gray-500 uppercase font-bold block">PUBLIC PASSES</span>
+              <strong className="text-2xl font-serif font-bold text-[#1E232A]">{totalPublic}</strong>
             </div>
           </div>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#1F2B2E]/50" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search trips by name, city, or description..."
-            className="w-full bg-white border-2 border-[#1F2B2E] pl-10 pr-4 py-2.5 font-mono text-xs text-[#1F2B2E] placeholder-[#1F2B2E]/40 focus:outline-none focus:ring-2 focus:ring-[#2C5F7C]"
+            placeholder="Search trips by title, destination, or description..."
+            className="w-full bg-white border border-gray-300 pl-11 pr-4 py-3 text-xs text-[#1E232A] font-semibold focus:outline-none focus:ring-2 focus:ring-[#F5B800]"
           />
         </div>
 
-        <div className="flex items-center gap-2 font-mono text-xs">
+        <div className="flex items-center gap-2 font-sans text-xs">
           {['all', 'public', 'private'].map((status) => (
             <button
               key={status}
               onClick={() => setFilterStatus(status)}
-              className={`px-3 py-2 border border-[#1F2B2E] uppercase font-bold transition cursor-pointer ${
+              className={`px-4 py-3 uppercase font-bold tracking-wider transition cursor-pointer ${
                 filterStatus === status
-                  ? 'bg-[#1F2B2E] text-white shadow-[2px_2px_0px_0px_#2C5F7C]'
-                  : 'bg-white text-[#1F2B2E] hover:bg-[#F6F3EC]'
+                  ? 'bg-[#1E232A] text-[#F5B800]'
+                  : 'bg-white text-[#1E232A] border border-gray-300 hover:bg-gray-100'
               }`}
             >
               {status}
             </button>
           ))}
+
+          <button
+            onClick={() => onNavigate('create-trip')}
+            className="px-5 py-3 bg-[#F5B800] hover:bg-[#E0A600] text-[#1E232A] font-bold text-xs tracking-widest uppercase transition flex items-center gap-1.5 cursor-pointer shadow-md shrink-0"
+          >
+            <Plus className="h-4 w-4" />
+            PLAN NEW JOURNEY
+          </button>
         </div>
       </div>
 
-      {/* Trips Vertical List (Wallet Format per frontend-design.md) */}
+      {/* Content Display */}
       {loading ? (
-        <div className="bg-white border-2 border-[#1F2B2E] p-12 text-center font-mono text-sm space-y-2">
-          <Loader2 className="h-6 w-6 animate-spin mx-auto text-[#2C5F7C]" />
-          <span>Retrieving travel route documents...</span>
+        <div className="p-16 text-center bg-white border border-gray-200 space-y-4">
+          <Loader2 className="h-8 w-8 text-[#F5B800] animate-spin mx-auto" />
+          <p className="text-xs font-mono font-bold text-gray-500 uppercase">
+            SYNCING ITINERARIES WITH NEON POSTGRESQL...
+          </p>
+        </div>
+      ) : error ? (
+        <div className="p-6 bg-red-50 border border-red-200 text-red-700 text-xs font-sans flex items-center gap-3">
+          <AlertCircle className="h-5 w-5 shrink-0" />
+          <span>{error}</span>
         </div>
       ) : filteredTrips.length === 0 ? (
-        <div className="bg-white border-2 border-dashed border-[#1F2B2E] p-12 text-center space-y-4">
-          <div className="w-16 h-16 bg-[#F6F3EC] border-2 border-[#1F2B2E] rounded-full mx-auto flex items-center justify-center">
-            <Compass className="h-8 w-8 text-[#2C5F7C]" />
-          </div>
+        <div className="p-16 text-center bg-white border border-gray-200 space-y-4">
+          <Globe className="h-12 w-12 text-gray-300 mx-auto" />
           <div className="space-y-1">
-            <h3 className="text-2xl font-bold font-display text-[#1F2B2E]">
-              NO TRIPS YET — PLAN YOUR FIRST ROUTE.
-            </h3>
-            <p className="text-xs text-[#1F2B2E]/70 font-body max-w-md mx-auto">
-              You have no active itinerary sheets matching your criteria. Start drafting a multi-city journey now.
+            <h3 className="text-2xl font-serif font-bold text-[#1E232A]">NO ITINERARIES FOUND</h3>
+            <p className="text-xs text-gray-500 max-w-md mx-auto">
+              {searchQuery ? 'No trips matched your search filter.' : 'You have not created any trip route documents yet.'}
             </p>
           </div>
           <button
             onClick={() => onNavigate('create-trip')}
-            className="px-6 py-3 bg-[#2C5F7C] hover:bg-[#1F2B2E] text-white border-2 border-[#1F2B2E] font-mono text-xs font-bold uppercase transition shadow-[3px_3px_0px_0px_#1F2B2E] inline-flex items-center gap-2 cursor-pointer"
+            className="px-6 py-3 bg-[#F5B800] hover:bg-[#E0A600] text-[#1E232A] font-bold text-xs uppercase tracking-widest transition cursor-pointer"
           >
-            <Plus className="h-4 w-4" />
-            CREATE FIRST TRIP
+            CREATE YOUR FIRST TRIP NOW
           </button>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredTrips.map((trip) => {
-            const stopsCount = trip.stops?.length || 0;
-            const isDeleting = deletingId === trip.id;
-            const isSharing = sharingId === trip.id;
-
+            const stopsCount = trip.stops ? trip.stops.length : 0;
+            const coverImage = trip.coverPhoto || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=800&q=80';
+            
             return (
               <div
                 key={trip.id}
-                className="ticket-stub flex flex-col lg:flex-row overflow-hidden shadow-[4px_4px_0px_0px_#1F2B2E] border-2 border-[#1F2B2E] bg-white group hover:translate-y-[-2px] transition duration-150"
+                className="bg-[#1A1D23] text-white border border-gray-800 rounded-3xl shadow-xl hover:shadow-2xl overflow-hidden flex flex-col justify-between group transition duration-300 min-h-[480px]"
               >
-                {/* Left Ticket Stub (City & Departure Info) */}
-                <div className="bg-[#1F2B2E] text-[#F6F3EC] p-6 lg:w-72 shrink-0 flex flex-col justify-between relative border-b lg:border-b-0 lg:border-r-2 border-dashed border-[#F6F3EC]/40">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between text-xs font-mono text-[#7FA69C] uppercase tracking-wider">
-                      <span>VOYAGE SHEET</span>
-                      <span className="px-2 py-0.5 rounded text-[10px] bg-[#B8823A] text-white font-bold">
-                        {stopsCount} {stopsCount === 1 ? 'STOP' : 'STOPS'}
+                <div>
+                  {/* Card Cover Header */}
+                  <div className="relative h-64 sm:h-72 overflow-hidden">
+                    <img
+                      src={coverImage}
+                      alt={trip.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition duration-700"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+
+                    {/* Status Badges */}
+                    <div className="absolute top-4 left-4 flex items-center gap-2">
+                      <span className={`px-3 py-1 text-xs font-extrabold uppercase tracking-widest rounded-full shadow-md ${
+                        trip.isPublic ? 'bg-[#F5B800] text-[#1E232A]' : 'bg-[#1E232A] text-white'
+                      }`}>
+                        {trip.isPublic ? 'PUBLIC PASS' : 'PRIVATE'}
                       </span>
                     </div>
 
-                    <div>
-                      <h3 className="text-2xl font-bold font-display tracking-tight text-[#F6F3EC] leading-tight group-hover:text-[#7FA69C] transition">
+                    {/* Delete & Share Buttons */}
+                    <div className="absolute top-4 right-4 flex items-center gap-2">
+                      <button
+                        onClick={() => handleShareToggle(trip)}
+                        disabled={sharingId === trip.id}
+                        title={trip.isPublic ? "Make Private" : "Share Publicly"}
+                        className="p-2.5 bg-white/90 hover:bg-white text-[#1E232A] rounded-full shadow transition cursor-pointer"
+                      >
+                        {sharingId === trip.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : trip.isPublic ? (
+                          <Share2 className="h-4 w-4 text-[#F5B800]" />
+                        ) : (
+                          <Lock className="h-4 w-4" />
+                        )}
+                      </button>
+
+                      <button
+                        onClick={() => handleDelete(trip.id, trip.name)}
+                        disabled={deletingId === trip.id}
+                        title="Delete Trip"
+                        className="p-2.5 bg-white/90 hover:bg-red-500 hover:text-white text-gray-700 rounded-full shadow transition cursor-pointer"
+                      >
+                        {deletingId === trip.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Trip Title Overlay */}
+                    <div className="absolute bottom-4 left-5 right-5 text-white">
+                      <h3 className="text-2xl font-serif font-black tracking-wide leading-snug line-clamp-2">
                         {trip.name}
                       </h3>
-                      <div className="text-xs font-mono text-[#F6F3EC]/80 mt-1">
-                        🗓 {trip.start_date || trip.startDate ? new Date(trip.start_date || trip.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'OCT 12, 2026'} &bull; {trip.end_date || trip.endDate ? new Date(trip.end_date || trip.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'OCT 21, 2026'}
+                      <div className="flex items-center gap-2 text-xs text-[#F5B800] font-sans font-bold mt-1">
+                        <Calendar className="h-3.5 w-3.5" />
+                        <span>{trip.startDate} — {trip.endDate}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-6 pt-4 border-t border-[#F6F3EC]/20 flex items-center justify-between font-mono text-xs">
-                    <button
-                      onClick={() => handleShareToggle(trip)}
-                      disabled={isSharing}
-                      className={`px-2 py-0.5 text-[10px] font-bold border uppercase flex items-center gap-1 transition cursor-pointer ${
-                        trip.isPublic
-                          ? 'bg-[#7FA69C] text-[#1F2B2E] border-[#7FA69C]'
-                          : 'bg-transparent text-[#F6F3EC]/80 border-[#F6F3EC]/40 hover:text-white'
-                      }`}
-                    >
-                      {trip.isPublic ? <Unlock className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
-                      {trip.isPublic ? 'PUBLIC PASS' : 'PRIVATE'}
-                    </button>
-
-                    <span className="text-[#B8823A] font-bold text-sm">
-                      ACTIVE ROUTE
-                    </span>
-                  </div>
-
-                  {/* Decorative Ticket Notches */}
-                  <div className="hidden lg:block absolute -top-2.5 -right-2.5 w-5 h-5 bg-[#F6F3EC] rounded-full border border-[#1F2B2E]"></div>
-                  <div className="hidden lg:block absolute -bottom-2.5 -right-2.5 w-5 h-5 bg-[#F6F3EC] rounded-full border border-[#1F2B2E]"></div>
-                </div>
-
-                {/* Right Ticket Body */}
-                <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
-                  <div className="space-y-3">
-                    
-                    {/* Header Row on Right */}
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <p className="text-xs sm:text-sm text-[#1F2B2E]/80 font-body leading-relaxed max-w-xl">
-                        {trip.description || 'Custom multi-city journey with scheduled destination stops, curated activities, and budget calculation.'}
+                  {/* Body Details */}
+                  <div className="p-6 space-y-4 font-sans">
+                    {trip.description && (
+                      <p className="text-xs text-gray-600 leading-relaxed font-medium line-clamp-3">
+                        {trip.description}
                       </p>
+                    )}
 
-                      {trip.coverPhoto && (
-                        <img
-                          src={trip.coverPhoto}
-                          alt={trip.name}
-                          className="h-16 w-24 object-cover border border-[#1F2B2E] rounded-sm hidden sm:block shrink-0 shadow-sm"
-                        />
-                      )}
-                    </div>
-
-                    {/* Stops Ordered Timeline Chips */}
-                    <div className="space-y-1.5 pt-1">
-                      <span className="font-mono text-[10px] text-[#1F2B2E]/60 uppercase font-bold block">
-                        Destinations & Stops ({stopsCount}):
+                    <div className="space-y-1.5 pt-2 border-t border-gray-100">
+                      <span className="text-[10px] text-gray-400 uppercase font-extrabold tracking-widest block">
+                        STOPS ROUTE:
                       </span>
-
                       {stopsCount > 0 ? (
-                        <div className="flex flex-wrap items-center gap-2 font-mono text-xs">
+                        <div className="flex flex-wrap gap-1.5">
                           {trip.stops.map((stop, idx) => (
-                            <div key={stop.id || idx} className="flex items-center gap-1.5">
-                              <span className="px-2.5 py-1 bg-[#F6F3EC] border border-[#1F2B2E] text-[#1F2B2E] font-bold flex items-center gap-1">
-                                <MapPin className="h-3 w-3 text-[#2C5F7C]" />
-                                {stop.city?.name || stop.cityName || `Stop ${idx + 1}`}
-                              </span>
-                              {idx < trip.stops.length - 1 && (
-                                <span className="text-[#1F2B2E]/40 font-bold">➔</span>
-                              )}
-                            </div>
+                            <span
+                              key={stop.id || idx}
+                              className="px-3 py-1 bg-gray-100 text-gray-800 font-sans text-xs font-bold rounded-full border border-gray-200"
+                            >
+                              📍 {stop.cityName}
+                            </span>
                           ))}
                         </div>
                       ) : (
-                        <span className="font-mono text-xs text-[#1F2B2E]/50 italic">
-                          No stops added yet. Click "Edit in Builder" to add cities.
-                        </span>
+                        <span className="text-xs text-gray-400 font-semibold italic">No stops added yet</span>
                       )}
                     </div>
-
                   </div>
+                </div>
 
-                  {/* Action Buttons Toolbar */}
-                  <div className="pt-4 border-t border-[#1F2B2E]/15 flex flex-wrap items-center justify-between gap-3">
-                    
-                    {/* Left Quick Navigation Actions */}
-                    <div className="flex flex-wrap items-center gap-2 font-mono text-xs">
-                      <button
-                        onClick={() => onNavigate('itinerary', { tripId: trip.id })}
-                        className="px-3 py-1.5 bg-[#1F2B2E] hover:bg-[#2C5F7C] text-white border border-[#1F2B2E] font-bold uppercase transition flex items-center gap-1 cursor-pointer"
-                      >
-                        <Eye className="h-3.5 w-3.5" />
-                        View Itinerary
-                      </button>
-
-                      <button
-                        onClick={() => onNavigate('builder', { tripId: trip.id })}
-                        className="px-3 py-1.5 bg-[#F6F3EC] hover:bg-[#2C5F7C] hover:text-white border border-[#1F2B2E] font-bold uppercase transition flex items-center gap-1 cursor-pointer"
-                      >
-                        <Edit3 className="h-3.5 w-3.5 text-[#2C5F7C]" />
-                        Builder
-                      </button>
-
-                      <button
-                        onClick={() => onNavigate('budget', { tripId: trip.id })}
-                        className="px-3 py-1.5 bg-[#F6F3EC] hover:bg-[#B8823A] hover:text-white border border-[#1F2B2E] font-bold uppercase transition flex items-center gap-1 cursor-pointer"
-                      >
-                        <DollarSign className="h-3.5 w-3.5 text-[#B8823A]" />
-                        Budget
-                      </button>
-
-                      <button
-                        onClick={() => onNavigate('calendar', { tripId: trip.id })}
-                        className="px-3 py-1.5 bg-[#F6F3EC] hover:bg-[#2C5F7C] hover:text-white border border-[#1F2B2E] font-bold uppercase transition flex items-center gap-1 cursor-pointer"
-                      >
-                        <Calendar className="h-3.5 w-3.5 text-[#2C5F7C]" />
-                        Calendar
-                      </button>
-
-                      {trip.isPublic && (
-                        <button
-                          onClick={() => onNavigate('share', { slug: trip.shareSlug })}
-                          className="px-3 py-1.5 bg-[#7FA69C]/20 hover:bg-[#7FA69C] hover:text-white text-[#1F2B2E] border border-[#7FA69C] font-bold uppercase transition flex items-center gap-1 cursor-pointer"
-                        >
-                          <Globe className="h-3.5 w-3.5 text-[#7FA69C]" />
-                          Share Link
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Delete Trigger */}
-                    <button
-                      onClick={() => handleDelete(trip.id, trip.name)}
-                      disabled={isDeleting}
-                      title="Delete Trip"
-                      className="p-1.5 bg-white border border-[#1F2B2E] text-[#1F2B2E] hover:bg-[#B84A3E] hover:text-white transition cursor-pointer"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-
-                  </div>
+                {/* Card Action Footer */}
+                <div className="p-6 pt-0 flex items-center gap-2">
+                  <button
+                    onClick={() => onNavigate('builder', { tripId: trip.id })}
+                    className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-[#1E232A] font-extrabold text-xs uppercase tracking-wider transition rounded-full flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Edit3 className="h-3.5 w-3.5" />
+                    BUILDER
+                  </button>
+                  <button
+                    onClick={() => onNavigate('itinerary', { tripId: trip.id })}
+                    className="flex-1 py-2.5 bg-[#F5B800] hover:bg-[#E0A600] text-[#1E232A] font-extrabold text-xs uppercase tracking-wider transition rounded-full shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                    VIEW
+                  </button>
                 </div>
               </div>
             );

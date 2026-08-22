@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   Compass, User as UserIcon, LogOut, Search, MapPin,
   Layers, Calendar, DollarSign, Globe, Shield, Plus,
-  Menu, X, Sparkles, ChevronDown
+  Menu, X, Sparkles, ChevronDown, Phone, Instagram, Facebook, Twitter
 } from 'lucide-react';
 
 export default function Navbar({ currentTab, onNavigate }) {
@@ -21,261 +21,280 @@ export default function Navbar({ currentTab, onNavigate }) {
 
   const navItemClass = (tabName) => {
     const isActive = currentTab === tabName;
-    return `px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold text-xs font-mono transition cursor-pointer flex items-center gap-1.5 ${
+    return `px-4 py-2 uppercase font-extrabold text-xs sm:text-sm tracking-wider transition cursor-pointer flex items-center gap-1.5 ${
       isActive
-        ? 'bg-[#1F2B2E] text-[#F6F3EC] shadow-[2px_2px_0px_0px_#2C5F7C]'
-        : 'bg-white text-[#1F2B2E] hover:bg-[#F6F3EC]'
+        ? 'text-[#F5B800] border-b-2 border-[#F5B800]'
+        : 'text-[#1E232A] hover:text-[#F5B800]'
     }`;
   };
 
   const isTripHubActive = ['builder', 'itinerary', 'budget', 'calendar', 'share'].includes(currentTab);
 
   return (
-    <header className="bg-white border-b-2 border-[#1F2B2E] sticky top-0 z-50 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        
-        {/* Brand Logo */}
-        <div className="flex items-center gap-4 lg:gap-6">
-          <div
-            onClick={() => {
-              onNavigate('home');
-              setMobileMenuOpen(false);
-            }}
-            className="flex items-center gap-3 cursor-pointer group"
-          >
-            <div className="h-10 w-10 bg-[#1F2B2E] text-[#F6F3EC] flex items-center justify-center font-mono font-extrabold text-xl rounded-sm shadow-[2px_2px_0px_0px_#2C5F7C] group-hover:bg-[#2C5F7C] transition">
-              GT
-            </div>
-            <div>
-              <span className="font-extrabold text-2xl font-display tracking-tight text-[#1F2B2E] block leading-none">
-                GLOBETROTTER
-              </span>
-              <span className="text-[10px] font-mono text-[#2C5F7C] uppercase tracking-widest block font-bold">
-                ITINERARY-AS-DOCUMENT
-              </span>
-            </div>
+    <header className="bg-white sticky top-0 z-50 shadow-md w-full">
+      
+      {/* Top Contact & Announcement Bar */}
+      <div className="bg-[#1A1D23] text-white text-xs sm:text-sm py-2.5 px-6 sm:px-12 flex justify-between items-center border-b border-white/10 font-sans">
+        <div className="flex items-center gap-6">
+          <div className="hidden sm:flex items-center gap-4 text-gray-300">
+            <span className="flex items-center gap-1.5 hover:text-[#F5B800] transition cursor-pointer">
+              <Instagram className="h-4 w-4" />
+            </span>
+            <span className="flex items-center gap-1.5 hover:text-[#F5B800] transition cursor-pointer">
+              <Facebook className="h-4 w-4" />
+            </span>
+            <span className="flex items-center gap-1.5 hover:text-[#F5B800] transition cursor-pointer">
+              <Twitter className="h-4 w-4" />
+            </span>
           </div>
-
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-2">
-            <button
-              onClick={() => onNavigate('home')}
-              className={navItemClass('home')}
-            >
-              DASHBOARD
-            </button>
-
-            <button
-              onClick={() => onNavigate('my-trips')}
-              className={navItemClass('my-trips')}
-            >
-              <Layers className="h-3.5 w-3.5 text-[#2C5F7C]" />
-              MY TRIPS
-            </button>
-
-            <button
-              onClick={() => onNavigate('cities')}
-              className={navItemClass('cities')}
-            >
-              <MapPin className="h-3.5 w-3.5 text-[#2C5F7C]" />
-              EXPLORE CITIES
-            </button>
-
-            <button
-              onClick={() => onNavigate('activities')}
-              className={navItemClass('activities')}
-            >
-              <Search className="h-3.5 w-3.5 text-[#B8823A]" />
-              ACTIVITIES
-            </button>
-
-            {/* Trip Hub Dropdown / Direct Link */}
-            <div className="relative">
-              <button
-                onClick={() => setTripDropdownOpen(!tripDropdownOpen)}
-                className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold text-xs font-mono transition cursor-pointer flex items-center gap-1.5 ${
-                  isTripHubActive
-                    ? 'bg-[#1F2B2E] text-[#F6F3EC] shadow-[2px_2px_0px_0px_#2C5F7C]'
-                    : 'bg-white text-[#1F2B2E] hover:bg-[#F6F3EC]'
-                }`}
-              >
-                <Layers className="h-3.5 w-3.5 text-[#7FA69C]" />
-                TRIP HUB
-                <ChevronDown className={`h-3 w-3 transition-transform ${tripDropdownOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {tripDropdownOpen && (
-                <div
-                  className="absolute left-0 mt-1 w-52 bg-white border-2 border-[#1F2B2E] shadow-[4px_4px_0px_0px_#1F2B2E] py-1 z-50"
-                  onMouseLeave={() => setTripDropdownOpen(false)}
-                >
-                  <button
-                    onClick={() => {
-                      onNavigate('my-trips');
-                      setTripDropdownOpen(false);
-                    }}
-                    className="w-full text-left px-3 py-2 text-xs font-mono font-bold text-[#1F2B2E] hover:bg-[#F6F3EC] flex items-center gap-2 border-b border-[#1F2B2E]/10 cursor-pointer"
-                  >
-                    <Layers className="h-3.5 w-3.5 text-[#2C5F7C]" />
-                    My Trips Wallet (Scr 4)
-                  </button>
-                  <button
-                    onClick={() => {
-                      onNavigate('create-trip');
-                      setTripDropdownOpen(false);
-                    }}
-                    className="w-full text-left px-3 py-2 text-xs font-mono font-bold text-[#1F2B2E] hover:bg-[#F6F3EC] flex items-center gap-2 border-b border-[#1F2B2E]/10 cursor-pointer"
-                  >
-                    <Plus className="h-3.5 w-3.5 text-[#B8823A]" />
-                    Plan New Trip (Scr 3)
-                  </button>
-                  <button
-                    onClick={() => {
-                      onNavigate('itinerary');
-                      setTripDropdownOpen(false);
-                    }}
-                    className="w-full text-left px-3 py-2 text-xs font-mono font-bold text-[#1F2B2E] hover:bg-[#F6F3EC] flex items-center gap-2 border-b border-[#1F2B2E]/10 cursor-pointer"
-                  >
-                    <Layers className="h-3.5 w-3.5 text-[#2C5F7C]" />
-                    Itinerary View (Scr 6)
-                  </button>
-                  <button
-                    onClick={() => {
-                      onNavigate('builder');
-                      setTripDropdownOpen(false);
-                    }}
-                    className="w-full text-left px-3 py-2 text-xs font-mono font-bold text-[#1F2B2E] hover:bg-[#F6F3EC] flex items-center gap-2 border-b border-[#1F2B2E]/10 cursor-pointer"
-                  >
-                    <Plus className="h-3.5 w-3.5 text-[#B8823A]" />
-                    Itinerary Builder (Scr 5)
-                  </button>
-                  <button
-                    onClick={() => {
-                      onNavigate('budget');
-                      setTripDropdownOpen(false);
-                    }}
-                    className="w-full text-left px-3 py-2 text-xs font-mono font-bold text-[#1F2B2E] hover:bg-[#F6F3EC] flex items-center gap-2 border-b border-[#1F2B2E]/10 cursor-pointer"
-                  >
-                    <DollarSign className="h-3.5 w-3.5 text-[#B8823A]" />
-                    Budget & Ledger (Scr 9)
-                  </button>
-                  <button
-                    onClick={() => {
-                      onNavigate('calendar');
-                      setTripDropdownOpen(false);
-                    }}
-                    className="w-full text-left px-3 py-2 text-xs font-mono font-bold text-[#1F2B2E] hover:bg-[#F6F3EC] flex items-center gap-2 border-b border-[#1F2B2E]/10 cursor-pointer"
-                  >
-                    <Calendar className="h-3.5 w-3.5 text-[#2C5F7C]" />
-                    Calendar & Timeline (Scr 10)
-                  </button>
-                  <button
-                    onClick={() => {
-                      onNavigate('share');
-                      setTripDropdownOpen(false);
-                    }}
-                    className="w-full text-left px-3 py-2 text-xs font-mono font-bold text-[#1F2B2E] hover:bg-[#F6F3EC] flex items-center gap-2 cursor-pointer"
-                  >
-                    <Globe className="h-3.5 w-3.5 text-[#7FA69C]" />
-                    Public Pass (Scr 11)
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Admin link (admin-only) */}
-            {isAdmin && (
-              <button
-                onClick={() => onNavigate('admin')}
-                className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold text-xs font-mono transition cursor-pointer flex items-center gap-1.5 ${
-                  currentTab === 'admin'
-                    ? 'bg-[#B84A3E] text-white border-[#B84A3E] shadow-[2px_2px_0px_0px_#1F2B2E]'
-                    : 'bg-white text-[#B84A3E] hover:bg-[#F6F3EC]'
-                }`}
-              >
-                <Shield className="h-3.5 w-3.5" />
-                ADMIN
-              </button>
-            )}
-          </nav>
+          <span className="flex items-center gap-2 text-white font-semibold">
+            <Phone className="h-4 w-4 text-[#F5B800]" />
+            1-800-GLOBE-TRIP (456-2387)
+          </span>
         </div>
 
-        {/* User Actions & CTAs */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          
-          {/* Quick Plan CTA */}
-          <button
-            onClick={() => onNavigate('create-trip')}
-            className="hidden sm:flex px-3 py-1.5 bg-[#B8823A] hover:bg-[#1F2B2E] text-white border-2 border-[#1F2B2E] font-mono text-xs font-bold uppercase transition shadow-[2px_2px_0px_0px_#1F2B2E] items-center gap-1.5 cursor-pointer"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            PLAN TRIP
-          </button>
-
+        <div className="flex items-center gap-4 font-bold tracking-wider uppercase">
           {isAuthenticated ? (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => onNavigate('profile')}
-                className={`flex items-center gap-2 px-2.5 py-1.5 bg-white border border-[#1F2B2E] font-mono text-xs font-bold transition cursor-pointer ${
-                  currentTab === 'profile' ? 'bg-[#1F2B2E] text-[#F6F3EC]' : 'hover:bg-[#F6F3EC] text-[#1F2B2E]'
-                }`}
-              >
-                {user.avatar ? (
-                  <img
-                    src={user.avatar}
-                    alt={user.name}
-                    className="h-5 w-5 object-cover border border-[#1F2B2E]"
-                  />
-                ) : (
-                  <div className="h-5 w-5 bg-[#1F2B2E] text-[#F6F3EC] flex items-center justify-center font-mono font-bold text-[10px] border border-[#1F2B2E]">
-                    {initialLetter}
-                  </div>
-                )}
-                <span className="uppercase hidden md:inline truncate max-w-[100px]">{user.name}</span>
-              </button>
-
+            <div className="flex items-center gap-4">
+              <span className="text-[#F5B800] font-extrabold">Welcome, {user.name}</span>
               <button
                 onClick={handleLogout}
-                title="Sign Out"
-                className="p-1.5 bg-white border border-[#1F2B2E] text-[#1F2B2E] hover:bg-[#B84A3E] hover:text-white transition cursor-pointer"
+                className="text-white hover:text-[#F5B800] transition flex items-center gap-1.5 cursor-pointer bg-white/10 px-3 py-1 rounded"
               >
-                <LogOut className="h-4 w-4" />
+                <LogOut className="h-4 w-4" /> SIGN OUT
               </button>
             </div>
           ) : (
             <button
               onClick={() => onNavigate('auth')}
-              className="px-3 py-1.5 bg-[#2C5F7C] hover:bg-[#1F2B2E] text-[#F6F3EC] border border-[#1F2B2E] font-mono text-xs font-bold uppercase transition shadow-[2px_2px_0px_0px_#1F2B2E] flex items-center gap-1.5 cursor-pointer"
+              className="text-[#F5B800] hover:text-white bg-[#F5B800]/10 hover:bg-[#F5B800]/20 px-4 py-1.5 rounded-full transition cursor-pointer font-extrabold text-xs sm:text-sm tracking-widest border border-[#F5B800]/30"
             >
-              <UserIcon className="h-3.5 w-3.5" />
-              <span>SIGN IN</span>
+              LOGIN / REGISTER
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Main Wanderers Brand Header - Full Edge-to-Edge Width */}
+      <div className="w-full px-6 sm:px-12 h-24 flex items-center justify-between border-b border-gray-100">
+        
+        {/* Brand Logo with Yellow Script Accent */}
+        <div
+          onClick={() => {
+            onNavigate('home');
+            setMobileMenuOpen(false);
+          }}
+          className="flex items-center gap-2 cursor-pointer group"
+        >
+          <div className="relative">
+            <span className="font-script text-[#F5B800] text-4xl sm:text-5xl block leading-none transform -rotate-6 transition group-hover:rotate-0">
+              GlobeTrotter
+            </span>
+            <span className="font-serif font-black text-2xl sm:text-3xl text-[#1E232A] tracking-wider block uppercase -mt-2">
+              ADVENTURES
+            </span>
+          </div>
+        </div>
+
+        {/* Desktop Navigation Links */}
+        <nav className="hidden lg:flex items-center gap-2">
+          <button
+            onClick={() => onNavigate('home')}
+            className={navItemClass('home')}
+          >
+            HOME
+          </button>
+
+          <button
+            onClick={() => onNavigate('my-trips')}
+            className={navItemClass('my-trips')}
+          >
+            MY TRIPS
+          </button>
+
+          <button
+            onClick={() => onNavigate('cities')}
+            className={navItemClass('cities')}
+          >
+            DESTINATIONS
+          </button>
+
+          <button
+            onClick={() => onNavigate('activities')}
+            className={navItemClass('activities')}
+          >
+            TOURS & ACTIVITIES
+          </button>
+
+          {/* Trip Hub Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setTripDropdownOpen(!tripDropdownOpen)}
+              className={`px-4 py-2 uppercase font-extrabold text-xs sm:text-sm tracking-wider transition cursor-pointer flex items-center gap-1 ${
+                isTripHubActive
+                  ? 'text-[#F5B800] border-b-2 border-[#F5B800]'
+                  : 'text-[#1E232A] hover:text-[#F5B800]'
+              }`}
+            >
+              TRIP HUB
+              <ChevronDown className={`h-4 w-4 transition-transform ${tripDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {tripDropdownOpen && (
+              <div
+                className="absolute left-0 mt-2 w-64 bg-[#1A1D23] text-white border-t-4 border-[#F5B800] shadow-2xl py-3 z-50 font-sans"
+                onMouseLeave={() => setTripDropdownOpen(false)}
+              >
+                <button
+                  onClick={() => {
+                    onNavigate('my-trips');
+                    setTripDropdownOpen(false);
+                  }}
+                  className="w-full text-left px-5 py-2.5 text-xs sm:text-sm font-semibold hover:bg-white/10 hover:text-[#F5B800] flex items-center gap-2 cursor-pointer border-b border-white/5"
+                >
+                  <Layers className="h-4 w-4 text-[#F5B800]" />
+                  My Trips Wallet
+                </button>
+                <button
+                  onClick={() => {
+                    onNavigate('create-trip');
+                    setTripDropdownOpen(false);
+                  }}
+                  className="w-full text-left px-5 py-2.5 text-xs sm:text-sm font-semibold hover:bg-white/10 hover:text-[#F5B800] flex items-center gap-2 cursor-pointer border-b border-white/5"
+                >
+                  <Plus className="h-4 w-4 text-[#F5B800]" />
+                  Plan New Journey
+                </button>
+                <button
+                  onClick={() => {
+                    onNavigate('itinerary');
+                    setTripDropdownOpen(false);
+                  }}
+                  className="w-full text-left px-5 py-2.5 text-xs sm:text-sm font-semibold hover:bg-white/10 hover:text-[#F5B800] flex items-center gap-2 cursor-pointer border-b border-white/5"
+                >
+                  <Globe className="h-4 w-4 text-[#F5B800]" />
+                  Interactive Itinerary View
+                </button>
+                <button
+                  onClick={() => {
+                    onNavigate('builder');
+                    setTripDropdownOpen(false);
+                  }}
+                  className="w-full text-left px-5 py-2.5 text-xs sm:text-sm font-semibold hover:bg-white/10 hover:text-[#F5B800] flex items-center gap-2 cursor-pointer border-b border-white/5"
+                >
+                  <Compass className="h-4 w-4 text-[#F5B800]" />
+                  Itinerary Builder
+                </button>
+                <button
+                  onClick={() => {
+                    onNavigate('budget');
+                    setTripDropdownOpen(false);
+                  }}
+                  className="w-full text-left px-5 py-2.5 text-xs sm:text-sm font-semibold hover:bg-white/10 hover:text-[#F5B800] flex items-center gap-2 cursor-pointer border-b border-white/5"
+                >
+                  <DollarSign className="h-4 w-4 text-[#F5B800]" />
+                  Trip Budget & Ledger
+                </button>
+                <button
+                  onClick={() => {
+                    onNavigate('calendar');
+                    setTripDropdownOpen(false);
+                  }}
+                  className="w-full text-left px-5 py-2.5 text-xs sm:text-sm font-semibold hover:bg-white/10 hover:text-[#F5B800] flex items-center gap-2 cursor-pointer border-b border-white/5"
+                >
+                  <Calendar className="h-4 w-4 text-[#F5B800]" />
+                  Timeline & Calendar
+                </button>
+                <button
+                  onClick={() => {
+                    onNavigate('share');
+                    setTripDropdownOpen(false);
+                  }}
+                  className="w-full text-left px-5 py-2.5 text-xs sm:text-sm font-semibold hover:bg-white/10 hover:text-[#F5B800] flex items-center gap-2 cursor-pointer"
+                >
+                  <Globe className="h-4 w-4 text-[#F5B800]" />
+                  Public Share Pass
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Admin link */}
+          {isAdmin && (
+            <button
+              onClick={() => onNavigate('admin')}
+              className={`px-4 py-2 font-bold text-xs sm:text-sm tracking-wider transition cursor-pointer flex items-center gap-1 text-red-500 hover:text-red-600 ${
+                currentTab === 'admin' ? 'border-b-2 border-red-500' : ''
+              }`}
+            >
+              <Shield className="h-4 w-4" />
+              ADMIN
+            </button>
+          )}
+        </nav>
+
+        {/* User Actions & Wanderers Gold CTA */}
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => onNavigate('create-trip')}
+            className="px-6 py-3 bg-[#F5B800] hover:bg-[#E0A600] text-[#1E232A] font-extrabold text-xs sm:text-sm tracking-widest uppercase transition shadow-md hover:shadow-lg flex items-center gap-2 cursor-pointer rounded-full"
+          >
+            <Plus className="h-4 w-4" />
+            PLAN NOW
+          </button>
+
+          {isAuthenticated ? (
+            <button
+              onClick={() => onNavigate('profile')}
+              className="flex items-center gap-2 px-3.5 py-2 bg-[#F9F8F6] border border-gray-300 hover:border-[#F5B800] transition cursor-pointer rounded-full"
+            >
+              {user.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt={user.name}
+                  className="h-7 w-7 rounded-full object-cover border border-[#F5B800]"
+                />
+              ) : (
+                <div className="h-7 w-7 bg-[#F5B800] text-[#1E232A] rounded-full flex items-center justify-center font-bold text-xs">
+                  {initialLetter}
+                </div>
+              )}
+              <span className="text-xs sm:text-sm font-bold uppercase hidden xl:inline text-[#1E232A] truncate max-w-[100px]">{user.name}</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => onNavigate('auth')}
+              className="hidden lg:flex p-2.5 text-[#1E232A] hover:text-[#F5B800] transition cursor-pointer"
+              title="Account Login"
+            >
+              <UserIcon className="h-6 w-6" />
             </button>
           )}
 
           {/* Mobile Menu Toggle Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 bg-white border border-[#1F2B2E] text-[#1F2B2E] cursor-pointer"
+            className="lg:hidden p-2 text-[#1E232A] cursor-pointer"
             aria-label="Toggle Navigation"
           >
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {mobileMenuOpen ? <X className="h-7 w-7 text-[#F5B800]" /> : <Menu className="h-7 w-7" />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Drawer Menu */}
+      {/* Mobile Menu Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-t-2 border-[#1F2B2E] p-4 space-y-2 font-mono text-xs shadow-lg">
+        <div className="lg:hidden bg-[#1A1D23] text-white border-t border-white/10 p-6 space-y-4 font-sans text-sm">
           <button
             onClick={() => {
               onNavigate('home');
               setMobileMenuOpen(false);
             }}
-            className={`w-full text-left px-3 py-2 border border-[#1F2B2E] font-bold uppercase ${
-              currentTab === 'home' ? 'bg-[#1F2B2E] text-white' : 'bg-white text-[#1F2B2E]'
+            className={`w-full text-left px-4 py-2.5 font-bold uppercase tracking-wider ${
+              currentTab === 'home' ? 'text-[#F5B800] bg-white/5' : 'text-white'
             }`}
           >
-            Dashboard
+            Home
           </button>
 
           <button
@@ -283,25 +302,11 @@ export default function Navbar({ currentTab, onNavigate }) {
               onNavigate('my-trips');
               setMobileMenuOpen(false);
             }}
-            className={`w-full text-left px-3 py-2 border border-[#1F2B2E] font-bold uppercase flex items-center gap-2 ${
-              currentTab === 'my-trips' ? 'bg-[#1F2B2E] text-white' : 'bg-white text-[#1F2B2E]'
+            className={`w-full text-left px-4 py-2.5 font-bold uppercase tracking-wider ${
+              currentTab === 'my-trips' ? 'text-[#F5B800] bg-white/5' : 'text-white'
             }`}
           >
-            <Layers className="h-4 w-4 text-[#2C5F7C]" />
-            My Trips Wallet (Scr 4)
-          </button>
-
-          <button
-            onClick={() => {
-              onNavigate('create-trip');
-              setMobileMenuOpen(false);
-            }}
-            className={`w-full text-left px-3 py-2 border border-[#1F2B2E] font-bold uppercase flex items-center gap-2 ${
-              currentTab === 'create-trip' ? 'bg-[#1F2B2E] text-white' : 'bg-white text-[#1F2B2E]'
-            }`}
-          >
-            <Plus className="h-4 w-4 text-[#B8823A]" />
-            Plan New Trip (Scr 3)
+            My Trips
           </button>
 
           <button
@@ -309,12 +314,11 @@ export default function Navbar({ currentTab, onNavigate }) {
               onNavigate('cities');
               setMobileMenuOpen(false);
             }}
-            className={`w-full text-left px-3 py-2 border border-[#1F2B2E] font-bold uppercase flex items-center gap-2 ${
-              currentTab === 'cities' ? 'bg-[#1F2B2E] text-white' : 'bg-white text-[#1F2B2E]'
+            className={`w-full text-left px-4 py-2.5 font-bold uppercase tracking-wider ${
+              currentTab === 'cities' ? 'text-[#F5B800] bg-white/5' : 'text-white'
             }`}
           >
-            <MapPin className="h-4 w-4 text-[#2C5F7C]" />
-            Explore Cities
+            Destinations
           </button>
 
           <button
@@ -322,23 +326,22 @@ export default function Navbar({ currentTab, onNavigate }) {
               onNavigate('activities');
               setMobileMenuOpen(false);
             }}
-            className={`w-full text-left px-3 py-2 border border-[#1F2B2E] font-bold uppercase flex items-center gap-2 ${
-              currentTab === 'activities' ? 'bg-[#1F2B2E] text-white' : 'bg-white text-[#1F2B2E]'
+            className={`w-full text-left px-4 py-2.5 font-bold uppercase tracking-wider ${
+              currentTab === 'activities' ? 'text-[#F5B800] bg-white/5' : 'text-white'
             }`}
           >
-            <Search className="h-4 w-4 text-[#B8823A]" />
-            Activities Catalog
+            Tours & Activities
           </button>
 
-          <div className="p-2 bg-[#F6F3EC] border border-[#1F2B2E] space-y-1">
-            <span className="font-bold text-[10px] text-[#2C5F7C] uppercase block">Trip Workspace:</span>
-            <div className="grid grid-cols-2 gap-1.5">
+          <div className="p-4 bg-white/5 border border-white/10 space-y-3">
+            <span className="font-bold text-xs text-[#F5B800] uppercase block tracking-wider">Trip Hub Options:</span>
+            <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => {
                   onNavigate('itinerary');
                   setMobileMenuOpen(false);
                 }}
-                className="px-2 py-1 bg-white border border-[#1F2B2E] text-left font-bold text-[11px]"
+                className="p-2.5 bg-white/5 hover:bg-white/10 text-left font-semibold text-white rounded text-xs"
               >
                 Itinerary View
               </button>
@@ -347,7 +350,7 @@ export default function Navbar({ currentTab, onNavigate }) {
                   onNavigate('builder');
                   setMobileMenuOpen(false);
                 }}
-                className="px-2 py-1 bg-white border border-[#1F2B2E] text-left font-bold text-[11px]"
+                className="p-2.5 bg-white/5 hover:bg-white/10 text-left font-semibold text-white rounded text-xs"
               >
                 Trip Builder
               </button>
@@ -356,7 +359,7 @@ export default function Navbar({ currentTab, onNavigate }) {
                   onNavigate('budget');
                   setMobileMenuOpen(false);
                 }}
-                className="px-2 py-1 bg-white border border-[#1F2B2E] text-left font-bold text-[11px]"
+                className="p-2.5 bg-white/5 hover:bg-white/10 text-left font-semibold text-white rounded text-xs"
               >
                 Budget Ledger
               </button>
@@ -365,36 +368,22 @@ export default function Navbar({ currentTab, onNavigate }) {
                   onNavigate('calendar');
                   setMobileMenuOpen(false);
                 }}
-                className="px-2 py-1 bg-white border border-[#1F2B2E] text-left font-bold text-[11px]"
+                className="p-2.5 bg-white/5 hover:bg-white/10 text-left font-semibold text-white rounded text-xs"
               >
                 Calendar View
               </button>
             </div>
-            <button
-              onClick={() => {
-                onNavigate('share');
-                setMobileMenuOpen(false);
-              }}
-              className="w-full px-2 py-1 bg-[#7FA69C] text-white border border-[#1F2B2E] text-center font-bold text-[11px]"
-            >
-              Public Share Pass
-            </button>
           </div>
 
-          {isAdmin && (
-            <button
-              onClick={() => {
-                onNavigate('admin');
-                setMobileMenuOpen(false);
-              }}
-              className={`w-full text-left px-3 py-2 border border-[#B84A3E] font-bold uppercase flex items-center gap-2 ${
-                currentTab === 'admin' ? 'bg-[#B84A3E] text-white' : 'bg-white text-[#B84A3E]'
-              }`}
-            >
-              <Shield className="h-4 w-4" />
-              Admin Dashboard
-            </button>
-          )}
+          <button
+            onClick={() => {
+              onNavigate('create-trip');
+              setMobileMenuOpen(false);
+            }}
+            className="w-full py-3.5 bg-[#F5B800] text-[#1E232A] font-extrabold text-center uppercase tracking-widest text-sm"
+          >
+            Plan New Journey
+          </button>
         </div>
       )}
     </header>

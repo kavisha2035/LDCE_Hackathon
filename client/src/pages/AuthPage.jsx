@@ -47,7 +47,7 @@ export default function AuthPage({ onSuccess, mode, resetToken, initialIsLogin, 
     }
   };
 
-  // Handle password reset submission (from email link)
+  // Handle password reset submission
   const handleResetPassword = async (e) => {
     e.preventDefault();
     setError('');
@@ -91,7 +91,7 @@ export default function AuthPage({ onSuccess, mode, resetToken, initialIsLogin, 
     setMessage('');
 
     if (!validateEmail(email)) {
-      setError('Please enter a valid email address (e.g. user@example.com).');
+      setError('Please enter a valid email address.');
       return;
     }
 
@@ -123,394 +123,131 @@ export default function AuthPage({ onSuccess, mode, resetToken, initialIsLogin, 
     }
   };
 
-  // ── RESET PASSWORD MODE (from email link) ──
-  if (mode === 'reset') {
-    return (
-      <div className="min-h-[80vh] flex items-center justify-center py-10 px-4">
-        <div className="w-full max-w-md bg-white border-2 border-[#1F2B2E] rounded-sm p-8 shadow-[4px_4px_0px_0px_#1F2B2E] relative">
+  return (
+    <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 bg-map-pattern">
+      <div className="w-full max-w-md bg-[#1A1D23] text-white shadow-2xl overflow-hidden border-t-4 border-[#F5B800] rounded-3xl">
+        
+        {/* Wanderers Header Tabs */}
+        {!isForgot && mode !== 'reset' && (
+          <div className="grid grid-cols-2 text-center border-b border-white/10 font-sans font-bold text-xs uppercase tracking-wider">
+            <button
+              type="button"
+              onClick={() => { setIsLogin(true); setIsForgot(false); setError(''); setMessage(''); }}
+              className={`py-4 transition cursor-pointer ${
+                isLogin ? 'bg-[#252B33] text-[#F5B800] border-b-2 border-[#F5B800]' : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              Login
+            </button>
+            <button
+              type="button"
+              onClick={() => { setIsLogin(false); setIsForgot(false); setError(''); setMessage(''); }}
+              className={`py-4 transition cursor-pointer ${
+                !isLogin ? 'bg-[#252B33] text-[#F5B800] border-b-2 border-[#F5B800]' : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              Register
+            </button>
+          </div>
+        )}
+
+        <div className="p-8 space-y-6">
           
-          {/* Header */}
-          <div className="flex items-center justify-between border-b-2 border-dashed border-[#1F2B2E] pb-5 mb-6">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 bg-[#1F2B2E] text-[#F6F3EC] flex items-center justify-center font-mono font-bold text-lg rounded-sm">
-                GT
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold font-display text-[#1F2B2E] tracking-tight leading-none">
-                  GLOBETROTTER
-                </h2>
-                <span className="text-[10px] font-mono uppercase tracking-widest text-[#2C5F7C]">
-                  PASSWORD RESET
-                </span>
-              </div>
-            </div>
-            <span className="text-xs font-mono px-2 py-0.5 bg-[#F6F3EC] border border-[#1F2B2E] text-[#B8823A] font-bold">
-              <KeyRound className="h-3.5 w-3.5 inline mr-1" />
-              SECURE
+          {/* Handwritten Yellow Brand Accent */}
+          <div className="text-center space-y-1">
+            <span className="font-script text-[#F5B800] text-4xl block transform -rotate-3">
+              GlobeTrotter
             </span>
+            <h2 className="font-serif text-xl font-bold tracking-wider uppercase text-white">
+              {mode === 'reset' ? 'SET NEW PASSPHRASE' : isForgot ? 'RECOVER PASSPHRASE' : isLogin ? 'WELCOME BACK' : 'CREATE ACCOUNT'}
+            </h2>
           </div>
 
           {/* Alerts */}
           {error && (
-            <div className="mb-6 p-3 bg-[#B84A3E]/10 border border-[#B84A3E] text-[#B84A3E] text-xs font-mono flex items-start gap-2">
+            <div className="p-3 bg-red-500/20 border border-red-500 text-red-200 text-xs font-sans flex items-start gap-2 rounded-xl">
               <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
               <div>{error}</div>
             </div>
           )}
 
-          {resetSuccess ? (
-            <div className="text-center space-y-6">
-              <div className="inline-flex items-center justify-center h-16 w-16 bg-[#7FA69C]/20 border-2 border-[#7FA69C] rounded-full mx-auto">
-                <CheckCircle className="h-8 w-8 text-[#7FA69C]" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-bold font-display text-[#1F2B2E] uppercase">
-                  Password Reset Complete
-                </h3>
-                <p className="text-sm text-[#1F2B2E]/70 font-body">
-                  {message}
-                </p>
-              </div>
-              <button
-                onClick={() => { if (onSuccess) onSuccess(); }}
-                className="w-full py-3 px-4 bg-[#2C5F7C] hover:bg-[#1F2B2E] font-mono font-bold text-sm text-[#F6F3EC] uppercase tracking-wider transition border border-[#1F2B2E] flex items-center justify-center gap-2 shadow-[2px_2px_0px_0px_#1F2B2E]"
-              >
-                PROCEED TO SIGN IN
-                <ArrowRight className="h-4 w-4" />
-              </button>
+          {message && (
+            <div className="p-3 bg-[#F5B800]/20 border border-[#F5B800] text-[#F5B800] text-xs font-sans flex items-start gap-2 rounded-xl">
+              <CheckCircle className="h-4 w-4 shrink-0 mt-0.5" />
+              <div>{message}</div>
             </div>
-          ) : (
-            <form onSubmit={handleResetPassword} className="space-y-5">
-              <p className="text-sm text-[#1F2B2E]/80 font-body leading-relaxed">
-                Enter your new password below. Make sure it's at least <strong>6 characters</strong> long.
-              </p>
-
-              <div className="space-y-1">
-                <label className="text-xs font-mono font-bold uppercase text-[#1F2B2E]">NEW PASSPHRASE</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-[#1F2B2E]/60" />
-                  <input
-                    type={showNewPassword ? 'text' : 'password'}
-                    required
-                    placeholder="••••••••"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full bg-[#F6F3EC] border border-[#1F2B2E] rounded-sm pl-9 pr-9 py-2 text-sm text-[#1F2B2E] placeholder-[#1F2B2E]/40 focus:outline-none focus:ring-2 focus:ring-[#2C5F7C] font-mono"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-3 top-3 text-[#1F2B2E]/60 hover:text-[#1F2B2E]"
-                  >
-                    {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-mono font-bold uppercase text-[#1F2B2E]">CONFIRM PASSPHRASE</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-[#1F2B2E]/60" />
-                  <input
-                    type={showNewPassword ? 'text' : 'password'}
-                    required
-                    placeholder="••••••••"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className={`w-full bg-[#F6F3EC] border rounded-sm pl-9 pr-3 py-2 text-sm text-[#1F2B2E] placeholder-[#1F2B2E]/40 focus:outline-none focus:ring-2 focus:ring-[#2C5F7C] font-mono ${
-                      confirmPassword && confirmPassword !== newPassword
-                        ? 'border-[#B84A3E] ring-1 ring-[#B84A3E]'
-                        : confirmPassword && confirmPassword === newPassword
-                        ? 'border-[#7FA69C] ring-1 ring-[#7FA69C]'
-                        : 'border-[#1F2B2E]'
-                    }`}
-                  />
-                </div>
-                {confirmPassword && confirmPassword !== newPassword && (
-                  <p className="text-[10px] font-mono text-[#B84A3E] mt-1">Passwords do not match</p>
-                )}
-                {confirmPassword && confirmPassword === newPassword && (
-                  <p className="text-[10px] font-mono text-[#7FA69C] mt-1 flex items-center gap-1">
-                    <CheckCircle className="h-3 w-3" /> Passwords match
-                  </p>
-                )}
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full mt-4 py-3 px-4 bg-[#2C5F7C] hover:bg-[#1F2B2E] font-mono font-bold text-sm text-[#F6F3EC] uppercase tracking-wider transition border border-[#1F2B2E] flex items-center justify-center gap-2 shadow-[2px_2px_0px_0px_#1F2B2E]"
-              >
-                {loading ? (
-                  <span className="inline-block h-4 w-4 border-2 border-[#F6F3EC] border-t-transparent rounded-full animate-spin"></span>
-                ) : (
-                  <>
-                    SET NEW PASSWORD
-                    <ArrowRight className="h-4 w-4" />
-                  </>
-                )}
-              </button>
-            </form>
           )}
-        </div>
-      </div>
-    );
-  }
 
-  // ── DEFAULT MODE: LOGIN / SIGNUP / FORGOT ──
-  return (
-    <div className="min-h-[80vh] flex items-center justify-center py-10 px-4">
-      <div className="w-full max-w-md bg-white border-2 border-[#1F2B2E] rounded-sm p-8 shadow-[4px_4px_0px_0px_#1F2B2E] relative">
-        
-        {/* Header Boarding Pass Motif */}
-        <div className="flex items-center justify-between border-b-2 border-dashed border-[#1F2B2E] pb-5 mb-6">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 bg-[#1F2B2E] text-[#F6F3EC] flex items-center justify-center font-mono font-bold text-lg rounded-sm">
-              GT
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold font-display text-[#1F2B2E] tracking-tight leading-none">
-                GLOBETROTTER
-              </h2>
-              <span className="text-[10px] font-mono uppercase tracking-widest text-[#2C5F7C]">
-                {isForgot ? 'PASSWORD RECOVERY' : 'PASSENGER MANIFEST'}
-              </span>
-            </div>
-          </div>
-
-          <span className="text-xs font-mono px-2 py-0.5 bg-[#F6F3EC] border border-[#1F2B2E] text-[#B8823A] font-bold">
-            DOC #1
-          </span>
-        </div>
-
-        {/* Reason Notification Banner */}
-        {reason && !isForgot && (
-          <div className="mb-5 p-3 bg-[#2C5F7C]/10 border-2 border-[#2C5F7C] text-[#2C5F7C] font-mono text-xs flex items-start gap-2 shadow-[2px_2px_0px_0px_#2C5F7C]">
-            <Compass className="h-4 w-4 shrink-0 mt-0.5" />
-            <div>
-              <span className="font-bold uppercase block text-[10px] text-[#1F2B2E]">PASSENGER SIGN IN / REGISTRATION REQUIRED</span>
-              <span className="text-[#1F2B2E]/90 text-xs">{reason}</span>
-            </div>
-          </div>
-        )}
-
-        {/* Ticket Stub Tabs Toggle */}
-        {!isForgot && (
-          <div className="grid grid-cols-2 gap-2 mb-6 p-1 bg-[#F6F3EC] border border-[#1F2B2E] rounded-sm font-mono text-xs">
-            <button
-              type="button"
-              onClick={() => { setIsLogin(true); setIsForgot(false); setError(''); setMessage(''); }}
-              className={`py-2 text-center font-bold uppercase transition ${
-                isLogin && !isForgot 
-                  ? 'bg-[#1F2B2E] text-[#F6F3EC]' 
-                  : 'text-[#1F2B2E] hover:bg-white'
-              }`}
-            >
-              SIGN IN
-            </button>
-            <button
-              type="button"
-              onClick={() => { setIsLogin(false); setIsForgot(false); setError(''); setMessage(''); }}
-              className={`py-2 text-center font-bold uppercase transition ${
-                !isLogin && !isForgot 
-                  ? 'bg-[#1F2B2E] text-[#F6F3EC]' 
-                  : 'text-[#1F2B2E] hover:bg-white'
-              }`}
-            >
-              NEW ACCOUNT
-            </button>
-          </div>
-        )}
-
-        {/* Forgot Password Header */}
-        {isForgot && (
-          <div className="mb-6">
-            <button
-              type="button"
-              onClick={() => { setIsForgot(false); setError(''); setMessage(''); }}
-              className="flex items-center gap-1.5 text-xs font-mono text-[#2C5F7C] hover:text-[#1F2B2E] transition mb-3"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              BACK TO SIGN IN
-            </button>
-            <p className="text-sm text-[#1F2B2E]/80 font-body leading-relaxed">
-              Enter your email address and we'll send you a secure link to reset your passphrase.
-            </p>
-          </div>
-        )}
-
-        {/* Alerts */}
-        {error && (
-          <div className="mb-6 p-3 bg-[#B84A3E]/10 border border-[#B84A3E] text-[#B84A3E] text-xs font-mono flex items-start gap-2">
-            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-            <div>{error}</div>
-          </div>
-        )}
-
-        {message && !isForgot && (
-          <div className="mb-6 p-3 bg-[#7FA69C]/20 border border-[#7FA69C] text-[#1F2B2E] text-xs font-mono flex items-start gap-2">
-            <CheckCircle className="h-4 w-4 text-[#2C5F7C] shrink-0 mt-0.5" />
-            <div>{message}</div>
-          </div>
-        )}
-
-        {/* Forgot Password Success State */}
-        {isForgot && message ? (
-          <div className="text-center space-y-6">
-            <div className="inline-flex items-center justify-center h-16 w-16 bg-[#2C5F7C]/10 border-2 border-[#2C5F7C] rounded-full mx-auto">
-              <Mail className="h-8 w-8 text-[#2C5F7C]" />
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-xl font-bold font-display text-[#1F2B2E] uppercase">
-                Check Your Inbox
-              </h3>
-              <p className="text-sm text-[#1F2B2E]/70 font-body">
-                {message}
-              </p>
-            </div>
-            <div className="space-y-3">
-              <button
-                onClick={() => { setIsForgot(false); setMessage(''); setError(''); }}
-                className="w-full py-3 px-4 bg-[#2C5F7C] hover:bg-[#1F2B2E] font-mono font-bold text-sm text-[#F6F3EC] uppercase tracking-wider transition border border-[#1F2B2E] flex items-center justify-center gap-2 shadow-[2px_2px_0px_0px_#1F2B2E]"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                BACK TO SIGN IN
-              </button>
-              <p className="text-[10px] font-mono text-[#1F2B2E]/50 text-center">
-                Didn't receive the email? Check your spam folder or try again.
-              </p>
-            </div>
-          </div>
-        ) : (
-          /* Form */
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && !isForgot && (
+          {/* Form Content */}
+          <form onSubmit={mode === 'reset' ? handleResetPassword : handleSubmit} className="space-y-4 font-sans text-xs">
+            
+            {!isLogin && !isForgot && mode !== 'reset' && (
               <>
                 <div className="space-y-1">
-                  <label className="text-xs font-mono font-bold uppercase text-[#1F2B2E]">PASSENGER NAME</label>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-300">User Name</label>
                   <div className="relative">
-                    <User className="absolute left-3 top-3 h-4 w-4 text-[#1F2B2E]/60" />
+                    <User className="absolute left-4 top-3 h-4 w-4 text-[#F5B800]" />
                     <input
                       type="text"
                       required
-                      placeholder="Alex Johnson"
+                      placeholder="Enter full name"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full bg-[#F6F3EC] border border-[#1F2B2E] rounded-sm pl-9 pr-3 py-2 text-sm text-[#1F2B2E] placeholder-[#1F2B2E]/40 focus:outline-none focus:ring-2 focus:ring-[#2C5F7C] font-body"
+                      className="w-full bg-white text-[#1E232A] pl-10 pr-4 py-2.5 rounded-full font-semibold focus:outline-none focus:ring-2 focus:ring-[#F5B800]"
                     />
                   </div>
                 </div>
 
-                {/* Custom Avatar Picker */}
                 <div className="space-y-1">
-                  <label className="text-xs font-mono font-bold uppercase text-[#1F2B2E]">CHOOSE AVATAR (URL OR FILE)</label>
-                  <div className="space-y-2">
-                    <div className="relative">
-                      <Image className="absolute left-3 top-3 h-4 w-4 text-[#1F2B2E]/60" />
-                      <input
-                        type="url"
-                        placeholder="Paste Image URL (e.g. https://...)"
-                        value={avatar}
-                        onChange={(e) => setAvatar(e.target.value)}
-                        className="w-full bg-[#F6F3EC] border border-[#1F2B2E] rounded-sm pl-9 pr-3 py-2 text-xs text-[#1F2B2E] placeholder-[#1F2B2E]/40 focus:outline-none focus:ring-2 focus:ring-[#2C5F7C] font-mono"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <label className="cursor-pointer px-3 py-1.5 bg-[#F6F3EC] border border-[#1F2B2E] font-mono text-[11px] font-bold text-[#2C5F7C] hover:bg-[#1F2B2E] hover:text-white transition flex items-center gap-1.5">
-                        <Upload className="h-3.5 w-3.5" />
-                        <span>UPLOAD IMAGE FILE</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleFileUpload}
-                          className="hidden"
-                        />
-                      </label>
-                      {avatar && (
-                        <button
-                          type="button"
-                          onClick={() => setAvatar('')}
-                          className="text-[11px] font-mono text-[#B84A3E] hover:underline"
-                        >
-                          CLEAR
-                        </button>
-                      )}
-                    </div>
-                    {avatar && (
-                      <div className="flex items-center gap-3 p-2 bg-[#F6F3EC] border border-[#1F2B2E]">
-                        <img src={avatar} alt="Preview" className="h-10 w-10 object-cover border border-[#1F2B2E]" />
-                        <span className="text-[10px] font-mono text-[#2C5F7C] font-bold">AVATAR PREVIEW</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-mono font-bold uppercase text-[#1F2B2E]">LANGUAGE PREFERENCE</label>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-gray-300">Avatar Image</label>
                   <div className="relative">
-                    <Globe className="absolute left-3 top-3 h-4 w-4 text-[#1F2B2E]/60" />
-                    <select
-                      value={languagePref}
-                      onChange={(e) => setLanguagePref(e.target.value)}
-                      className="w-full bg-[#F6F3EC] border border-[#1F2B2E] rounded-sm pl-9 pr-3 py-2 text-sm text-[#1F2B2E] focus:outline-none focus:ring-2 focus:ring-[#2C5F7C] font-mono"
-                    >
-                      <option value="en">English (US)</option>
-                      <option value="es">Español (Spanish)</option>
-                      <option value="fr">Français (French)</option>
-                      <option value="de">Deutsch (German)</option>
-                      <option value="ja">日本語 (Japanese)</option>
-                    </select>
+                    <Image className="absolute left-4 top-3 h-4 w-4 text-[#F5B800]" />
+                    <input
+                      type="url"
+                      placeholder="Paste Image URL (Optional)"
+                      value={avatar}
+                      onChange={(e) => setAvatar(e.target.value)}
+                      className="w-full bg-white text-[#1E232A] pl-10 pr-4 py-2.5 rounded-full font-semibold focus:outline-none focus:ring-2 focus:ring-[#F5B800]"
+                    />
                   </div>
                 </div>
               </>
             )}
 
-            <div className="space-y-1">
-              <label className="text-xs font-mono font-bold uppercase text-[#1F2B2E]">EMAIL ADDRESS</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-[#1F2B2E]/60" />
-                <input
-                  type="email"
-                  required
-                  placeholder="alex@example.com"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (error && error.includes('email')) setError('');
-                  }}
-                  className="w-full bg-[#F6F3EC] border border-[#1F2B2E] rounded-sm pl-9 pr-3 py-2 text-sm text-[#1F2B2E] placeholder-[#1F2B2E]/40 focus:outline-none focus:ring-2 focus:ring-[#2C5F7C] font-mono"
-                />
+            {mode !== 'reset' && (
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-gray-300">User Name / Email</label>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-3 h-4 w-4 text-[#F5B800]" />
+                  <input
+                    type="email"
+                    required
+                    placeholder="User Name or Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-white text-[#1E232A] pl-10 pr-4 py-2.5 rounded-full font-semibold focus:outline-none focus:ring-2 focus:ring-[#F5B800]"
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             {!isForgot && (
               <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-mono font-bold uppercase text-[#1F2B2E]">SECURITY PASSPHRASE</label>
-                  {isLogin && (
-                    <button
-                      type="button"
-                      onClick={() => { setIsForgot(true); setError(''); setMessage(''); }}
-                      className="text-[11px] font-mono text-[#2C5F7C] hover:underline"
-                    >
-                      FORGOT?
-                    </button>
-                  )}
-                </div>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-gray-300">Password</label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-[#1F2B2E]/60" />
+                  <Lock className="absolute left-4 top-3 h-4 w-4 text-[#F5B800]" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-[#F6F3EC] border border-[#1F2B2E] rounded-sm pl-9 pr-9 py-2 text-sm text-[#1F2B2E] placeholder-[#1F2B2E]/40 focus:outline-none focus:ring-2 focus:ring-[#2C5F7C] font-mono"
+                    placeholder="Password"
+                    value={mode === 'reset' ? newPassword : password}
+                    onChange={(e) => mode === 'reset' ? setNewPassword(e.target.value) : setPassword(e.target.value)}
+                    className="w-full bg-white text-[#1E232A] pl-10 pr-10 py-2.5 rounded-full font-semibold focus:outline-none focus:ring-2 focus:ring-[#F5B800]"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3 text-[#1F2B2E]/60 hover:text-[#1F2B2E]"
+                    className="absolute right-4 top-3 text-gray-500 hover:text-gray-700"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -518,22 +255,35 @@ export default function AuthPage({ onSuccess, mode, resetToken, initialIsLogin, 
               </div>
             )}
 
+            {/* Remember Me & Lost Password Link */}
+            {isLogin && !isForgot && (
+              <div className="flex items-center justify-between text-[11px] pt-1">
+                <label className="flex items-center gap-2 text-gray-300 cursor-pointer">
+                  <input type="checkbox" className="accent-[#F5B800]" />
+                  Remember me
+                </label>
+                <button
+                  type="button"
+                  onClick={() => { setIsForgot(true); setError(''); setMessage(''); }}
+                  className="text-[#F5B800] hover:underline font-semibold"
+                >
+                  Lost Your password?
+                </button>
+              </div>
+            )}
+
+            {/* Wanderers Gold Submit Button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-4 py-3 px-4 bg-[#2C5F7C] hover:bg-[#1F2B2E] font-mono font-bold text-sm text-[#F6F3EC] uppercase tracking-wider transition border border-[#1F2B2E] flex items-center justify-center gap-2 shadow-[2px_2px_0px_0px_#1F2B2E]"
+              className="w-full py-3.5 bg-[#F5B800] hover:bg-[#E0A600] text-[#1E232A] font-bold text-xs tracking-widest uppercase transition shadow-md mt-4 cursor-pointer rounded-full"
             >
-              {loading ? (
-                <span className="inline-block h-4 w-4 border-2 border-[#F6F3EC] border-t-transparent rounded-full animate-spin"></span>
-              ) : (
-                <>
-                  {isForgot ? 'REQUEST RESET LINK' : isLogin ? 'CONFIRM SIGN IN' : 'REGISTER PASSENGER'}
-                  <ArrowRight className="h-4 w-4" />
-                </>
-              )}
+              {loading ? 'PROCESSING...' : isForgot ? 'SEND RESET LINK' : isLogin ? 'LOGIN' : 'REGISTER'}
             </button>
+
           </form>
-        )}
+
+        </div>
       </div>
     </div>
   );
