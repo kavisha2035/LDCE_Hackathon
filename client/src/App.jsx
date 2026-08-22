@@ -4,15 +4,17 @@ import AuthPage from './pages/AuthPage';
 import ProfilePage from './pages/ProfilePage';
 import TicketCard from './components/TicketCard';
 import ActivitySearchPage from './pages/ActivitySearchPage';
+import TripBudgetPage from './pages/TripBudgetPage';
+import TripCalendarPage from './pages/TripCalendarPage';
 import { 
   Compass, Server, CheckCircle2, ShieldCheck, MapPin, DollarSign, 
   Calendar, Users, RefreshCw, Sparkles, ArrowRight, User as UserIcon, 
-  LogOut, Database, Globe, Layers, Key, Search
+  LogOut, Database, Globe, Layers, Key, Search, PieChart
 } from 'lucide-react';
 
 function MainApp() {
   const { user, logout, isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'db', 'auth', 'profile', 'activities'
+  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'activities', 'budget', 'calendar', 'profile', 'auth'
   
   // Health check & Cities data
   const [health, setHealth] = useState(null);
@@ -112,6 +114,24 @@ function MainApp() {
                 <Search className="h-3.5 w-3.5" />
                 ACTIVITIES (SCR 8)
               </button>
+              <button
+                onClick={() => setActiveTab('budget')}
+                className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold transition flex items-center gap-1.5 ${
+                  activeTab === 'budget' ? 'bg-[#1F2B2E] text-[#F6F3EC]' : 'bg-white text-[#1F2B2E] hover:bg-[#F6F3EC]'
+                }`}
+              >
+                <DollarSign className="h-3.5 w-3.5 text-[#B8823A]" />
+                BUDGET (SCR 9)
+              </button>
+              <button
+                onClick={() => setActiveTab('calendar')}
+                className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold transition flex items-center gap-1.5 ${
+                  activeTab === 'calendar' ? 'bg-[#1F2B2E] text-[#F6F3EC]' : 'bg-white text-[#1F2B2E] hover:bg-[#F6F3EC]'
+                }`}
+              >
+                <Calendar className="h-3.5 w-3.5 text-[#2C5F7C]" />
+                CALENDAR (SCR 10)
+              </button>
               {isAuthenticated && (
                 <button
                   onClick={() => setActiveTab('profile')}
@@ -182,6 +202,21 @@ function MainApp() {
               selectedActivityIds={[]}
             />
           </div>
+        )}
+
+        {activeTab === 'budget' && (
+          <TripBudgetPage
+            onBack={() => setActiveTab('overview')}
+            onNavigateToCalendar={() => setActiveTab('calendar')}
+          />
+        )}
+
+        {activeTab === 'calendar' && (
+          <TripCalendarPage
+            onBack={() => setActiveTab('overview')}
+            onNavigateToBudget={() => setActiveTab('budget')}
+            onNavigateToActivities={() => setActiveTab('activities')}
+          />
         )}
 
         {(activeTab === 'overview' || (activeTab === 'auth' && isAuthenticated) || (activeTab === 'profile' && !isAuthenticated)) && (
