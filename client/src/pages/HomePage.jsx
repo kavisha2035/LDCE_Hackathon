@@ -684,27 +684,27 @@ export default function HomePage({
         </div>
 
         {/* Destination Stamp Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-10">
           {filteredCities.map((city) => {
             const isSaved = savedCities.includes(city.name);
             return (
               <div
                 key={city.name}
-                className="bg-white border border-gray-200 rounded-3xl shadow-xl hover:shadow-2xl overflow-hidden flex flex-col justify-between group transition duration-300 min-h-[620px]"
+                className="bg-white border border-gray-200 rounded-3xl shadow-xl hover:shadow-2xl overflow-hidden flex flex-col justify-between group transition duration-300 min-h-[460px] sm:min-h-[520px] h-full"
               >
                 <div>
                   {/* Card Image Banner */}
-                  <div className="relative h-80 sm:h-96 overflow-hidden">
+                  <div className="relative h-60 sm:h-72 lg:h-80 overflow-hidden">
                     <img
                       src={city.image}
                       alt={city.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition duration-700"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent"></div>
                     
                     {/* Country Badge */}
-                    <div className="absolute top-6 left-6">
-                      <span className="px-4 py-1.5 bg-[#1E232A] text-[#F5B800] font-sans text-xs font-extrabold uppercase tracking-widest rounded-full shadow-md">
+                    <div className="absolute top-4 left-4 sm:top-6 sm:left-6">
+                      <span className="px-3.5 py-1.5 bg-[#1E232A] text-[#F5B800] font-sans text-[11px] sm:text-xs font-extrabold uppercase tracking-widest rounded-full shadow-md">
                         {city.country}
                       </span>
                     </div>
@@ -712,44 +712,44 @@ export default function HomePage({
                     <button
                       onClick={() => toggleSaveCity(city.name)}
                       title={isSaved ? "Saved to Bucket List" : "Save destination"}
-                      className={`absolute top-6 right-6 p-3 rounded-full shadow-lg transition cursor-pointer ${
+                      className={`absolute top-4 right-4 sm:top-6 sm:right-6 p-2.5 sm:p-3 rounded-full shadow-lg transition cursor-pointer ${
                         isSaved ? 'bg-[#F5B800] text-[#1E232A]' : 'bg-white/90 text-[#1E232A] hover:bg-white'
                       }`}
                     >
-                      <Heart className={`h-5 w-5 ${isSaved ? 'fill-[#1E232A]' : ''}`} />
+                      <Heart className={`h-4 w-4 sm:h-5 sm:w-5 ${isSaved ? 'fill-[#1E232A]' : ''}`} />
                     </button>
 
                     {/* Bottom Title on Image */}
-                    <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between text-white">
-                      <div>
-                        <h3 className="text-4xl sm:text-5xl font-serif font-black tracking-wide leading-tight">
+                    <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6 flex items-end justify-between text-white gap-2">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-black tracking-wide leading-tight truncate">
                           {city.name}
                         </h3>
-                        <span className="text-xs text-[#F5B800] uppercase font-extrabold tracking-widest block mt-1">
+                        <span className="text-[10px] sm:text-xs text-[#F5B800] uppercase font-extrabold tracking-widest block mt-0.5 truncate">
                           {city.region} REGION
                         </span>
                       </div>
-                      <span className="px-3.5 py-1.5 bg-white/20 backdrop-blur-md text-white text-xs font-extrabold uppercase rounded-full">
+                      <span className="px-2.5 py-1 sm:px-3.5 sm:py-1.5 bg-white/20 backdrop-blur-md text-white text-[10px] sm:text-xs font-extrabold uppercase rounded-full shrink-0">
                         INDEX {city.costIndex}/5
                       </span>
                     </div>
                   </div>
 
                   {/* Body Content */}
-                  <div className="p-10 space-y-6">
-                    <p className="text-sm text-gray-600 leading-relaxed font-sans font-medium">
+                  <div className="p-6 sm:p-8 space-y-4 sm:space-y-6">
+                    <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-sans font-medium line-clamp-3">
                       {city.description}
                     </p>
 
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       <span className="text-[10px] text-gray-400 uppercase font-extrabold tracking-widest block">
                         SIGNATURE HIGHLIGHTS:
                       </span>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-1.5 sm:gap-2">
                         {city.highlights.map((h) => (
                           <span
                             key={h}
-                            className="px-3.5 py-1.5 bg-gray-100 text-gray-700 font-sans text-xs font-bold rounded-full border border-gray-200"
+                            className="px-3 py-1 bg-gray-100 text-gray-700 font-sans text-[11px] sm:text-xs font-bold rounded-full border border-gray-200"
                           >
                             {h}
                           </span>
@@ -760,20 +760,20 @@ export default function HomePage({
                 </div>
 
                 {/* Card Action Footer */}
-                <div className="p-10 pt-4 flex items-center justify-between border-t border-gray-100 bg-gray-50/50">
+                <div className="p-6 sm:p-8 pt-4 flex flex-col sm:flex-row sm:items-center justify-between border-t border-gray-100 bg-gray-50/50 gap-3">
                   <span className="text-xs text-gray-500 font-sans font-semibold">
-                    Popularity: <strong className="text-[#1E232A] text-sm font-black">{city.popularity}%</strong>
+                    Popularity: <strong className="text-[#1E232A] text-xs sm:text-sm font-black">{city.popularity}%</strong>
                   </span>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => onNavigate('activities', { city: city.name })}
-                      className="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-[#1E232A] font-extrabold text-xs uppercase tracking-wider transition cursor-pointer rounded-full"
+                      className="flex-1 sm:flex-initial px-4 py-2 sm:px-5 sm:py-2.5 bg-gray-200 hover:bg-gray-300 text-[#1E232A] font-extrabold text-[11px] sm:text-xs uppercase tracking-wider transition cursor-pointer rounded-full text-center"
                     >
                       ACTIVITIES
                     </button>
                     <button
                       onClick={() => onNavigate('cities', { search: city.name })}
-                      className="px-6 py-2.5 bg-[#F5B800] hover:bg-[#E0A600] text-[#1E232A] font-extrabold text-xs uppercase tracking-wider transition cursor-pointer rounded-full shadow-md"
+                      className="flex-1 sm:flex-initial px-5 py-2 sm:px-6 sm:py-2.5 bg-[#F5B800] hover:bg-[#E0A600] text-[#1E232A] font-extrabold text-[11px] sm:text-xs uppercase tracking-wider transition cursor-pointer rounded-full shadow-md text-center"
                     >
                       DETAILS &gt;
                     </button>
