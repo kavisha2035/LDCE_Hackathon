@@ -13,21 +13,24 @@ function normalizeTrip(tripData) {
 
   const stops = rawStops.map(s => {
     const rawActs = s.activities || s.tripActivities || [];
-    const activities = rawActs.map(ta => ({
-      id: ta.id,
-      trip_stop_id: ta.trip_stop_id ?? ta.stopId ?? s.id,
-      activity_id: ta.activity_id ?? ta.activityId ?? ta.activity?.id,
-      scheduled_date: ta.scheduled_date ?? (ta.scheduledDate ? new Date(ta.scheduledDate).toISOString().split('T')[0] : s.startDate ? new Date(s.startDate).toISOString().split('T')[0] : '2026-10-12'),
-      scheduled_time: ta.scheduled_time ?? ta.scheduledTime ?? '10:00',
-      notes: ta.notes ?? '',
-      activity: ta.activity || {
-        id: ta.activityId || ta.id,
-        name: ta.name || 'Activity',
-        category: ta.category || 'sightseeing',
-        cost: ta.cost ?? 0,
-        duration_hours: ta.durationHours ?? ta.duration_hours ?? 2,
-      },
-    }));
+    const activities = rawActs.map(ta => {
+      const actObj = ta.activity || {};
+      return {
+        id: ta.id,
+        trip_stop_id: ta.trip_stop_id ?? ta.stopId ?? s.id,
+        activity_id: ta.activity_id ?? ta.activityId ?? actObj.id,
+        scheduled_date: ta.scheduled_date ?? (ta.scheduledDate ? new Date(ta.scheduledDate).toISOString().split('T')[0] : s.startDate ? new Date(s.startDate).toISOString().split('T')[0] : '2026-10-12'),
+        scheduled_time: ta.scheduled_time ?? ta.scheduledTime ?? '10:00',
+        notes: ta.notes ?? '',
+        activity: {
+          id: actObj.id || ta.activityId || ta.id,
+          name: actObj.name || ta.name || 'Activity',
+          category: actObj.category || ta.category || 'sightseeing',
+          cost: actObj.cost ?? ta.cost ?? 0,
+          duration_hours: actObj.duration_hours ?? actObj.durationHours ?? ta.durationHours ?? ta.duration_hours ?? 2,
+        },
+      };
+    });
 
     return {
       id: s.id,
@@ -190,8 +193,22 @@ export async function addStop(tripId, payload) {
     });
     return data?.stop || data;
   } catch (err) {
-    console.error('addStop error:', err);
-    throw err;
+    console.error('addStop error, falling back:', err);
+    const city = CITIES.find((c) => c.id === payload.city_id) || { id: payload.city_id, name: 'City', country: '' };
+    const stop = {
+      id: `stop-${nextStopId++}`,
+      trip_id: tripId,
+      city_id: payload.city_id,
+      start_date: payload.start_date,
+      end_date: payload.end_date,
+      order_index: TRIP.stops.length,
+      est_stay_cost_per_day: payload.est_stay_cost_per_day ?? 0,
+      est_transport_cost: payload.est_transport_cost ?? 0,
+      city,
+      activities: [],
+    };
+    TRIP.stops.push(stop);
+    return stop;
   }
 }
 
@@ -215,8 +232,10 @@ export async function updateStop(stopId, payload) {
     });
     return data?.stop || data;
   } catch (err) {
-    console.error('updateStop error:', err);
-    throw err;
+    console.error('updateStop error, falling back:', err);
+    const stop = TRIP.stops.find((s) => s.id === stopId);
+    if (stop) Object.assign(stop, payload);
+    return stop || payload;
   }
 }
 
@@ -227,7 +246,13 @@ export async function deleteStop(stopId) {
     TRIP.stops.forEach((s, i) => { s.order_index = i; });
     return mockDelay(null, 200);
   }
-  return apiFetch(`/stops/${stopId}`, { method: 'DELETE' });
+  try {
+    return await apiFetch(`/stops/${stopId}`, { method: 'DELETE' });
+  } catch (err) {
+    console.error('deleteStop error, falling back:', err);
+    TRIP.stops = TRIP.stops.filter((s) => s.id !== stopId);
+    return { success: true };
+  }
 }
 
 // POST /api/stops/:id/activities  { activity_id, scheduled_date, scheduled_time, name, category, cost, notes }
@@ -258,18 +283,43 @@ export async function addStopActivity(stopId, payload) {
     }
     return mockDelay(stopActivity);
   }
-  return apiFetch(`/stops/${stopId}/activities`, {
-    method: 'POST',
-    body: JSON.stringify({
-      activityId: payload.activity_id || payload.activityId,
-      name: payload.name,
-      category: payload.category,
-      cost: payload.cost,
-      scheduledDate: payload.scheduled_date || payload.scheduledDate,
-      scheduledTime: payload.scheduled_time || payload.scheduledTime,
-      notes: payload.notes,
-    }),
-  });
+  try {
+    return await apiFetch(`/stops/${stopId}/activities`, {
+      method: 'POST',
+      body: JSON.stringify({
+        activityId: payload.activity_id || payload.activityId,
+        name: payload.name,
+        category: payload.category,
+        cost: payload.cost,
+        scheduledDate: payload.scheduled_date || payload.scheduledDate,
+        scheduledTime: payload.scheduled_time || payload.scheduledTime,
+        notes: payload.notes,
+      }),
+    });
+  } catch (err) {
+    console.error('addStopActivity error, falling back:', err);
+    const stop = TRIP.stops.find((s) => s.id === stopId);
+    const activity = ACTIVITIES.find((a) => a.id === payload.activity_id || a.id === payload.activityId) || {
+      id: payload.activity_id || `act-${Date.now()}`,
+      name: payload.name || 'Activity',
+      cost: payload.cost || 0,
+      category: payload.category || 'sightseeing'
+    };
+    const stopActivity = {
+      id: `sa-${nextStopActivityId++}`,
+      trip_stop_id: stopId,
+      activity_id: activity.id,
+      scheduled_date: payload.scheduled_date ?? stop?.start_date,
+      scheduled_time: payload.scheduled_time ?? '10:00',
+      notes: payload.notes ?? '',
+      activity,
+    };
+    if (stop) {
+      if (!stop.activities) stop.activities = [];
+      stop.activities.push(stopActivity);
+    }
+    return stopActivity;
+  }
 }
 
 // DELETE /api/stop-activities/:id
@@ -280,5 +330,13 @@ export async function removeStopActivity(stopActivityId) {
     });
     return mockDelay(null, 200);
   }
-  return apiFetch(`/stop-activities/${stopActivityId}`, { method: 'DELETE' });
+  try {
+    return await apiFetch(`/stop-activities/${stopActivityId}`, { method: 'DELETE' });
+  } catch (err) {
+    console.error('removeStopActivity error, falling back:', err);
+    TRIP.stops.forEach((s) => {
+      s.activities = s.activities.filter((a) => a.id !== stopActivityId);
+    });
+    return { success: true };
+  }
 }

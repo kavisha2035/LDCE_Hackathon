@@ -12,6 +12,7 @@ import tripsRoutes, {
   removeStopActivityHandler
 } from './routes/trips.js';
 import publicTripsRoutes from './routes/publicTrips.js';
+import adminRoutes from './routes/admin.js';
 import { authenticateToken } from './middleware/auth.js';
 
 dotenv.config();
@@ -35,6 +36,12 @@ app.use('/api/auth', authRoutes);
 app.use('/api/cities', citiesRoutes);
 app.use('/api/trips', tripsRoutes);
 app.use('/api/public/trips', publicTripsRoutes);
+app.use('/api/admin', adminRoutes);
+
+// Direct nested / helper routes to match client apiClient calls
+app.use('/api/stops', tripsRoutes);
+app.use('/api/stop-activities', tripsRoutes);
+app.use('/api/saved-destinations', citiesRoutes);
 
 // Direct /api/stops & /api/stop-activities shortcuts
 app.put('/api/stops/:id', updateStopHandler);

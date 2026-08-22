@@ -8,6 +8,7 @@ import {
 
 export default function Navbar({ currentTab, onNavigate }) {
   const { user, logout, isAuthenticated } = useAuth();
+  const isAdmin = Boolean(isAuthenticated && user?.isAdmin);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [tripDropdownOpen, setTripDropdownOpen] = useState(false);
 
@@ -182,18 +183,20 @@ export default function Navbar({ currentTab, onNavigate }) {
               )}
             </div>
 
-            {/* Admin link */}
-            <button
-              onClick={() => onNavigate('admin')}
-              className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold text-xs font-mono transition cursor-pointer flex items-center gap-1.5 ${
-                currentTab === 'admin'
-                  ? 'bg-[#B84A3E] text-white border-[#B84A3E] shadow-[2px_2px_0px_0px_#1F2B2E]'
-                  : 'bg-white text-[#B84A3E] hover:bg-[#F6F3EC]'
-              }`}
-            >
-              <Shield className="h-3.5 w-3.5" />
-              ADMIN
-            </button>
+            {/* Admin link (admin-only) */}
+            {isAdmin && (
+              <button
+                onClick={() => onNavigate('admin')}
+                className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold text-xs font-mono transition cursor-pointer flex items-center gap-1.5 ${
+                  currentTab === 'admin'
+                    ? 'bg-[#B84A3E] text-white border-[#B84A3E] shadow-[2px_2px_0px_0px_#1F2B2E]'
+                    : 'bg-white text-[#B84A3E] hover:bg-[#F6F3EC]'
+                }`}
+              >
+                <Shield className="h-3.5 w-3.5" />
+                ADMIN
+              </button>
+            )}
           </nav>
         </div>
 
@@ -378,18 +381,20 @@ export default function Navbar({ currentTab, onNavigate }) {
             </button>
           </div>
 
-          <button
-            onClick={() => {
-              onNavigate('admin');
-              setMobileMenuOpen(false);
-            }}
-            className={`w-full text-left px-3 py-2 border border-[#B84A3E] font-bold uppercase flex items-center gap-2 ${
-              currentTab === 'admin' ? 'bg-[#B84A3E] text-white' : 'bg-white text-[#B84A3E]'
-            }`}
-          >
-            <Shield className="h-4 w-4" />
-            Admin Dashboard
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => {
+                onNavigate('admin');
+                setMobileMenuOpen(false);
+              }}
+              className={`w-full text-left px-3 py-2 border border-[#B84A3E] font-bold uppercase flex items-center gap-2 ${
+                currentTab === 'admin' ? 'bg-[#B84A3E] text-white' : 'bg-white text-[#B84A3E]'
+              }`}
+            >
+              <Shield className="h-4 w-4" />
+              Admin Dashboard
+            </button>
+          )}
         </div>
       )}
     </header>

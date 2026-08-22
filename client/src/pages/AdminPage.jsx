@@ -13,49 +13,13 @@ import CostDots from '../components/city-search/CostDots';
 import { categoryColor } from '../components/activity-search/categoryColor';
 import { formatCurrency, formatDuration } from '../lib/format';
 import { chartPalette } from '../components/budget/chartColors';
+import { apiFetch } from '../api/apiClient';
+import { fetchAdminDashboard } from '../api/adminApi';
 
-/* ── MOCK DATA ── */
-const MOCK_USERS = [
-  { id: 'u1',  name: 'Arjun Mehta',     email: 'arjun@globetrotter.io',  avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Arjun',  joinDate: '2026-01-12', totalTrips: 7,  status: 'active',    isAdmin: true  },
-  { id: 'u2',  name: 'Priya Shah',      email: 'priya@globetrotter.io',  avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Priya',  joinDate: '2026-02-04', totalTrips: 4,  status: 'active',    isAdmin: false },
-  { id: 'u3',  name: 'Lena Mueller',    email: 'lena.m@example.de',      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Lena',   joinDate: '2026-02-19', totalTrips: 2,  status: 'active',    isAdmin: false },
-  { id: 'u4',  name: 'Rahul Patel',     email: 'rahul.p@example.in',     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rahul',  joinDate: '2026-03-08', totalTrips: 0,  status: 'inactive',  isAdmin: false },
-  { id: 'u5',  name: 'Sofia Rivera',    email: 'sofia.r@example.mx',     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sofia',  joinDate: '2026-03-22', totalTrips: 5,  status: 'active',    isAdmin: false },
-  { id: 'u6',  name: 'James OBrien',    email: 'james.ob@example.ie',    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=James',  joinDate: '2026-04-11', totalTrips: 3,  status: 'active',    isAdmin: false },
-  { id: 'u7',  name: 'Yuki Tanaka',     email: 'yuki.t@example.jp',      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Yuki',   joinDate: '2026-04-30', totalTrips: 6,  status: 'active',    isAdmin: false },
-  { id: 'u8',  name: 'Fatima Al-Sayed', email: 'fatima.a@example.ae',    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Fatima', joinDate: '2026-05-14', totalTrips: 1,  status: 'suspended', isAdmin: false },
-  { id: 'u9',  name: 'Carlos Diaz',     email: 'carlos.d@example.co',    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Carlos', joinDate: '2026-06-01', totalTrips: 9,  status: 'active',    isAdmin: false },
-  { id: 'u10', name: 'Anika Novak',     email: 'anika.n@example.cz',     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Anika',  joinDate: '2026-06-18', totalTrips: 2,  status: 'inactive',  isAdmin: false },
-];
-
-const MOCK_CITIES = [
-  { id: 'city-paris',  name: 'Paris',     country: 'France',    region: 'Europe',     costIndex: 4, popularity: 98, imageUrl: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=600&q=80', _count: { activities: 4 } },
-  { id: 'city-london', name: 'London',    country: 'UK',        region: 'Europe',     costIndex: 5, popularity: 97, imageUrl: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=600&q=80', _count: { activities: 2 } },
-  { id: 'city-tokyo',  name: 'Tokyo',     country: 'Japan',     region: 'Asia',       costIndex: 4, popularity: 96, imageUrl: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=600&q=80', _count: { activities: 4 } },
-  { id: 'city-ny',     name: 'New York',  country: 'USA',       region: 'N. America', costIndex: 5, popularity: 95, imageUrl: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=600&q=80', _count: { activities: 3 } },
-  { id: 'city-rome',   name: 'Rome',      country: 'Italy',     region: 'Europe',     costIndex: 3, popularity: 94, imageUrl: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=600&q=80', _count: { activities: 3 } },
-  { id: 'city-bkk',   name: 'Bangkok',   country: 'Thailand',  region: 'Asia',       costIndex: 2, popularity: 94, imageUrl: 'https://images.unsplash.com/photo-1508009603885-50cf7c579365?auto=format&fit=crop&w=600&q=80', _count: { activities: 2 } },
-  { id: 'city-bali',  name: 'Bali',      country: 'Indonesia', region: 'Asia',       costIndex: 2, popularity: 93, imageUrl: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=600&q=80', _count: { activities: 2 } },
-  { id: 'city-kyoto',  name: 'Kyoto',     country: 'Japan',     region: 'Asia',       costIndex: 3, popularity: 92, imageUrl: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=600&q=80', _count: { activities: 2 } },
-  { id: 'city-bcn',    name: 'Barcelona', country: 'Spain',     region: 'Europe',     costIndex: 3, popularity: 91, imageUrl: 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?auto=format&fit=crop&w=600&q=80', _count: { activities: 2 } },
-  { id: 'city-cairo',  name: 'Cairo',     country: 'Egypt',     region: 'Africa',     costIndex: 1, popularity: 85, imageUrl: 'https://images.unsplash.com/photo-1572252009286-268acec5ca0a?auto=format&fit=crop&w=600&q=80', _count: { activities: 1 } },
-];
-
-const MOCK_ACTIVITIES = [
-  { id: 'a1', name: 'Eiffel Tower Summit Tour',        cityName: 'Paris',     category: 'sightseeing', cost: 35, durationHours: 2.5, tripCount: 42, imageUrl: 'https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?auto=format&fit=crop&w=600&q=80', description: 'Ascend to the top for panoramic views of Paris.' },
-  { id: 'a2', name: 'Senso-ji Temple Exploration',     cityName: 'Tokyo',     category: 'culture',     cost: 0,  durationHours: 2.0, tripCount: 38, imageUrl: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=600&q=80', description: 'Visit Tokyo oldest and most iconic Buddhist temple.' },
-  { id: 'a3', name: 'Fushimi Inari Torii Gates Hike',  cityName: 'Kyoto',     category: 'sightseeing', cost: 0,  durationHours: 2.5, tripCount: 35, imageUrl: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=600&q=80', description: 'Hike through sacred vermilion torii gate pathways.' },
-  { id: 'a4', name: 'Colosseum Underground Tour',      cityName: 'Rome',      category: 'sightseeing', cost: 48, durationHours: 3.0, tripCount: 31, imageUrl: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=600&q=80', description: 'Step back into gladiator history and ancient Roman politics.' },
-  { id: 'a5', name: 'Louvre Museum Guided Walk',       cityName: 'Paris',     category: 'culture',     cost: 25, durationHours: 3.0, tripCount: 29, imageUrl: 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=600&q=80', description: 'Explore Mona Lisa and thousands of world-famous masterpieces.' },
-  { id: 'a6', name: 'Grand Palace Temple Tour',        cityName: 'Bangkok',   category: 'culture',     cost: 16, durationHours: 2.5, tripCount: 27, imageUrl: 'https://images.unsplash.com/photo-1508009603885-50cf7c579365?auto=format&fit=crop&w=600&q=80', description: 'Sacred royal ceremonial complex with dazzling golden spires.' },
-  { id: 'a7', name: 'Sagrada Familia Tour',            cityName: 'Barcelona', category: 'culture',     cost: 34, durationHours: 1.5, tripCount: 25, imageUrl: 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?auto=format&fit=crop&w=600&q=80', description: 'Gaudi unfinished architectural masterpiece.' },
-  { id: 'a8', name: 'Tower of London Crown Jewels',    cityName: 'London',    category: 'sightseeing', cost: 38, durationHours: 2.5, tripCount: 22, imageUrl: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=600&q=80', description: 'Explore 1,000 years of royal history and guards.' },
-];
-
-const ANALYTICS = {
-  langPrefs:  [{ name: 'English', value: 54 }, { name: 'Spanish', value: 18 }, { name: 'Japanese', value: 14 }, { name: 'German', value: 9 }, { name: 'Other', value: 5 }],
-  tripTrends: [{ month: 'Feb', trips: 4 }, { month: 'Mar', trips: 9 }, { month: 'Apr', trips: 14 }, { month: 'May', trips: 22 }, { month: 'Jun', trips: 19 }, { month: 'Jul', trips: 31 }, { month: 'Aug', trips: 28 }],
-  topCities:  [{ city: 'Paris', visits: 42 }, { city: 'Tokyo', visits: 38 }, { city: 'Kyoto', visits: 31 }, { city: 'Rome', visits: 27 }, { city: 'Bangkok', visits: 23 }],
+const EMPTY_ANALYTICS = {
+  langPrefs: [],
+  tripTrends: [],
+  topCities: [],
 };
 
 /* ── STATUS BADGE ── */
@@ -92,8 +56,8 @@ function ConfirmDialog({ user, onConfirm, onCancel }) {
 }
 
 /* ── TAB 1: MANAGE USERS ── */
-function ManageUsersTab() {
-  const [users, setUsers] = useState(MOCK_USERS);
+function ManageUsersTab({ usersData, loading }) {
+  const [users, setUsers] = useState(usersData || []);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilter] = useState('all');
   const [sortField, setSortField] = useState('joinDate');
@@ -101,6 +65,10 @@ function ManageUsersTab() {
   const [groupBy, setGroupBy] = useState('none');
   const [toDelete, setToDelete] = useState(null);
   const [viewUser, setViewUser] = useState(null);
+
+  useEffect(() => {
+    setUsers(usersData || []);
+  }, [usersData]);
 
   const handleSort = (field) => { if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc'); else { setSortField(field); setSortDir('asc'); } };
 
@@ -156,6 +124,9 @@ function ManageUsersTab() {
 
       {/* Table */}
       <div className="bg-white border-2 border-ink shadow-[4px_4px_0px_0px_#1F2B2E] overflow-hidden">
+        {loading && users.length === 0 ? (
+          <div className="flex items-center justify-center py-24 font-mono text-sm text-ink/30 uppercase tracking-widest"><RefreshCw className="h-4 w-4 mr-2 animate-spin" />Loading users...</div>
+        ) : (
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
             <thead className="border-b-2 border-ink bg-paper">
@@ -200,6 +171,7 @@ function ManageUsersTab() {
           </table>
           {filtered.length === 0 && <div className="py-16 text-center font-mono text-sm text-ink/30 uppercase tracking-widest">No users match your filters</div>}
         </div>
+        )}
       </div>
 
       {toDelete && <ConfirmDialog user={toDelete} onConfirm={() => { setUsers(p => p.filter(u => u.id !== toDelete.id)); setToDelete(null); }} onCancel={() => setToDelete(null)} />}
@@ -234,21 +206,8 @@ function ManageUsersTab() {
 }
 
 /* ── TAB 2: POPULAR CITIES ── */
-function PopularCitiesTab() {
-  const [cities, setCities] = useState([]);
-  const [loading, setLoading] = useState(true);
+function PopularCitiesTab({ cities, loading }) {
   const rankColors = ['#B8823A', '#7FA69C', '#2C5F7C'];
-
-  useEffect(() => {
-    const go = async () => {
-      try {
-        const res = await fetch('/api/cities?sortBy=popularity');
-        if (res.ok) { const data = await res.json(); if (data.cities && data.cities.length > 0) { setCities(data.cities); setLoading(false); return; } }
-      } catch (_) {}
-      setCities(MOCK_CITIES); setLoading(false);
-    };
-    go();
-  }, []);
 
   return (
     <div className="space-y-5">
@@ -294,17 +253,17 @@ function PopularCitiesTab() {
 }
 
 /* ── TAB 3: POPULAR ACTIVITIES ── */
-function PopularActivitiesTab() {
+function PopularActivitiesTab({ activities, loading }) {
   const [search, setSearch] = useState('');
   const [filterCat, setFilterCat] = useState('all');
-  const categories = ['all', ...new Set(MOCK_ACTIVITIES.map(a => a.category))];
+  const categories = ['all', ...new Set((activities || []).map(a => a.category))];
 
   const filtered = useMemo(() => {
-    let list = [...MOCK_ACTIVITIES];
+    let list = [...(activities || [])];
     if (search) { const q = search.toLowerCase(); list = list.filter(a => a.name.toLowerCase().includes(q) || a.cityName.toLowerCase().includes(q)); }
     if (filterCat !== 'all') list = list.filter(a => a.category === filterCat);
     return list;
-  }, [search, filterCat]);
+  }, [activities, search, filterCat]);
 
   return (
     <div className="space-y-5">
@@ -320,6 +279,7 @@ function PopularActivitiesTab() {
           ))}
         </div>
       </div>
+      {loading && filtered.length === 0 && <div className="flex items-center justify-center py-10 font-mono text-sm text-ink/30 uppercase tracking-widest"><RefreshCw className="h-4 w-4 mr-2 animate-spin" />Loading activities...</div>}
       <div className="space-y-3">
         {filtered.map((act, idx) => {
           const color = categoryColor(act.category);
@@ -365,15 +325,18 @@ function PopularActivitiesTab() {
 const MONO_STYLE = { fontFamily: 'JetBrains Mono, monospace', fontSize: 11, fill: '#1F2B2E' };
 const TT = { fontFamily: 'JetBrains Mono, monospace', fontSize: 11, border: '1px solid #1F2B2E', borderRadius: 2, backgroundColor: '#F6F3EC' };
 
-function UserTrendsTab() {
-  const pieColors = chartPalette(ANALYTICS.langPrefs.length);
+function UserTrendsTab({ users, cities, activities, analytics }) {
+  const safeAnalytics = analytics || EMPTY_ANALYTICS;
+  const totalTrips = users.reduce((sum, user) => sum + (user.totalTrips || 0), 0);
+  const totalActivityUsages = activities.reduce((sum, act) => sum + (act.tripCount || 0), 0);
+  const pieColors = chartPalette(Math.max(1, safeAnalytics.langPrefs.length));
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Total Users"   value={MOCK_USERS.length} accent="text-route-blue" />
-        <StatCard label="Total Trips"   value={MOCK_USERS.reduce((s, u) => s + u.totalTrips, 0)} accent="text-ochre" />
-        <StatCard label="Total Cities"  value={MOCK_CITIES.length} accent="text-sea" />
-        <StatCard label="Avg Acts/Trip" value={(MOCK_ACTIVITIES.reduce((s, a) => s + a.tripCount, 0) / Math.max(1, MOCK_USERS.reduce((s, u) => s + u.totalTrips, 0))).toFixed(1)} accent="text-ink" />
+        <StatCard label="Total Users"   value={users.length} accent="text-route-blue" />
+        <StatCard label="Total Trips"   value={totalTrips} accent="text-ochre" />
+        <StatCard label="Total Cities"  value={cities.length} accent="text-sea" />
+        <StatCard label="Avg Acts/Trip" value={(totalActivityUsages / Math.max(1, totalTrips)).toFixed(1)} accent="text-ink" />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <div className="bg-white border-2 border-ink shadow-[4px_4px_0px_0px_#1F2B2E] p-5">
@@ -384,8 +347,8 @@ function UserTrendsTab() {
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={ANALYTICS.langPrefs} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={52} outerRadius={88} paddingAngle={2}>
-                  {ANALYTICS.langPrefs.map((_, i) => <Cell key={i} fill={pieColors[i]} stroke="#1F2B2E" strokeWidth={1} />)}
+                <Pie data={safeAnalytics.langPrefs} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={52} outerRadius={88} paddingAngle={2}>
+                  {safeAnalytics.langPrefs.map((_, i) => <Cell key={i} fill={pieColors[i]} stroke="#1F2B2E" strokeWidth={1} />)}
                 </Pie>
                 <Tooltip contentStyle={TT} formatter={(v) => [`${v}%`, 'Users']} />
                 <Legend wrapperStyle={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, textTransform: 'uppercase' }} iconSize={8} />
@@ -400,7 +363,7 @@ function UserTrendsTab() {
           </div>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={ANALYTICS.tripTrends} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+              <LineChart data={safeAnalytics.tripTrends} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1F2B2E" strokeOpacity={0.08} vertical={false} />
                 <XAxis dataKey="month" tick={MONO_STYLE} axisLine={{ stroke: '#1F2B2E' }} tickLine={false} />
                 <YAxis tick={MONO_STYLE} axisLine={{ stroke: '#1F2B2E' }} tickLine={false} />
@@ -418,7 +381,7 @@ function UserTrendsTab() {
         </div>
         <div className="h-56">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={ANALYTICS.topCities} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+            <BarChart data={safeAnalytics.topCities} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1F2B2E" strokeOpacity={0.08} vertical={false} />
               <XAxis dataKey="city" tick={MONO_STYLE} axisLine={{ stroke: '#1F2B2E' }} tickLine={false} />
               <YAxis tick={MONO_STYLE} axisLine={{ stroke: '#1F2B2E' }} tickLine={false} />
@@ -438,7 +401,7 @@ function UserTrendsTab() {
               <tr>{['Rank','Activity','City','Category','Cost','Trips'].map(h => <th key={h} className="px-4 py-2.5 text-left font-mono text-[10px] uppercase tracking-widest text-ink/40">{h}</th>)}</tr>
             </thead>
             <tbody>
-              {MOCK_ACTIVITIES.slice(0, 5).map((act, idx) => {
+              {activities.slice(0, 5).map((act, idx) => {
                 const color = categoryColor(act.category);
                 return (
                   <tr key={act.id} className="border-b border-ink/10 hover:bg-paper/50 transition-colors">
@@ -469,6 +432,48 @@ const TABS = [
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('users');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [users, setUsers] = useState([]);
+  const [cities, setCities] = useState([]);
+  const [activities, setActivities] = useState([]);
+  const [analytics, setAnalytics] = useState(EMPTY_ANALYTICS);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadDashboard = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const [dashboardData, cityData] = await Promise.all([
+          fetchAdminDashboard(),
+          apiFetch('/cities?sortBy=popularity'),
+        ]);
+        if (cancelled) return;
+
+        setUsers(dashboardData.users || []);
+        setActivities(dashboardData.activities || []);
+        setAnalytics(dashboardData.analytics || EMPTY_ANALYTICS);
+        setCities(Array.isArray(cityData?.cities) ? cityData.cities : []);
+      } catch (err) {
+        if (cancelled) return;
+        setUsers([]);
+        setActivities([]);
+        setCities([]);
+        setAnalytics(EMPTY_ANALYTICS);
+        setError(err?.message || 'Unable to load admin dashboard data.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    loadDashboard();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <div className="space-y-6">
       <div className="bg-white border-2 border-ink shadow-[4px_4px_0px_0px_#1F2B2E] px-6 py-5">
@@ -500,11 +505,20 @@ export default function AdminPage() {
           );
         })}
       </div>
+      {error && (
+        <div className="bg-white border-2 border-stamp-red shadow-[4px_4px_0px_0px_#1F2B2E] px-4 py-3 flex items-start justify-between gap-3">
+          <div>
+            <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-stamp-red">Data Load Error</p>
+            <p className="font-body text-sm text-ink/70">{error}</p>
+          </div>
+          <button onClick={() => window.location.reload()} className="px-3 py-1.5 border border-ink bg-paper font-mono text-[10px] font-bold uppercase hover:bg-ink hover:text-paper transition">Retry</button>
+        </div>
+      )}
       <div>
-        {activeTab === 'users'      && <ManageUsersTab />}
-        {activeTab === 'cities'     && <PopularCitiesTab />}
-        {activeTab === 'activities' && <PopularActivitiesTab />}
-        {activeTab === 'analytics'  && <UserTrendsTab />}
+        {activeTab === 'users'      && <ManageUsersTab usersData={users} loading={loading} />}
+        {activeTab === 'cities'     && <PopularCitiesTab cities={cities} loading={loading} />}
+        {activeTab === 'activities' && <PopularActivitiesTab activities={activities} loading={loading} />}
+        {activeTab === 'analytics'  && <UserTrendsTab users={users} cities={cities} activities={activities} analytics={analytics} />}
       </div>
     </div>
   );

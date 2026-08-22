@@ -876,10 +876,18 @@ export const removeStopActivityHandler = async (req, res) => {
   }
 };
 
+// Alias for removeStopActivityHandler
+export const deleteStopActivityHandler = removeStopActivityHandler;
+
 // Route shortcuts on /api/trips for stops/activities
-router.put('/stops/:id', updateStopHandler);
-router.delete('/stops/:id', deleteStopHandler);
 router.post('/stops/:id/activities', addStopActivityHandler);
+router.post('/:id/activities', addStopActivityHandler);
+
+router.put('/stops/:id', updateStopHandler);
+router.put('/:id', updateStopHandler);
+
+router.delete('/stops/:id', deleteStopHandler);
 router.delete('/stop-activities/:id', removeStopActivityHandler);
+router.delete('/:id', deleteStopHandler);
 
 export default router;

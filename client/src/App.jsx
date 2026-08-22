@@ -24,6 +24,7 @@ const PROTECTED_TABS = ['create-trip', 'my-trips', 'builder', 'profile', 'admin'
 
 function MainApp() {
   const { user, isAuthenticated } = useAuth();
+  const isAdmin = Boolean(isAuthenticated && user?.isAdmin);
   const [activeTab, setActiveTab] = useState('home'); // 'home', 'create-trip', 'my-trips', 'cities', 'activities', 'builder', 'itinerary', 'budget', 'calendar', 'share', 'admin', 'profile', 'auth', 'reset'
   const [navParams, setNavParams] = useState({});
   const [resetToken, setResetToken] = useState(null);
@@ -46,6 +47,20 @@ function MainApp() {
     }
   }, []);
 
+  // Defensive guard in case tab state is changed elsewhere for admin
+  useEffect(() => {
+    if (activeTab === 'admin' && !isAdmin) {
+      if (!isAuthenticated) {
+        setAuthMode('login');
+        setAuthReason('Administrative credentials required to access the admin portal.');
+        setActiveTab('auth');
+      } else {
+        setActiveTab('home');
+      }
+      setNavParams({});
+    }
+  }, [activeTab, isAdmin, isAuthenticated]);
+
   const navigate = (tab, params = {}) => {
     // 1. If unauthenticated user tries to access a protected page, remember the target and redirect to signup
     if (PROTECTED_TABS.includes(tab) && !isAuthenticated) {
@@ -60,6 +75,20 @@ function MainApp() {
         'Please sign in or register to access this section.'
       );
       setActiveTab('auth');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    if (tab === 'admin' && !isAdmin) {
+      if (!isAuthenticated) {
+        setRedirectTarget({ tab: 'admin', params });
+        setAuthMode('login');
+        setAuthReason('Administrative credentials required to access the admin portal.');
+        setActiveTab('auth');
+      } else {
+        setActiveTab('home');
+      }
+      setNavParams({});
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
@@ -346,12 +375,12 @@ function MainApp() {
         )}
 
         {activeTab === 'admin' && (
-          isAuthenticated ? (
+          isAdmin ? (
             <AdminPage />
           ) : (
             <AuthPage
               mode="login"
-              reason="Administrative sign-in required to access the admin portal."
+              reason="Administrative credentials required to access the admin portal."
               onSuccess={() => navigate('admin')}
             />
           )
