@@ -1,6 +1,8 @@
 import express from 'express';
+import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import nodemailer from 'nodemailer';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../middleware/auth.js';
 
@@ -10,6 +12,27 @@ const prisma = new PrismaClient();
 const SALT_ROUNDS = parseInt(process.env.BCRYPT_SALT_ROUNDS, 10) || 12;
 const JWT_SECRET = process.env.JWT_SECRET || 'globetrotter_super_secret_jwt_key_2026';
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || 'globetrotter_refresh_token_secret_7d_2026';
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
+
+// Gmail SMTP transporter (created lazily)
+let mailTransporter = null;
+const getMailTransporter = () => {
+  if (!mailTransporter) {
+    const gmailUser = process.env.GMAIL_USER;
+    const gmailPass = process.env.GMAIL_APP_PASSWORD;
+    if (!gmailUser || !gmailPass || gmailUser === 'YOUR_GMAIL@gmail.com') {
+      console.warn('⚠️ GMAIL_USER / GMAIL_APP_PASSWORD not configured in server/.env');
+    }
+    mailTransporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: gmailUser,
+        pass: gmailPass
+      }
+    });
+  }
+  return mailTransporter;
+};
 
 // Email validation helper
 const isValidEmail = (email) => {
@@ -233,6 +256,174 @@ router.post('/logout', async (req, res) => {
     res.status(200).json({ message: 'Logged out successfully.' });
   } catch (error) {
     console.error('Logout Error:', error);
+    res.status(500).json({ error: 'Internal Server Error', message: error.message });
+  }
+});
+
+// POST /api/auth/forgot-password (Public — no auth required)
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    console.log(`\n📨 [Forgot Password] Request received for email: "${email}"`);
+
+    if (!email || !isValidEmail(email)) {
+      return res.status(400).json({ error: 'Validation Error', message: 'Please provide a valid email address.' });
+    }
+
+    // Always respond with same message to prevent email enumeration
+    const successMessage = 'If an account with that email exists, a password reset link has been sent. Please check your inbox.';
+
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase().trim() }
+    });
+
+    if (!user) {
+      console.log(`⚠️ [Forgot Password] No user found in database with email: "${email}". Note: An account must be signed up first.`);
+      return res.status(200).json({ message: successMessage });
+    }
+
+    console.log(`✅ [Forgot Password] User found: ${user.name} (${user.id})`);
+
+    // Invalidate any existing unused reset tokens for this user
+    await prisma.passwordResetToken.updateMany({
+      where: { userId: user.id, usedAt: null },
+      data: { usedAt: new Date() }
+    });
+
+    // Generate a cryptographically secure reset token
+    const resetToken = crypto.randomUUID();
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    await prisma.passwordResetToken.create({
+      data: {
+        token: resetToken,
+        userId: user.id,
+        expiresAt
+      }
+    });
+
+    // Build reset link
+    const resetLink = `${CLIENT_URL}?reset_token=${resetToken}`;
+    console.log(`\n======================================================`);
+    console.log(`🔗 [DEV RESET LINK] Click to reset password immediately:`);
+    console.log(`   ${resetLink}`);
+    console.log(`======================================================\n`);
+
+    // Send email via Nodemailer (Gmail SMTP)
+    try {
+      const transporter = getMailTransporter();
+      console.log(`📤 [Gmail] Attempting to send reset email to ${user.email}...`);
+      
+      const info = await transporter.sendMail({
+        from: `"GlobeTrotter" <${process.env.GMAIL_USER}>`,
+        to: user.email,
+        subject: '🔐 GlobeTrotter — Password Reset Request',
+        html: `
+          <div style="font-family: 'Inter', Arial, sans-serif; max-width: 520px; margin: 0 auto; background: #F6F3EC; border: 2px solid #1F2B2E; padding: 0;">
+            <div style="background: #1F2B2E; padding: 20px 24px; text-align: center;">
+              <h1 style="margin: 0; color: #F6F3EC; font-family: 'Arial Black', Arial, sans-serif; font-size: 22px; letter-spacing: 2px;">
+                GLOBETROTTER
+              </h1>
+              <p style="margin: 4px 0 0; color: #7FA69C; font-size: 10px; letter-spacing: 3px; text-transform: uppercase;">
+                PASSWORD RESET REQUEST
+              </p>
+            </div>
+            <div style="padding: 28px 24px;">
+              <p style="color: #1F2B2E; font-size: 14px; line-height: 1.6; margin: 0 0 16px;">
+                Hello <strong>${user.name}</strong>,
+              </p>
+              <p style="color: #1F2B2E; font-size: 14px; line-height: 1.6; margin: 0 0 24px;">
+                We received a request to reset your password. Click the button below to set a new passphrase. This link expires in <strong>1 hour</strong>.
+              </p>
+              <div style="text-align: center; margin: 24px 0;">
+                <a href="${resetLink}" style="display: inline-block; background: #2C5F7C; color: #F6F3EC; padding: 14px 32px; font-size: 13px; font-weight: bold; text-decoration: none; letter-spacing: 1px; text-transform: uppercase; border: 2px solid #1F2B2E;">
+                  RESET MY PASSWORD
+                </a>
+              </div>
+              <p style="color: #1F2B2E; font-size: 12px; line-height: 1.5; margin: 24px 0 0; opacity: 0.7;">
+                If you didn't request this, you can safely ignore this email. Your password will remain unchanged.
+              </p>
+              <hr style="border: none; border-top: 1px dashed #1F2B2E; margin: 24px 0; opacity: 0.3;" />
+              <p style="color: #1F2B2E; font-size: 10px; opacity: 0.5; text-align: center; font-family: monospace;">
+                GlobeTrotter &bull; Itinerary-as-Document &bull; ${new Date().getFullYear()}
+              </p>
+            </div>
+          </div>
+        `
+      });
+
+      console.log('✅ [Gmail] Email sent! Message ID:', info.messageId);
+    } catch (emailErr) {
+      console.error('❌ [Gmail Error]:', emailErr.message);
+    }
+
+    res.status(200).json({ message: successMessage });
+  } catch (error) {
+    console.error('Forgot Password Error:', error);
+    res.status(500).json({ error: 'Internal Server Error', message: error.message });
+  }
+});
+
+// POST /api/auth/reset-password (Public — no auth required)
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ error: 'Validation Error', message: 'Reset token is required.' });
+    }
+
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ error: 'Validation Error', message: 'New password must be at least 6 characters long.' });
+    }
+
+    // Find the reset token
+    const resetRecord = await prisma.passwordResetToken.findUnique({
+      where: { token },
+      include: { user: true }
+    });
+
+    if (!resetRecord) {
+      return res.status(400).json({ error: 'Invalid Token', message: 'This reset link is invalid or has already been used.' });
+    }
+
+    // Check if already used
+    if (resetRecord.usedAt) {
+      return res.status(400).json({ error: 'Token Used', message: 'This reset link has already been used. Please request a new one.' });
+    }
+
+    // Check expiry
+    if (new Date() > resetRecord.expiresAt) {
+      // Mark as used so it can't be retried
+      await prisma.passwordResetToken.update({
+        where: { id: resetRecord.id },
+        data: { usedAt: new Date() }
+      });
+      return res.status(400).json({ error: 'Token Expired', message: 'This reset link has expired. Please request a new one.' });
+    }
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
+
+    // Update user password and mark token as used (in a transaction)
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: resetRecord.userId },
+        data: { password: hashedPassword }
+      }),
+      prisma.passwordResetToken.update({
+        where: { id: resetRecord.id },
+        data: { usedAt: new Date() }
+      }),
+      // Revoke all refresh tokens for this user (force re-login on all devices)
+      prisma.refreshToken.deleteMany({
+        where: { userId: resetRecord.userId }
+      })
+    ]);
+
+    res.status(200).json({ message: 'Password has been reset successfully. Please sign in with your new password.' });
+  } catch (error) {
+    console.error('Reset Password Error:', error);
     res.status(500).json({ error: 'Internal Server Error', message: error.message });
   }
 });
