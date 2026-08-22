@@ -168,7 +168,24 @@ async function main() {
     activityCount += activities.length;
   }
 
-  console.log(`✅ Seeding complete! Populated ${cityCount} cities and ${activityCount} activities.`);
+  // Seed / Upsert the 3 permanent Admin accounts
+  const bcrypt = (await import('bcrypt')).default;
+  const adminAccounts = [
+    { email: 'jash@gmail.com', password: 'jash1234', name: 'Jash (Admin)' },
+    { email: 'kavishasharma@gmail.com', password: 'kavisha1234', name: 'Kavisha Sharma (Admin)' },
+    { email: 'hemakshadmin@gmail.com', password: 'hemaksh1234', name: 'Hemaksh (Admin)' }
+  ];
+
+  for (const admin of adminAccounts) {
+    const passwordHash = await bcrypt.hash(admin.password, 10);
+    await prisma.user.upsert({
+      where: { email: admin.email.toLowerCase() },
+      update: { name: admin.name, password: passwordHash, isAdmin: true },
+      create: { email: admin.email.toLowerCase(), name: admin.name, password: passwordHash, isAdmin: true, languagePref: 'en' }
+    });
+  }
+
+  console.log(`✅ Seeding complete! Populated ${cityCount} cities, ${activityCount} activities, and 3 Admin accounts.`);
 }
 
 main()

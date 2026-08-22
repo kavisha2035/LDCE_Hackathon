@@ -110,11 +110,11 @@ export default function AuthPage({ onSuccess, mode, resetToken, initialIsLogin, 
         }
         setMessage(data.message);
       } else if (isLogin) {
-        await login(email.toLowerCase().trim(), password);
-        if (onSuccess) onSuccess();
+        const data = await login(email.toLowerCase().trim(), password);
+        if (onSuccess) onSuccess(data?.user);
       } else {
-        await signup(name, email.toLowerCase().trim(), password, languagePref, avatar);
-        if (onSuccess) onSuccess();
+        const data = await signup(name, email.toLowerCase().trim(), password, languagePref, avatar);
+        if (onSuccess) onSuccess(data?.user);
       }
     } catch (err) {
       setError(err.message || 'An error occurred. Please try again.');
