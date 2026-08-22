@@ -22,18 +22,82 @@ import {
 
 const PROTECTED_TABS = ['create-trip', 'my-trips', 'builder', 'profile', 'admin'];
 
+const VALID_TABS = [
+  'home', 'create-trip', 'my-trips', 'cities', 'activities',
+  'builder', 'itinerary', 'budget', 'calendar', 'share',
+  'admin', 'profile', 'auth', 'reset'
+];
+
+const parseLocation = (loc = window.location) => {
+  const path = loc.pathname.replace(/^\/+|\/+$/g, '');
+  const searchParams = new URLSearchParams(loc.search);
+  const params = {};
+  for (const [key, value] of searchParams.entries()) {
+    params[key] = value;
+  }
+
+  // Check reset token in query
+  if (params.reset_token) {
+    return { tab: 'reset', params, resetToken: params.reset_token };
+  }
+
+  if (!path || path === '' || path === 'home') {
+    return { tab: 'home', params };
+  }
+
+  if (path.startsWith('share/')) {
+    const slug = path.split('/')[1];
+    return { tab: 'share', params: { ...params, slug } };
+  }
+
+  if (VALID_TABS.includes(path)) {
+    return { tab: path, params };
+  }
+
+  return { tab: 'home', params };
+};
+
+const buildUrl = (tab, params = {}) => {
+  let path = tab === 'home' ? '/' : `/${tab}`;
+  const searchParams = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      searchParams.set(key, String(value));
+    }
+  });
+
+  const query = searchParams.toString();
+  return query ? `${path}?${query}` : path;
+};
+
 function MainApp() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading } = useAuth();
   const isAdmin = Boolean(isAuthenticated && user?.isAdmin);
-  const [activeTab, setActiveTab] = useState('home'); // 'home', 'create-trip', 'my-trips', 'cities', 'activities', 'builder', 'itinerary', 'budget', 'calendar', 'share', 'admin', 'profile', 'auth', 'reset'
-  const [navParams, setNavParams] = useState({});
-  const [resetToken, setResetToken] = useState(null);
+
+  const initialLoc = parseLocation();
+  const [activeTab, setActiveTab] = useState(initialLoc.tab);
+  const [navParams, setNavParams] = useState(initialLoc.params);
+  const [resetToken, setResetToken] = useState(initialLoc.resetToken || null);
 
   // Authentication redirection memory: track previous page and intended target
   const [previousPage, setPreviousPage] = useState({ tab: 'home', params: {} });
   const [redirectTarget, setRedirectTarget] = useState(null);
   const [authReason, setAuthReason] = useState('');
   const [authMode, setAuthMode] = useState('signup'); // 'signup', 'login'
+
+  // Initialize and synchronize with browser history (popstate / back / forward)
+  useEffect(() => {
+    const handlePopState = () => {
+      const { tab, params, resetToken: token } = parseLocation();
+      setActiveTab(tab);
+      setNavParams(params);
+      if (token) setResetToken(token);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   // Detect reset_token query param from password reset email link
   useEffect(() => {
@@ -47,23 +111,24 @@ function MainApp() {
     }
   }, []);
 
-  // Defensive guard in case tab state is changed elsewhere for admin
+  // Defensive guard in case tab state is changed elsewhere for admin (runs after auth check finishes)
   useEffect(() => {
+    if (loading) return;
+
     if (activeTab === 'admin' && !isAdmin) {
       if (!isAuthenticated) {
         setAuthMode('login');
         setAuthReason('Administrative credentials required to access the admin portal.');
-        setActiveTab('auth');
+        navigate('auth');
       } else {
-        setActiveTab('home');
+        navigate('home');
       }
-      setNavParams({});
     }
-  }, [activeTab, isAdmin, isAuthenticated]);
+  }, [activeTab, isAdmin, isAuthenticated, loading]);
 
   const navigate = (tab, params = {}) => {
     // 1. If unauthenticated user tries to access a protected page, remember the target and redirect to signup
-    if (PROTECTED_TABS.includes(tab) && !isAuthenticated) {
+    if (!loading && PROTECTED_TABS.includes(tab) && !isAuthenticated) {
       setRedirectTarget({ tab, params });
       setAuthMode('signup');
       setAuthReason(
@@ -74,18 +139,30 @@ function MainApp() {
         tab === 'admin' ? 'Administrative credentials required to access the admin portal.' :
         'Please sign in or register to access this section.'
       );
+      const url = buildUrl('auth');
+      if (window.location.pathname + window.location.search !== url) {
+        window.history.pushState({ tab: 'auth', params: {} }, '', url);
+      }
       setActiveTab('auth');
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
-    if (tab === 'admin' && !isAdmin) {
+    if (!loading && tab === 'admin' && !isAdmin) {
       if (!isAuthenticated) {
         setRedirectTarget({ tab: 'admin', params });
         setAuthMode('login');
         setAuthReason('Administrative credentials required to access the admin portal.');
+        const url = buildUrl('auth');
+        if (window.location.pathname + window.location.search !== url) {
+          window.history.pushState({ tab: 'auth', params: {} }, '', url);
+        }
         setActiveTab('auth');
       } else {
+        const url = buildUrl('home');
+        if (window.location.pathname + window.location.search !== url) {
+          window.history.pushState({ tab: 'home', params: {} }, '', url);
+        }
         setActiveTab('home');
       }
       setNavParams({});
@@ -99,14 +176,23 @@ function MainApp() {
         setRedirectTarget({ tab: activeTab, params: navParams });
       }
       setAuthMode('login');
+      const url = buildUrl('auth');
+      if (window.location.pathname + window.location.search !== url) {
+        window.history.pushState({ tab: 'auth', params: {} }, '', url);
+      }
       setActiveTab('auth');
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
-    // 3. Normal navigation: update previous page history
+    // 3. Normal navigation: update previous page history and push browser URL
     if (activeTab !== 'auth' && activeTab !== 'reset') {
       setPreviousPage({ tab: activeTab, params: navParams });
+    }
+
+    const url = buildUrl(tab, params);
+    if (window.location.pathname + window.location.search !== url) {
+      window.history.pushState({ tab, params }, '', url);
     }
 
     setActiveTab(tab);
@@ -125,9 +211,7 @@ function MainApp() {
     setAuthMode('login');
     
     // Redirect to the remembered page
-    setNavParams(target.params || {});
-    setActiveTab(target.tab || 'home');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    navigate(target.tab || 'home', target.params || {});
   };
 
   // Subpage title helper
