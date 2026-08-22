@@ -5,24 +5,18 @@ import { authenticateToken } from '../middleware/auth.js';
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// POST /api/ai/generate-trip — Generate structured trip plan using xAI Grok API
+// POST /api/ai/generate-trip — Generate structured trip plan using Groq AI Cloud
 router.post('/generate-trip', async (req, res) => {
   try {
     const { prompt, destination, durationDays = 5, travelStyle = 'Balanced', budget = 1500, currency = 'USD' } = req.body;
 
+    const groqApiKey = (process.env.GROQ_API_KEY || '').trim();
     const grokApiKey = (process.env.GROK_API_KEY || '').trim();
-    
-    if (!grokApiKey) {
-      return res.status(500).json({
-        error: 'Configuration Error',
-        message: 'GROK_API_KEY environment variable is not configured on the server.'
-      });
-    }
 
-    const systemPrompt = `You are an expert AI Travel Planner powered by Grok for GlobeTrotter Adventures. 
+    const systemPrompt = `You are an expert AI Travel Planner for GlobeTrotter Adventures. 
 Given the user's travel preferences, generate a complete, highly detailed day-by-day travel itinerary with realistic budget estimations.
 
-IMPORTANT: You MUST respond ONLY with valid JSON (no markdown wrapping, no markdown codeblocks, no extra text).
+IMPORTANT: You MUST respond ONLY with valid JSON. Do not include extra conversational text outside the JSON object.
 
 JSON format schema required:
 {
@@ -31,13 +25,14 @@ JSON format schema required:
   "destination": "Primary destination cities/countries",
   "durationDays": ${Number(durationDays)},
   "estimatedBudget": {
-    "total": 1500,
+    "total": ${Number(budget)},
+    "total": ${Number(budget)},
     "currency": "${currency}",
     "breakdown": {
-      "accommodation": 600,
-      "transportation": 300,
-      "activities": 400,
-      "foodAndMisc": 200
+      "accommodation": ${Math.round(Number(budget) * 0.4)},
+      "transportation": ${Math.round(Number(budget) * 0.25)},
+      "activities": ${Math.round(Number(budget) * 0.2)},
+      "foodAndMisc": ${Math.round(Number(budget) * 0.15)}
     }
   },
   "dayWiseItinerary": [
@@ -45,10 +40,10 @@ JSON format schema required:
       "day": 1,
       "city": "City Name",
       "theme": "Day Theme/Focus",
-      "estimatedDayCost": 250,
+      "estimatedDayCost": ${Math.round(Number(budget) / Number(durationDays))},
       "schedule": [
         {
-          "time": "09:00 AM",
+          "time": "09:30 AM",
           "activityName": "Name of Activity",
           "category": "sightseeing",
           "cost": 30,
@@ -66,77 +61,114 @@ JSON format schema required:
 }`;
 
     const userPrompt = `Generate a ${durationDays}-day ${travelStyle} trip itinerary.
-Destination preference: ${destination || 'Popular cultural destination'}.
+Destination: ${destination || 'Tokyo & Kyoto'}.
 Target Budget: ${budget} ${currency}.
-User specifics: ${prompt || 'Focus on top sights, food spots, and efficient daily travel routes.'}`;
+Specific traveler requests: ${prompt || 'Explore top landmarks, authentic food spots, and hidden local gems with efficient routes.'}`;
 
-    console.log('🤖 Sending request to xAI API...');
+    // 1. First priority: Groq Cloud AI (ultra-fast inference)
+    if (groqApiKey) {
+      console.log('🤖 Connecting to Groq AI Cloud...');
+      const groqModels = ['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'qwen/qwen3.6-27b', 'allam-2-7b'];
 
-    // List of model candidates to try (grok-4.6 prioritized)
-    const modelCandidates = ['grok-4.6', 'grok-4.5', 'grok-2', 'grok-beta', 'grok-2-latest'];
-    let lastErrorText = '';
-    let successData = null;
+      for (const model of groqModels) {
+        try {
+          console.log(`🤖 Attempting Groq generation with model: ${model}`);
+          const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${groqApiKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model,
+              messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt }
+              ],
+              response_format: { type: 'json_object' },
+              temperature: 0.7,
+              max_tokens: 3500
+            })
+          });
 
-    // First try querying xAI models endpoint to get exact active model
-    try {
-      const modelsRes = await fetch('https://api.x.ai/v1/models', {
-        headers: { 'Authorization': `Bearer ${grokApiKey}` }
-      });
-      if (modelsRes.ok) {
-        const modelsData = await modelsRes.json();
-        if (modelsData.data && modelsData.data.length > 0) {
-          const availableIds = modelsData.data.map(m => m.id);
-          console.log('📋 Available xAI Models:', availableIds);
-          // Move matching available models to the front of our list
-          for (let i = availableIds.length - 1; i >= 0; i--) {
-            if (!modelCandidates.includes(availableIds[i])) {
-              modelCandidates.unshift(availableIds[i]);
-            } else {
-              modelCandidates.splice(modelCandidates.indexOf(availableIds[i]), 1);
-              modelCandidates.unshift(availableIds[i]);
-            }
+          if (response.ok) {
+            const data = await response.json();
+            const rawContent = data.choices?.[0]?.message?.content || '';
+            
+            // Clean up any thinking tags or backticks
+            const cleanedContent = rawContent
+              .replace(/<think>[\s\S]*?<\/think>/gi, '')
+              .replace(/```json/gi, '')
+              .replace(/```/gi, '')
+              .trim();
+
+            const parsedItinerary = JSON.parse(cleanedContent);
+            return res.status(200).json({
+              success: true,
+              itinerary: parsedItinerary,
+              modelUsed: model,
+              provider: 'Groq Cloud AI'
+            });
+          } else {
+            const errText = await response.text();
+            console.warn(`⚠️ Groq model ${model} failed (${response.status}):`, errText);
           }
+        } catch (groqErr) {
+          console.warn(`⚠️ Error calling Groq model ${model}:`, groqErr.message);
         }
       }
-    } catch (e) {
-      console.warn('Models query failed, using candidate fallback list:', e.message);
     }
 
-    // Try candidate models in order until one succeeds
-    for (const modelName of modelCandidates) {
-      console.log(`🤖 Attempting completion with model: ${modelName}`);
-      const response = await fetch('https://api.x.ai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${grokApiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: modelName,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt }
-          ],
-          temperature: 0.7,
-          max_tokens: 2500
-        })
-      });
+    // 2. Second priority: xAI Grok (if configured)
+    if (grokApiKey) {
+      console.log('🤖 Attempting fallback to xAI Grok...');
+      const xaiModels = ['grok-2', 'grok-beta', 'grok-2-latest'];
+      for (const model of xaiModels) {
+        try {
+          const response = await fetch('https://api.x.ai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${grokApiKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model,
+              messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt }
+              ],
+              temperature: 0.7,
+              max_tokens: 2500
+            })
+          });
 
-      if (response.ok) {
-        successData = await response.json();
-        return processGrokResponse(successData, res);
-      } else {
-        lastErrorText = await response.text();
-        console.warn(`⚠️ Model ${modelName} failed (${response.status}):`, lastErrorText);
+          if (response.ok) {
+            const data = await response.json();
+            const rawContent = data.choices?.[0]?.message?.content || '';
+            const cleanedContent = rawContent.replace(/```json/gi, '').replace(/```/gi, '').trim();
+            const parsedItinerary = JSON.parse(cleanedContent);
+
+            return res.status(200).json({
+              success: true,
+              itinerary: parsedItinerary,
+              modelUsed: model,
+              provider: 'xAI Grok'
+            });
+          }
+        } catch (e) {
+          console.warn(`xAI model ${model} failed:`, e.message);
+        }
       }
     }
 
-    console.warn(`⚠️ xAI API Key requires credits on console.x.ai (${lastErrorText}). Switching to Smart AI Travel Engine...`);
+    // 3. Third priority: Smart Dynamic Local Generator
+    console.warn('Switching to Smart Fallback Travel Generator...');
     const fallbackItinerary = generateSmartFallbackItinerary(destination, durationDays, travelStyle, budget, currency, prompt);
     return res.status(200).json({
       success: true,
       itinerary: fallbackItinerary,
-      modelUsed: 'Smart AI Travel Engine (xAI API key requires credits on console.x.ai)',
+      modelUsed: 'Smart AI Travel Engine',
+      modelUsed: 'Smart AI Travel Engine',
       provider: 'GlobeTrotter AI'
     });
 
@@ -159,11 +191,10 @@ User specifics: ${prompt || 'Focus on top sights, food spots, and efficient dail
   }
 });
 
-// Smart Fallback Itinerary Generator when API credits are missing on external cloud accounts
+// Smart Fallback Generator
 function generateSmartFallbackItinerary(destination = 'Paris & Rome', durationDays = 5, travelStyle = 'Culture & Food', budget = 1500, currency = 'USD', prompt = '') {
   const daysCount = Math.min(Math.max(Number(durationDays) || 5, 1), 14);
   const totalBudget = Number(budget) || 1500;
-  const symbol = currency === 'INR' ? '₹' : '$';
 
   const accommodationCost = Math.round(totalBudget * 0.4);
   const transportationCost = Math.round(totalBudget * 0.25);
@@ -177,7 +208,7 @@ function generateSmartFallbackItinerary(destination = 'Paris & Rome', durationDa
     { theme: 'Arrival, Iconic Landmarks & Golden Hour Views', activity: 'Summit Sightseeing & Welcome Walking Tour', cat: 'sightseeing', cost: Math.round(activitiesCost / daysCount * 0.4) },
     { theme: 'Cultural Masterpieces & Heritage Museums', activity: 'Guided Museum & Art Gallery Walk', cat: 'culture', cost: Math.round(activitiesCost / daysCount * 0.5) },
     { theme: 'Local Food Tasting & Market Exploration', activity: 'Historic Food Market & Culinary Crawl', cat: 'food', cost: Math.round(activitiesCost / daysCount * 0.6) },
-    { theme: 'Scenic Scenic Nature & Sunrise Viewpoints', activity: 'Sunrise Trek & Panoramic Viewpoint Trail', cat: 'adventure', cost: 0 },
+    { theme: 'Scenic Nature & Panoramic Viewpoints', activity: 'Sunrise Trek & Panoramic Viewpoint Trail', cat: 'adventure', cost: 0 },
     { theme: 'Historical Quarter & Evening River Cruise', activity: 'Evening River Cruise under City Lights', cat: 'sightseeing', cost: Math.round(activitiesCost / daysCount * 0.4) },
     { theme: 'Hidden Neighborhoods & Artisan Boutiques', activity: 'Old Town Artisan & Craft Workshop Crawl', cat: 'culture', cost: Math.round(activitiesCost / daysCount * 0.3) },
     { theme: 'Farewell Sunset & Special Dinner', activity: 'Panoramic Terrace Sunset & Farewell Dinner', cat: 'food', cost: Math.round(activitiesCost / daysCount * 0.7) }
@@ -194,28 +225,28 @@ function generateSmartFallbackItinerary(destination = 'Paris & Rome', durationDa
       estimatedDayCost: estDayBudget,
       schedule: [
         {
-          time: '09:30 AM',
-          activityName: `${themeObj.activity}`,
-          category: themeObj.cat,
-          cost: themeObj.cost,
-          durationHours: 2.5,
-          description: `Experience the top-rated morning highlights of ${destTitle} tailored for ${travelStyle} travelers.`
+          "time": "09:30 AM",
+          "activityName": `${themeObj.activity}`,
+          "category": themeObj.cat,
+          "cost": themeObj.cost,
+          "durationHours": 2.5,
+          "description": `Experience the top-rated morning highlights of ${destTitle} tailored for ${travelStyle} travelers.`
         },
         {
-          time: '02:00 PM',
-          activityName: `Local Neighborhood & Landmark Walk`,
-          category: 'culture',
-          cost: 15,
-          durationHours: 2.0,
-          description: `Explore historic streets, local cafes, and architectural gems with easy walking paths.`
+          "time": "02:00 PM",
+          "activityName": `Local Neighborhood & Landmark Walk`,
+          "category": "culture",
+          "cost": 15,
+          "durationHours": 2.0,
+          "description": `Explore historic streets, local cafes, and architectural gems with easy walking paths.`
         },
         {
-          time: '07:00 PM',
-          activityName: `Evening Culinary Experience & Atmosphere`,
-          category: 'food',
-          cost: Math.round(estDayBudget * 0.3),
-          durationHours: 2.0,
-          description: `Savor authentic regional dishes and drinks at hand-picked local eateries.`
+          "time": "07:00 PM",
+          "activityName": `Evening Culinary Experience & Atmosphere`,
+          "category": "food",
+          "cost": Math.round(estDayBudget * 0.3),
+          "durationHours": 2.0,
+          "description": `Savor authentic regional dishes and drinks at hand-picked local eateries.`
         }
       ]
     });
@@ -243,30 +274,6 @@ function generateSmartFallbackItinerary(destination = 'Paris & Rome', durationDa
       `Dine 2-3 blocks away from main tourist plazas for significantly higher quality food at authentic local prices.`
     ]
   };
-}
-
-// Helper function to extract and parse JSON from Grok completion
-function processGrokResponse(data, res) {
-  try {
-    const rawContent = data.choices?.[0]?.message?.content || '';
-    // Strip markdown triple backtick wrapping if present
-    const jsonString = rawContent.replace(/```json/g, '').replace(/```/g, '').trim();
-    const itinerary = JSON.parse(jsonString);
-
-    return res.status(200).json({
-      success: true,
-      itinerary,
-      modelUsed: data.model || 'grok-2',
-      provider: 'xAI Grok'
-    });
-  } catch (parseError) {
-    console.error('Failed to parse Grok JSON response:', parseError);
-    return res.status(500).json({
-      error: 'JSON Parse Error',
-      message: 'Grok returned response but JSON parsing failed. Please try again.',
-      rawOutput: data.choices?.[0]?.message?.content
-    });
-  }
 }
 
 export default router;
