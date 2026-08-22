@@ -1,7 +1,7 @@
 import { apiFetch, mockDelay } from './apiClient';
 import { ACTIVITIES } from './mockData';
 
-const USE_MOCK = true;
+const USE_MOCK = false;
 
 // GET /api/cities/:id/activities?category=&cost=
 export async function fetchCityActivities(cityId, { category = '', maxCost = '' } = {}) {
@@ -14,9 +14,23 @@ export async function fetchCityActivities(cityId, { category = '', maxCost = '' 
     });
     return mockDelay(results, 300);
   }
+
   const qs = new URLSearchParams({
     ...(category && { category }),
-    ...(maxCost && { cost: maxCost }),
+    ...(maxCost && { maxCost }),
   }).toString();
-  return apiFetch(`/cities/${cityId}/activities?${qs}`);
+
+  try {
+    const data = await apiFetch(`/cities/${cityId}/activities?${qs}`);
+    const list = Array.isArray(data) ? data : (data?.activities || []);
+    return list.map(a => ({
+      ...a,
+      city_id: a.city_id ?? a.cityId ?? cityId,
+      duration_hours: a.duration_hours ?? a.durationHours ?? 1.5,
+      image_url: a.image_url ?? a.imageUrl,
+    }));
+  } catch (err) {
+    console.error('fetchCityActivities error, falling back to mock:', err);
+    return ACTIVITIES.filter(a => !cityId || a.city_id === cityId);
+  }
 }

@@ -10,6 +10,7 @@ import ItineraryView from './components/itinerary-view/ItineraryView';
 import { TRIP_ID } from './api/mockData';
 import TripBudgetPage from './pages/TripBudgetPage';
 import TripCalendarPage from './pages/TripCalendarPage';
+import PublicItineraryPage from './pages/PublicItineraryPage';
 import { 
   Compass, Server, CheckCircle2, ShieldCheck, MapPin, DollarSign, 
   Calendar, Users, RefreshCw, Sparkles, ArrowRight, User as UserIcon, 
@@ -162,6 +163,15 @@ function MainApp() {
                 <Calendar className="h-3.5 w-3.5 text-[#2C5F7C]" />
                 CALENDAR (SCR 10)
               </button>
+              <button
+                onClick={() => setActiveTab('share')}
+                className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold transition flex items-center gap-1.5 ${
+                  activeTab === 'share' ? 'bg-[#1F2B2E] text-[#F6F3EC]' : 'bg-white text-[#1F2B2E] hover:bg-[#F6F3EC]'
+                }`}
+              >
+                <Globe className="h-3.5 w-3.5 text-[#7FA69C]" />
+                SHARE (SCR 11)
+              </button>
               {isAuthenticated && (
                 <button
                   onClick={() => setActiveTab('profile')}
@@ -263,6 +273,13 @@ function MainApp() {
             onBack={() => setActiveTab('overview')}
             onNavigateToBudget={() => setActiveTab('budget')}
             onNavigateToActivities={() => setActiveTab('activities')}
+          />
+        )}
+
+        {activeTab === 'share' && (
+          <PublicItineraryPage
+            onBack={() => setActiveTab('overview')}
+            onNavigateToAuth={() => setActiveTab('auth')}
           />
         )}
 

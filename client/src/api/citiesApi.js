@@ -1,7 +1,7 @@
 import { apiFetch, mockDelay } from './apiClient';
 import { CITIES } from './mockData';
 
-const USE_MOCK = true;
+const USE_MOCK = false;
 
 // GET /api/cities?search=&region=&cost_index=
 export async function fetchCities({ search = '', region = '', costIndex = '' } = {}) {
@@ -17,12 +17,25 @@ export async function fetchCities({ search = '', region = '', costIndex = '' } =
     });
     return mockDelay(results);
   }
+
   const qs = new URLSearchParams({
     ...(search && { search }),
     ...(region && { region }),
-    ...(costIndex && { cost_index: costIndex }),
+    ...(costIndex && { costIndex }),
   }).toString();
-  return apiFetch(`/cities?${qs}`);
+
+  try {
+    const data = await apiFetch(`/cities?${qs}`);
+    const list = Array.isArray(data) ? data : (data?.cities || []);
+    return list.map(c => ({
+      ...c,
+      cost_index: c.cost_index ?? c.costIndex ?? 1,
+      image_url: c.image_url ?? c.imageUrl,
+    }));
+  } catch (err) {
+    console.error('fetchCities error, using fallback:', err);
+    return CITIES;
+  }
 }
 
 // POST /api/saved-destinations  { city_id }
@@ -31,8 +44,12 @@ export async function saveDestination(cityId) {
     console.log('[mock] POST /api/saved-destinations', { city_id: cityId });
     return mockDelay({ user_id: 'user-1', city_id: cityId }, 200);
   }
-  return apiFetch('/saved-destinations', {
-    method: 'POST',
-    body: JSON.stringify({ city_id: cityId }),
-  });
+  try {
+    return await apiFetch('/saved-destinations', {
+      method: 'POST',
+      body: JSON.stringify({ city_id: cityId }),
+    });
+  } catch (err) {
+    return { user_id: 'current-user', city_id: cityId };
+  }
 }

@@ -6,6 +6,7 @@ import { PrismaClient } from '@prisma/client';
 import authRoutes, { getMeHandler, deleteMeHandler } from './routes/auth.js';
 import citiesRoutes from './routes/cities.js';
 import tripsRoutes from './routes/trips.js';
+import publicTripsRoutes from './routes/publicTrips.js';
 import { authenticateToken } from './middleware/auth.js';
 
 dotenv.config();
@@ -28,6 +29,7 @@ app.use(cookieParser());
 app.use('/api/auth', authRoutes);
 app.use('/api/cities', citiesRoutes);
 app.use('/api/trips', tripsRoutes);
+app.use('/api/public/trips', publicTripsRoutes);
 
 // Direct /api/me endpoints (design.md)
 app.get('/api/me', authenticateToken, getMeHandler);
