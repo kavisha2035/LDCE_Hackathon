@@ -236,31 +236,31 @@ function MainApp() {
   const getSubpageInfo = () => {
     switch (activeTab) {
       case 'create-trip':
-        return { title: 'PLAN A NEW JOURNEY', screen: 'SCREEN 3 • CREATE ROUTE', icon: Plus, color: 'text-[#2C5F7C]' };
+        return { title: 'PLAN A NEW JOURNEY', screen: 'CREATE ROUTE', icon: Plus, color: 'text-[#2C5F7C]' };
       case 'my-trips':
-        return { title: 'MY ROUTE SHEETS & WALLET', screen: 'SCREEN 4 • TICKET WALLET', icon: Layers, color: 'text-[#2C5F7C]' };
+        return { title: 'MY ROUTE SHEETS & WALLET', screen: 'TICKET WALLET', icon: Layers, color: 'text-[#2C5F7C]' };
       case 'cities':
-        return { title: 'CITY DISCOVERY & SEARCH', screen: 'SCREEN 7 • DISCOVERY', icon: MapPin, color: 'text-[#2C5F7C]' };
+        return { title: 'CITY DISCOVERY & SEARCH', screen: 'DESTINATIONS', icon: MapPin, color: 'text-[#2C5F7C]' };
       case 'activities':
-        return { title: 'ACTIVITY & EXPERIENCE CATALOG', screen: 'SCREEN 8 • CATALOG', icon: Search, color: 'text-[#B8823A]' };
+        return { title: 'ACTIVITY & EXPERIENCE CATALOG', screen: 'EXPERIENCES', icon: Search, color: 'text-[#B8823A]' };
       case 'builder':
-        return { title: 'ITINERARY BUILDER & ROUTE DRAFT', screen: 'SCREEN 5 • WORKSPACE', icon: Layers, color: 'text-[#2C5F7C]' };
+        return { title: 'ITINERARY BUILDER & ROUTE DRAFT', screen: 'WORKSPACE', icon: Layers, color: 'text-[#2C5F7C]' };
       case 'itinerary':
-        return { title: 'ITINERARY DOCUMENT VIEW', screen: 'SCREEN 6 • READING VIEW', icon: Layers, color: 'text-[#1F2B2E]' };
+        return { title: 'ITINERARY DOCUMENT VIEW', screen: 'READING VIEW', icon: Layers, color: 'text-[#1F2B2E]' };
       case 'budget':
-        return { title: 'TRIP BUDGET & COST LEDGER', screen: 'SCREEN 9 • SERVER ARITHMETIC', icon: DollarSign, color: 'text-[#B8823A]' };
+        return { title: 'TRIP BUDGET & COST LEDGER', screen: 'FINANCIAL LEDGER', icon: DollarSign, color: 'text-[#B8823A]' };
       case 'calendar':
-        return { title: 'TRIP CALENDAR & TIMELINE', screen: 'SCREEN 10 • SCHEDULE', icon: Calendar, color: 'text-[#2C5F7C]' };
+        return { title: 'TRIP CALENDAR & TIMELINE', screen: 'SCHEDULE TIMELINE', icon: Calendar, color: 'text-[#2C5F7C]' };
       case 'share':
-        return { title: 'PUBLIC SHAREABLE ITINERARY PASS', screen: 'SCREEN 11 • PUBLIC PASS', icon: Globe, color: 'text-[#7FA69C]' };
+        return { title: 'PUBLIC SHAREABLE ITINERARY PASS', screen: 'PUBLIC PASS', icon: Globe, color: 'text-[#7FA69C]' };
       case 'admin':
-        return { title: 'SYSTEM & ANALYTICS DASHBOARD', screen: 'SCREEN 13 • ADMIN PORTAL', icon: Shield, color: 'text-[#B84A3E]' };
+        return { title: 'SYSTEM & ANALYTICS DASHBOARD', screen: 'ADMIN PORTAL', icon: Shield, color: 'text-[#B84A3E]' };
       case 'profile':
-        return { title: 'PASSENGER PASSPORT & SETTINGS', screen: 'SCREEN 12 • USER PROFILE', icon: User, color: 'text-[#1F2B2E]' };
+        return { title: 'PASSENGER PASSPORT & SETTINGS', screen: 'USER PROFILE', icon: User, color: 'text-[#1F2B2E]' };
       case 'auth':
-        return { title: 'PASSENGER CHECK-IN & REGISTRATION', screen: 'SCREEN 1 • AUTH', icon: User, color: 'text-[#2C5F7C]' };
+        return { title: 'PASSENGER CHECK-IN & REGISTRATION', screen: 'AUTHENTICATION', icon: User, color: 'text-[#2C5F7C]' };
       case 'reset':
-        return { title: 'PASSWORD RESET RECOVERY', screen: 'SCREEN 1 • AUTH RECOVERY', icon: User, color: 'text-[#B8823A]' };
+        return { title: 'PASSWORD RESET RECOVERY', screen: 'AUTH RECOVERY', icon: User, color: 'text-[#B8823A]' };
       default:
         return null;
     }

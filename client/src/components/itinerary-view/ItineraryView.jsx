@@ -61,7 +61,7 @@ export default function ItineraryView({ tripId: propTripId, onNavigate }) {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <p className="text-[10px] font-mono uppercase tracking-widest text-route-blue font-bold">
-              SCREEN 6 &bull; ITINERARY VIEW
+              ITINERARY VIEW
             </p>
             {userTrips.length > 1 && (
               <select

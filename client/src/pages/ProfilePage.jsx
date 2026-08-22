@@ -89,9 +89,7 @@ export default function ProfilePage() {
       <div className="bg-white border-2 border-[#1F2B2E] p-6 shadow-[4px_4px_0px_0px_#1F2B2E] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-xs font-mono text-[#B8823A] uppercase tracking-wider mb-1">
-            <span>SCREEN 12</span>
-            <span>&bull;</span>
-            <span>PASSENGER SETTINGS</span>
+            <span>PASSENGER PASSPORT & SETTINGS</span>
           </div>
           <h1 className="text-3xl font-bold font-display text-[#1F2B2E] tracking-tight">
             USER PROFILE & PREFERENCES

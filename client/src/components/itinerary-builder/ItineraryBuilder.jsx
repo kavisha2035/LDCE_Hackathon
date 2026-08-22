@@ -92,7 +92,7 @@ export default function ItineraryBuilder({ tripId: propTripId, onNavigate }) {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[10px] font-mono uppercase tracking-widest text-[#2C5F7C] font-bold">
-              SCREEN 5 &bull; ITINERARY BUILDER
+              ITINERARY BUILDER
             </span>
             {userTrips.length > 1 && (
               <select

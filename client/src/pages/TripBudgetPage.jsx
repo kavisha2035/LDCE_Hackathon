@@ -136,9 +136,6 @@ export default function TripBudgetPage({ tripId: propTripId, onBack, onNavigateT
             </button>
           )}
           <div className="flex items-center gap-3">
-            <span className="px-2.5 py-0.5 bg-[#B8823A] text-[#F6F3EC] font-mono text-xs font-bold uppercase">
-              SCREEN 09
-            </span>
             <span className="font-mono text-xs text-[#2C5F7C] uppercase tracking-widest font-bold">
               FINANCIAL LEDGER & BREAKDOWN
             </span>
@@ -566,7 +563,7 @@ export default function TripBudgetPage({ tripId: propTripId, onBack, onNavigateT
                     onClick={onNavigateToCalendar}
                     className="font-mono text-xs font-bold text-[#2C5F7C] uppercase flex items-center gap-1 hover:underline cursor-pointer"
                   >
-                    VIEW ON TRIP CALENDAR (SCR 10) <ChevronRight className="w-3.5 h-3.5" />
+                    VIEW ON TRIP CALENDAR <ChevronRight className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>

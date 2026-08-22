@@ -115,11 +115,8 @@ export default function PublicItineraryPage({ shareSlug = 'europe-grand-2026-x8f
             </button>
           )}
           <div className="flex items-center gap-3">
-            <span className="px-2.5 py-0.5 bg-[#2C5F7C] text-[#F6F3EC] font-mono text-xs font-bold uppercase">
-              SCREEN 11
-            </span>
-            <span className="font-mono text-xs text-[#2C5F7C] uppercase tracking-widest">
-              PUBLIC READ-ONLY SHARE LINK (/share/:slug)
+            <span className="font-mono text-xs text-[#2C5F7C] uppercase tracking-widest font-bold">
+              PUBLIC SHAREABLE ITINERARY PASS
             </span>
           </div>
         </div>

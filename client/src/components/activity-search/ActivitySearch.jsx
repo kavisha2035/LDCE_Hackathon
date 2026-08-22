@@ -32,7 +32,7 @@ export default function ActivitySearch({ cityId: fixedCityId, onAdd, embedded = 
         <div className="flex items-center justify-between border-b-2 border-dashed border-ink pb-4 mb-6">
           <div>
             <h1 className="text-3xl font-extrabold font-display tracking-tight text-ink leading-none">ACTIVITY SEARCH</h1>
-            <span className="text-[10px] font-mono uppercase tracking-widest text-route-blue">Screen 8 &bull; Discovery</span>
+            <span className="text-[10px] font-mono uppercase tracking-widest text-route-blue font-bold">Activity Discovery</span>
           </div>
         </div>
       )}

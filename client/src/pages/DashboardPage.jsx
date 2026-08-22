@@ -24,8 +24,6 @@ export default function DashboardPage() {
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-2.5 py-0.5 bg-[#2C5F7C] text-white font-mono text-xs font-bold uppercase">
               <span>PASSENGER DASHBOARD</span>
-              <span>&bull;</span>
-              <span>SCREEN 02</span>
             </div>
             <h1 className="text-4xl sm:text-5xl font-extrabold font-display tracking-tight text-[#1F2B2E]">
               WELCOME BACK, {isAuthenticated ? user.name.toUpperCase() : 'EXPLORER'}

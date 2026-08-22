@@ -496,7 +496,7 @@ export default function AdminPage() {
           <div>
             <div className="flex items-center gap-2 mb-1.5">
               <div className="h-6 w-6 bg-stamp-red border border-ink flex items-center justify-center"><Shield className="h-3.5 w-3.5 text-white" /></div>
-              <span className="font-mono text-[10px] font-bold text-stamp-red uppercase tracking-widest">Admin Access -- Screen 13</span>
+              <span className="font-mono text-[10px] font-bold text-stamp-red uppercase tracking-widest">Admin Portal Access</span>
             </div>
             <h1 className="font-display font-extrabold text-3xl sm:text-4xl text-ink uppercase tracking-tight leading-none">Admin Control Panel</h1>
             <p className="font-body text-sm text-ink/60 mt-1">Manage users, monitor platform trends, and view analytics across the GlobeTrotter network.</p>

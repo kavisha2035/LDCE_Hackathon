@@ -146,10 +146,7 @@ export default function TripCalendarPage({ tripId, onBack, onNavigateToBudget, o
             </button>
           )}
           <div className="flex items-center gap-3">
-            <span className="px-2.5 py-0.5 bg-[#2C5F7C] text-[#F6F3EC] font-mono text-xs font-bold uppercase">
-              SCREEN 10
-            </span>
-            <span className="font-mono text-xs text-[#2C5F7C] uppercase tracking-widest">
+            <span className="font-mono text-xs text-[#2C5F7C] uppercase tracking-widest font-bold">
               HORIZONTAL TIMELINE & CALENDAR
             </span>
           </div>
@@ -263,19 +260,19 @@ export default function TripCalendarPage({ tripId, onBack, onNavigateToBudget, o
               {onNavigateToBudget && (
                 <button
                   onClick={onNavigateToBudget}
-                  className="px-3 py-1.5 bg-[#F6F3EC] border border-[#1F2B2E] font-bold text-[#B8823A] uppercase hover:bg-[#B8823A] hover:text-white transition shadow-[2px_2px_0px_0px_#1F2B2E]"
+                  className="px-3 py-1.5 bg-[#F6F3EC] border border-[#1F2B2E] font-bold text-[#B8823A] uppercase hover:bg-[#B8823A] hover:text-white transition shadow-[2px_2px_0px_0px_#1F2B2E] cursor-pointer"
                 >
                   <DollarSign className="w-3.5 h-3.5 inline mr-1" />
-                  VIEW BUDGET (SCR 9)
+                  VIEW BUDGET
                 </button>
               )}
               {onNavigateToActivities && (
                 <button
                   onClick={onNavigateToActivities}
-                  className="px-3 py-1.5 bg-[#2C5F7C] text-white border border-[#1F2B2E] font-bold uppercase hover:bg-[#1F2B2E] transition shadow-[2px_2px_0px_0px_#1F2B2E]"
+                  className="px-3 py-1.5 bg-[#2C5F7C] text-white border border-[#1F2B2E] font-bold uppercase hover:bg-[#1F2B2E] transition shadow-[2px_2px_0px_0px_#1F2B2E] cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5 inline mr-1" />
-                  FIND ACTIVITIES (SCR 8)
+                  FIND ACTIVITIES
                 </button>
               )}
             </div>
@@ -392,9 +389,9 @@ export default function TripCalendarPage({ tripId, onBack, onNavigateToBudget, o
                       {onNavigateToActivities && (
                         <button
                           onClick={onNavigateToActivities}
-                          className="px-3 py-1.5 bg-[#2C5F7C] text-white font-mono text-xs font-bold uppercase border border-[#1F2B2E] hover:bg-[#1F2B2E] transition shadow-[2px_2px_0px_0px_#1F2B2E]"
+                          className="px-3 py-1.5 bg-[#2C5F7C] text-white font-mono text-xs font-bold uppercase border border-[#1F2B2E] hover:bg-[#1F2B2E] transition shadow-[2px_2px_0px_0px_#1F2B2E] cursor-pointer"
                         >
-                          + ADD EXPERIENCES FROM SCREEN 8
+                          + ADD EXPERIENCES
                         </button>
                       )}
                     </div>
