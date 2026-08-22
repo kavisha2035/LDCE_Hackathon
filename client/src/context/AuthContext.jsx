@@ -3,14 +3,23 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
+  const getInitialToken = () => {
+    const t = localStorage.getItem('gt_token');
+    if (!t || t === 'undefined' || t === 'null') {
+      localStorage.removeItem('gt_token');
+      return null;
+    }
+    return t;
+  };
+
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('gt_token') || null);
+  const [token, setToken] = useState(getInitialToken);
   const [loading, setLoading] = useState(true);
 
   // Verify and fetch user profile on load if token exists
   useEffect(() => {
     const initAuth = async () => {
-      if (token) {
+      if (token && token !== 'undefined' && token !== 'null') {
         try {
           const res = await fetch('/api/auth/me', {
             headers: {
@@ -27,6 +36,8 @@ export const AuthProvider = ({ children }) => {
         } catch (err) {
           console.error('Auth verification failed:', err);
         }
+      } else {
+        logout();
       }
       setLoading(false);
     };
@@ -46,8 +57,11 @@ export const AuthProvider = ({ children }) => {
       throw new Error(data.message || 'Login failed');
     }
 
-    localStorage.setItem('gt_token', data.token);
-    setToken(data.token);
+    const authToken = data.token || data.accessToken;
+    if (authToken) {
+      localStorage.setItem('gt_token', authToken);
+      setToken(authToken);
+    }
     setUser(data.user);
     return data;
   };
@@ -64,8 +78,11 @@ export const AuthProvider = ({ children }) => {
       throw new Error(data.message || 'Signup failed');
     }
 
-    localStorage.setItem('gt_token', data.token);
-    setToken(data.token);
+    const authToken = data.token || data.accessToken;
+    if (authToken) {
+      localStorage.setItem('gt_token', authToken);
+      setToken(authToken);
+    }
     setUser(data.user);
     return data;
   };
@@ -74,6 +91,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('gt_token');
     setToken(null);
     setUser(null);
+    fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
   };
 
   const updateProfile = async (profileData) => {
@@ -103,26 +121,29 @@ export const AuthProvider = ({ children }) => {
       }
     });
 
+    const data = await res.json();
     if (!res.ok) {
-      const data = await res.json();
       throw new Error(data.message || 'Failed to delete account');
     }
 
     logout();
+    return data;
   };
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      token,
-      loading,
-      login,
-      signup,
-      logout,
-      updateProfile,
-      deleteAccount,
-      isAuthenticated: !!user
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        loading,
+        login,
+        signup,
+        logout,
+        updateProfile,
+        deleteAccount,
+        isAuthenticated: !!user
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

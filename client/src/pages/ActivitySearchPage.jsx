@@ -299,7 +299,15 @@ function ActivityDetailModal({ activity, onClose, isSelected, onToggle }) {
 }
 
 // ----------- Main Activity Search Page -----------
-export default function ActivitySearchPage({ cityId, onBack, onAddActivity, onRemoveActivity, selectedActivityIds = [] }) {
+export default function ActivitySearchPage({
+  cityId,
+  initialCityName,
+  initialSearch = '',
+  onBack,
+  onAddActivity,
+  onRemoveActivity,
+  selectedActivityIds = []
+}) {
   const [city, setCity] = useState(null);
   const [activities, setActivities] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -307,7 +315,7 @@ export default function ActivitySearchPage({ cityId, onBack, onAddActivity, onRe
   const [error, setError] = useState('');
 
   // Filters
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [maxCost, setMaxCost] = useState('');
   const [maxDuration, setMaxDuration] = useState('');
@@ -328,15 +336,23 @@ export default function ActivitySearchPage({ cityId, onBack, onAddActivity, onRe
       fetch('/api/cities')
         .then(res => res.json())
         .then(data => {
-          setCities(data.cities || []);
-          if (data.cities?.length > 0 && !activeCityId) {
-            setActiveCityId(data.cities[0].id);
+          const list = data.cities || [];
+          setCities(list);
+          if (list.length > 0 && !activeCityId) {
+            if (initialCityName) {
+              const matched = list.find(c => c.name.toLowerCase() === initialCityName.toLowerCase());
+              if (matched) {
+                setActiveCityId(matched.id);
+                return;
+              }
+            }
+            setActiveCityId(list[0].id);
           }
         })
         .catch(() => setError('Failed to load cities'))
         .finally(() => setLoadingCities(false));
     }
-  }, [cityId]);
+  }, [cityId, initialCityName]);
 
   // Fetch activities when city or filters change
   useEffect(() => {
