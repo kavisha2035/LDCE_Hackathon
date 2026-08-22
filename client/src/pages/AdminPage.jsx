@@ -14,7 +14,7 @@ import { categoryColor } from '../components/activity-search/categoryColor';
 import { formatCurrency, formatDuration } from '../lib/format';
 import { chartPalette } from '../components/budget/chartColors';
 import { apiFetch } from '../api/apiClient';
-import { fetchAdminDashboard } from '../api/adminApi';
+import { fetchAdminDashboard, deleteAdminUser } from '../api/adminApi';
 
 const EMPTY_ANALYTICS = {
   langPrefs: [],
@@ -35,7 +35,7 @@ function SortIcon({ field, sortField, sortDir }) {
 }
 
 /* ── CONFIRM DIALOG ── */
-function ConfirmDialog({ user, onConfirm, onCancel }) {
+function ConfirmDialog({ user, deleting, onConfirm, onCancel }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60">
       <div className="bg-paper border-2 border-ink shadow-[6px_6px_0px_0px_#1F2B2E] w-full max-w-sm mx-4 p-6">
@@ -47,8 +47,8 @@ function ConfirmDialog({ user, onConfirm, onCancel }) {
           </div>
         </div>
         <div className="flex gap-3 mt-5">
-          <button onClick={onCancel} className="flex-1 py-2 border border-ink font-mono text-xs font-bold uppercase hover:bg-ink/5 transition"><X className="h-3.5 w-3.5 inline mr-1.5" />CANCEL</button>
-          <button onClick={onConfirm} className="flex-1 py-2 bg-stamp-red border border-ink text-white font-mono text-xs font-bold uppercase hover:bg-ink transition shadow-[2px_2px_0px_0px_#1F2B2E]"><Trash2 className="h-3.5 w-3.5 inline mr-1.5" />DELETE</button>
+          <button onClick={onCancel} disabled={deleting} className="flex-1 py-2 border border-ink font-mono text-xs font-bold uppercase hover:bg-ink/5 transition disabled:opacity-50"><X className="h-3.5 w-3.5 inline mr-1.5" />CANCEL</button>
+          <button onClick={onConfirm} disabled={deleting} className="flex-1 py-2 bg-stamp-red border border-ink text-white font-mono text-xs font-bold uppercase hover:bg-ink transition shadow-[2px_2px_0px_0px_#1F2B2E] disabled:opacity-50"><Trash2 className="h-3.5 w-3.5 inline mr-1.5" />{deleting ? 'DELETING...' : 'DELETE'}</button>
         </div>
       </div>
     </div>
@@ -64,7 +64,22 @@ function ManageUsersTab({ usersData, loading }) {
   const [sortDir, setSortDir] = useState('desc');
   const [groupBy, setGroupBy] = useState('none');
   const [toDelete, setToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const [viewUser, setViewUser] = useState(null);
+
+  const handleConfirmDelete = async () => {
+    setDeleting(true);
+    try {
+      await deleteAdminUser(toDelete.id);
+      setUsers(p => p.filter(u => u.id !== toDelete.id));
+      setToDelete(null);
+    } catch (err) {
+      console.error('Delete user failed:', err);
+      alert(err.message || 'Failed to delete user.');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   useEffect(() => {
     setUsers(usersData || []);
@@ -174,7 +189,7 @@ function ManageUsersTab({ usersData, loading }) {
         )}
       </div>
 
-      {toDelete && <ConfirmDialog user={toDelete} onConfirm={() => { setUsers(p => p.filter(u => u.id !== toDelete.id)); setToDelete(null); }} onCancel={() => setToDelete(null)} />}
+      {toDelete && <ConfirmDialog user={toDelete} deleting={deleting} onConfirm={handleConfirmDelete} onCancel={() => setToDelete(null)} />}
       {viewUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60">
           <div className="bg-paper border-2 border-ink shadow-[6px_6px_0px_0px_#1F2B2E] w-full max-w-sm mx-4 p-6">

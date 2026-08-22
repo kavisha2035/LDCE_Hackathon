@@ -166,7 +166,7 @@ const FALLBACK_CITIES = [
 // GET /api/cities — Search cities with optional filters
 router.get('/', async (req, res) => {
   try {
-    const { search, country, minCost, maxCost, sortBy } = req.query;
+    const { search, country, region, costIndex, minCost, maxCost, sortBy } = req.query;
 
     let cities = [];
     try {
@@ -180,7 +180,12 @@ router.get('/', async (req, res) => {
       if (country) {
         where.country = { equals: country, mode: 'insensitive' };
       }
-      if (minCost || maxCost) {
+      if (region) {
+        where.region = { equals: region, mode: 'insensitive' };
+      }
+      if (costIndex) {
+        where.costIndex = parseInt(costIndex, 10);
+      } else if (minCost || maxCost) {
         where.costIndex = {};
         if (minCost) where.costIndex.gte = parseInt(minCost, 10);
         if (maxCost) where.costIndex.lte = parseInt(maxCost, 10);
@@ -210,6 +215,15 @@ router.get('/', async (req, res) => {
       }
       if (country) {
         filtered = filtered.filter(c => c.country.toLowerCase() === country.toLowerCase());
+      }
+      if (region) {
+        filtered = filtered.filter(c => (c.region || '').toLowerCase() === region.toLowerCase());
+      }
+      if (costIndex) {
+        filtered = filtered.filter(c => c.costIndex === parseInt(costIndex, 10));
+      } else {
+        if (minCost) filtered = filtered.filter(c => c.costIndex >= parseInt(minCost, 10));
+        if (maxCost) filtered = filtered.filter(c => c.costIndex <= parseInt(maxCost, 10));
       }
       cities = filtered;
     }

@@ -39,8 +39,6 @@ app.use('/api/public/trips', publicTripsRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Direct nested / helper routes to match client apiClient calls
-app.use('/api/stops', tripsRoutes);
-app.use('/api/stop-activities', tripsRoutes);
 app.use('/api/saved-destinations', citiesRoutes);
 
 // Direct /api/stops & /api/stop-activities shortcuts

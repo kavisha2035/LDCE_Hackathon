@@ -1,5 +1,9 @@
 import { apiFetch } from './apiClient';
 
+export async function deleteAdminUser(userId) {
+  return apiFetch(`/admin/users/${userId}`, { method: 'DELETE' });
+}
+
 export async function fetchAdminDashboard() {
   const data = await apiFetch('/admin/dashboard');
   return {
