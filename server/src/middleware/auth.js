@@ -7,6 +7,7 @@ export const authenticateToken = (req, res, next) => {
   if (!token) {
     return res.status(401).json({
       error: 'Unauthorized',
+      code: 'TOKEN_MISSING',
       message: 'Access token is missing'
     });
   }
@@ -15,9 +16,17 @@ export const authenticateToken = (req, res, next) => {
 
   jwt.verify(token, secret, (err, user) => {
     if (err) {
+      if (err.name === 'TokenExpiredError') {
+        return res.status(401).json({
+          error: 'Unauthorized',
+          code: 'TOKEN_EXPIRED',
+          message: 'Access token expired'
+        });
+      }
       return res.status(403).json({
         error: 'Forbidden',
-        message: 'Invalid or expired token'
+        code: 'TOKEN_INVALID',
+        message: 'Invalid access token'
       });
     }
     req.user = user; // { userId, email, iat, exp }

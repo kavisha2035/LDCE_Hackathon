@@ -1,4 +1,4 @@
-// Prisma Schema for GlobeTrotter — Aligned with design.md
+// Prisma Schema for GlobeTrotter — Refresh Token Architecture Included
 
 generator client {
   provider = "prisma-client-js"
@@ -13,105 +13,126 @@ model User {
   id                String             @id @default(uuid())
   name              String
   email             String             @unique
-  password          String
-  isAdmin           Boolean            @default(false)
-  languagePref      String             @default("en")
-  avatar            String?
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
+  password          String             @map("password_hash")
+  isAdmin           Boolean            @default(false) @map("is_admin")
+  languagePref      String             @default("en") @map("language_pref")
+  avatar            String?            @map("avatar_url")
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
   trips             Trip[]
   savedDestinations SavedDestination[]
+  refreshTokens     RefreshToken[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("refresh_tokens")
 }
 
 model City {
-  id                String             @id @default(uuid())
-  name              String
-  country           String
-  region            String?
-  costIndex         Int                @default(1) // 1 (cheap) to 5 (expensive)
-  popularity        Int                @default(0)
-  imageUrl          String?
-  description       String?
-  stops             Stop[]
-  activities        Activity[]
-  savedBy           SavedDestination[]
+  id          String             @id @default(uuid())
+  name        String
+  country     String
+  region      String?
+  costIndex   Int                @default(1) @map("cost_index") // 1 (cheap) to 5 (expensive)
+  popularity  Int                @default(0)
+  imageUrl    String?            @map("image_url")
+  description String?
+  stops       Stop[]
+  activities  Activity[]
+  savedBy     SavedDestination[]
 
   @@index([country])
   @@index([region])
   @@index([popularity])
+  @@map("cities")
 }
 
 model Trip {
   id          String   @id @default(uuid())
-  userId      String
+  userId      String   @map("user_id")
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   name        String
   description String?
-  startDate   DateTime
-  endDate     DateTime
-  coverPhoto  String?
-  isPublic    Boolean  @default(false)
-  shareSlug   String?  @unique
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  startDate   DateTime @map("start_date")
+  endDate     DateTime @map("end_date")
+  coverPhoto  String?  @map("cover_photo_url")
+  isPublic    Boolean  @default(false) @map("is_public")
+  shareSlug   String?  @unique @map("share_slug")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
   stops       Stop[]
 
   @@index([userId])
   @@index([shareSlug])
+  @@map("trips")
 }
 
 model Stop {
-  id                   String         @id @default(uuid())
-  tripId               String
-  trip                 Trip           @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  cityId               String
-  city                 City           @relation(fields: [cityId], references: [id])
-  startDate            DateTime
-  endDate              DateTime
-  orderIndex           Int            @default(0)
-  estStayCostPerDay    Float          @default(0.0)
-  estTransportCost     Float          @default(0.0)
-  tripActivities       TripActivity[]
+  id                String         @id @default(uuid())
+  tripId            String         @map("trip_id")
+  trip              Trip           @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  cityId            String         @map("city_id")
+  city              City           @relation(fields: [cityId], references: [id])
+  startDate         DateTime       @map("start_date")
+  endDate           DateTime       @map("end_date")
+  orderIndex        Int            @default(0) @map("order_index")
+  estStayCostPerDay Float          @default(0.0) @map("est_stay_cost_per_day")
+  estTransportCost  Float          @default(0.0) @map("est_transport_cost")
+  tripActivities    TripActivity[]
 
   @@index([tripId])
   @@index([cityId])
+  @@map("trip_stops")
 }
 
 model Activity {
   id             String         @id @default(uuid())
-  cityId         String
+  cityId         String         @map("city_id")
   city           City           @relation(fields: [cityId], references: [id], onDelete: Cascade)
   name           String
   category       String         // sightseeing, food, adventure, culture, nightlife
   cost           Float          @default(0.0)
-  durationHours  Float          @default(1.0) // hours
+  durationHours  Float          @default(1.0) @map("duration_hours")
   description    String?
-  imageUrl       String?
+  imageUrl       String?        @map("image_url")
   tripActivities TripActivity[]
 
   @@index([cityId])
   @@index([category])
+  @@map("activities")
 }
 
 model TripActivity {
   id            String    @id @default(uuid())
-  stopId        String
+  stopId        String    @map("trip_stop_id")
   stop          Stop      @relation(fields: [stopId], references: [id], onDelete: Cascade)
-  activityId    String
+  activityId    String    @map("activity_id")
   activity      Activity  @relation(fields: [activityId], references: [id])
-  scheduledDate DateTime?
-  scheduledTime String?
+  scheduledDate DateTime? @map("scheduled_date")
+  scheduledTime String?   @map("scheduled_time")
   notes         String?
 
   @@index([stopId])
   @@index([activityId])
+  @@map("trip_stop_activities")
 }
 
 model SavedDestination {
-  userId    String
-  cityId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  city      City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  userId String @map("user_id")
+  cityId String @map("city_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  city   City   @relation(fields: [cityId], references: [id], onDelete: Cascade)
 
   @@id([userId, cityId])
+  @@map("saved_destinations")
 }

@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import authRoutes, { getMeHandler, deleteMeHandler } from './routes/auth.js';
@@ -11,9 +12,15 @@ const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors());
+// CORS setup with credentials (HTTP-Only cookies)
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  credentials: true
+}));
+
+// Body & Cookie Parsers
 app.use(express.json());
+app.use(cookieParser());
 
 // Auth & User routes
 app.use('/api/auth', authRoutes);
@@ -45,6 +52,10 @@ app.get('/api/health', async (req, res) => {
           activities: activityCount,
           users: userCount
         }
+      },
+      security: {
+        refreshTokenStorage: 'HTTP-Only Cookie (XSS Protected)',
+        accessTokenExpiry: '15m'
       },
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV || 'development'
@@ -83,6 +94,6 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 GlobeTrotter Server running on http://localhost:${PORT}`);
-  console.log(`💚 Health & Neon DB Check: http://localhost:${PORT}/api/health`);
+  console.log(`💚 Health Check: http://localhost:${PORT}/api/health`);
   console.log(`🔐 Auth Endpoints: http://localhost:${PORT}/api/auth`);
 });
