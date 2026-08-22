@@ -13,17 +13,18 @@ import ItineraryView from './components/itinerary-view/ItineraryView';
 import TripBudgetPage from './pages/TripBudgetPage';
 import TripCalendarPage from './pages/TripCalendarPage';
 import PublicItineraryPage from './pages/PublicItineraryPage';
+import CommunityPage from './pages/CommunityPage';
 import AdminPage from './pages/AdminPage';
 import {
   Compass, ArrowLeft, Layers, Calendar, DollarSign,
-  Globe, Search, MapPin, Shield, User, Sparkles, Plus
+  Globe, Search, MapPin, Shield, User, Sparkles, Plus, MessageSquare
 } from 'lucide-react';
 
 const PROTECTED_TABS = ['create-trip', 'my-trips', 'builder', 'profile', 'admin'];
 
 const VALID_TABS = [
   'home', 'create-trip', 'my-trips', 'cities', 'activities',
-  'builder', 'itinerary', 'budget', 'calendar', 'share',
+  'builder', 'itinerary', 'budget', 'calendar', 'share', 'community',
   'admin', 'profile', 'auth', 'reset'
 ];
 
@@ -266,6 +267,8 @@ function MainApp() {
         return { title: 'TRIP CALENDAR & TIMELINE', screen: 'SCHEDULE TIMELINE', icon: Calendar, color: 'text-[#2C5F7C]' };
       case 'share':
         return { title: 'PUBLIC SHAREABLE ITINERARY PASS', screen: 'PUBLIC PASS', icon: Globe, color: 'text-[#7FA69C]' };
+      case 'community':
+        return { title: 'EXPLORER COMMUNITY FEED & REVIEWS', screen: 'COMMUNITY TAB', icon: MessageSquare, color: 'text-[#F5B800]' };
       case 'admin':
         return { title: 'SYSTEM & ANALYTICS DASHBOARD', screen: 'ADMIN PORTAL', icon: Shield, color: 'text-[#B84A3E]' };
       case 'profile':
@@ -320,8 +323,8 @@ function MainApp() {
                 )}
               </div>
 
-              {/* Quick Trip Workspace Switchers for Itinerary / Builder / Budget / Calendar / Share */}
-              {['builder', 'itinerary', 'budget', 'calendar', 'share', 'my-trips', 'create-trip'].includes(activeTab) && (
+              {/* Quick Trip Workspace Switchers for Itinerary / Builder / Budget / Calendar / Share / Community */}
+              {['builder', 'itinerary', 'budget', 'calendar', 'share', 'community', 'my-trips', 'create-trip'].includes(activeTab) && (
                 <div className="flex flex-wrap items-center gap-1.5 font-sans text-xs">
                   <button
                     onClick={() => navigate('my-trips')}
@@ -378,6 +381,14 @@ function MainApp() {
                     }`}
                   >
                     Share
+                  </button>
+                  <button
+                    onClick={() => navigate('community')}
+                    className={`px-3 py-1.5 rounded-full font-extrabold uppercase transition cursor-pointer ${
+                      activeTab === 'community' ? 'bg-[#F5B800] text-[#1E232A]' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    Community
                   </button>
                 </div>
               )}
@@ -493,6 +504,13 @@ function MainApp() {
               setAuthReason('Please sign in or create an account to clone trips into your wallet.');
               setActiveTab('auth');
             }}
+          />
+        )}
+
+        {activeTab === 'community' && (
+          <CommunityPage
+            onNavigate={navigate}
+            initialShareTripId={navParams.tripId || null}
           />
         )}
 

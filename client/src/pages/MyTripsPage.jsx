@@ -6,7 +6,7 @@ import {
   Compass, Plus, Calendar, MapPin, DollarSign, Layers,
   Share2, Trash2, Edit3, Eye, Search, Filter, Check,
   ExternalLink, AlertCircle, Sparkles, Globe, Clock, Loader2,
-  Lock, Unlock, ArrowRight, CheckCircle2, Navigation, History
+  Lock, Unlock, ArrowRight, CheckCircle2, Navigation, History, MessageSquare
 } from 'lucide-react';
 
 export const getTripTemporalStatus = (trip) => {
@@ -170,8 +170,16 @@ export default function MyTripsPage({ onNavigate }) {
               </span>
             </div>
 
-            {/* Delete & Share Buttons */}
+            {/* Delete, Share Publicly & Share to Community Buttons */}
             <div className="absolute top-4 right-4 flex items-center gap-2">
+              <button
+                onClick={() => onNavigate('community', { tripId: trip.id })}
+                title="Share Experience to Community Tab"
+                className="p-2.5 bg-white/90 hover:bg-[#F5B800] text-[#1E232A] rounded-full shadow transition cursor-pointer flex items-center gap-1 font-bold text-xs"
+              >
+                <MessageSquare className="h-4 w-4 text-[#1E232A]" />
+              </button>
+
               <button
                 onClick={() => handleShareToggle(trip)}
                 disabled={sharingId === trip.id}
