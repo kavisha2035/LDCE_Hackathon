@@ -143,19 +143,20 @@ function processMistralResponse(data, res, reqBody = {}) {
     const rawContent = data.choices?.[0]?.message?.content || '';
     let jsonString = rawContent.replace(/```json/g, '').replace(/```/g, '').trim();
     
+    // Extract JSON object if wrapped in explanatory text
+    const jsonMatch = jsonString.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      jsonString = jsonMatch[0];
+    }
+
     let itinerary;
     try {
       itinerary = JSON.parse(jsonString);
     } catch (firstErr) {
-      // If truncated, attempt to auto-repair trailing JSON structure
-      console.warn('Attempting JSON repair for truncated response...');
-      if (!jsonString.endsWith('}')) {
-        jsonString += '}';
-      }
-      if (!jsonString.includes('"insiderTips"')) {
-        jsonString += ',"insiderTips":["Book landmark tickets early","Use local day passes"]}';
-      }
-      itinerary = JSON.parse(jsonString);
+      console.warn('Attempting JSON repair for response...');
+      // Fix control characters or unescaped quotes if present
+      const cleaned = jsonString.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+      itinerary = JSON.parse(cleaned);
     }
 
     return res.status(200).json({
@@ -165,11 +166,20 @@ function processMistralResponse(data, res, reqBody = {}) {
       provider: 'Mistral AI'
     });
   } catch (parseError) {
-    console.error('Failed to parse Mistral AI JSON response:', parseError);
-    return res.status(500).json({
-      error: 'JSON Parse Error',
-      message: 'Mistral AI returned response but JSON parsing failed. Please try again.',
-      rawOutput: data.choices?.[0]?.message?.content
+    console.error('JSON parsing failed, serving smart fallback itinerary:', parseError);
+    const fallbackItinerary = generateSmartFallbackItinerary(
+      reqBody.destination, 
+      reqBody.durationDays, 
+      reqBody.travelStyle, 
+      reqBody.budget, 
+      reqBody.currency, 
+      reqBody.prompt
+    );
+    return res.status(200).json({
+      success: true,
+      itinerary: fallbackItinerary,
+      modelUsed: 'Smart AI Engine (Fallback)',
+      provider: 'GlobeTrotter AI'
     });
   }
 }
