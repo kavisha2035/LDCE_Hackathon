@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import authRoutes, { getMeHandler, deleteMeHandler } from './routes/auth.js';
 import { authenticateToken } from './middleware/auth.js';
+import citiesRoutes from './routes/cities.js';
+import tripsRoutes from './routes/trips.js';
 
 dotenv.config();
 
@@ -17,6 +19,8 @@ app.use(express.json());
 
 // Auth & User routes
 app.use('/api/auth', authRoutes);
+app.use('/api/cities', citiesRoutes);
+app.use('/api/trips', tripsRoutes);
 
 // Direct /api/me endpoints
 app.get('/api/me', authenticateToken, getMeHandler);

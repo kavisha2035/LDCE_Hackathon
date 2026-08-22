@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import AuthPage from './pages/AuthPage';
 import ProfilePage from './pages/ProfilePage';
 import TicketCard from './components/TicketCard';
+import ActivitySearchPage from './pages/ActivitySearchPage';
 import { 
   Compass, Server, CheckCircle2, ShieldCheck, MapPin, DollarSign, 
   Calendar, Users, RefreshCw, Sparkles, ArrowRight, User as UserIcon, 
@@ -11,7 +12,7 @@ import {
 
 function MainApp() {
   const { user, logout, isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'db', 'auth', 'profile'
+  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'db', 'auth', 'profile', 'activities'
   
   // Health check & Cities data
   const [health, setHealth] = useState(null);
@@ -102,7 +103,15 @@ function MainApp() {
               >
                 OVERVIEW
               </button>
-
+              <button
+                onClick={() => setActiveTab('activities')}
+                className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold transition flex items-center gap-1.5 ${
+                  activeTab === 'activities' ? 'bg-[#1F2B2E] text-[#F6F3EC]' : 'bg-white text-[#1F2B2E] hover:bg-[#F6F3EC]'
+                }`}
+              >
+                <Search className="h-3.5 w-3.5" />
+                ACTIVITIES (SCR 8)
+              </button>
               {isAuthenticated && (
                 <button
                   onClick={() => setActiveTab('profile')}
@@ -162,6 +171,17 @@ function MainApp() {
 
         {activeTab === 'profile' && isAuthenticated && (
           <ProfilePage />
+        )}
+
+        {activeTab === 'activities' && (
+          <div className="bg-white border-2 border-[#1F2B2E] p-6 shadow-[4px_4px_0px_0px_#1F2B2E]">
+            <ActivitySearchPage
+              onBack={() => setActiveTab('overview')}
+              onAddActivity={(activity) => console.log('Add activity:', activity)}
+              onRemoveActivity={(activity) => console.log('Remove activity:', activity)}
+              selectedActivityIds={[]}
+            />
+          </div>
         )}
 
         {(activeTab === 'overview' || (activeTab === 'auth' && isAuthenticated) || (activeTab === 'profile' && !isAuthenticated)) && (

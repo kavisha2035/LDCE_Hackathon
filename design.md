@@ -4,7 +4,7 @@
 
 ---
 
-## 3. Architecture
+## 1. Architecture
 
 ```
 ┌─────────────────┐         HTTPS/JSON          ┌──────────────────┐
@@ -26,7 +26,7 @@
 
 ---
 
-## 4. Database Schema (PostgreSQL)
+## 2. Database Schema (PostgreSQL)
 
 ```sql
 -- Users
@@ -114,7 +114,7 @@ CREATE TABLE saved_destinations (
 
 ---
 
-## 5. API Contract (freeze this before Hour 0.5 ends)
+## 3. API Contract (freeze this before Hour 0.5 ends)
 
 All routes except auth and public-share require `Authorization: Bearer <jwt>`. Admin routes additionally require `users.is_admin = true`.
 
@@ -148,7 +148,7 @@ Keep every response shape flat and predictable — a trip object always includes
 
 ---
 
-## 6. Budget Calculation Logic
+## 4. Budget Calculation Logic
 
 Computed server-side in `GET /api/trips/:id/budget` — frontend only renders numbers, never recomputes them.
 
@@ -169,7 +169,7 @@ Return `trip_total`, `avg_per_day`, `breakdown_by_category`, and a per-stop arra
 
 ---
 
-## 7. Screens
+## 5. Screens
 
 ### 1. Login / Signup
 Single page, tab-toggle between modes rather than two routes. Email/password fields, "Forgot Password" can be a non-functional link (no email infra today — that's an acceptable, honest gap to name if asked). Client-side validation: non-empty, email format, password length.
