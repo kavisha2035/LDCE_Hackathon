@@ -8,15 +8,17 @@ import CitySearch from './components/city-search/CitySearch';
 import ItineraryBuilder from './components/itinerary-builder/ItineraryBuilder';
 import ItineraryView from './components/itinerary-view/ItineraryView';
 import { TRIP_ID } from './api/mockData';
+import TripBudgetPage from './pages/TripBudgetPage';
+import TripCalendarPage from './pages/TripCalendarPage';
 import { 
   Compass, Server, CheckCircle2, ShieldCheck, MapPin, DollarSign, 
   Calendar, Users, RefreshCw, Sparkles, ArrowRight, User as UserIcon, 
-  LogOut, Database, Globe, Layers, Key, Search
+  LogOut, Database, Globe, Layers, Key, Search, PieChart
 } from 'lucide-react';
 
 function MainApp() {
   const { user, logout, isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'db', 'auth', 'profile', 'activities'
+  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'activities', 'budget', 'calendar', 'profile', 'auth'
   
   // Health check & Cities data
   const [health, setHealth] = useState(null);
@@ -58,14 +60,14 @@ function MainApp() {
     {
       person: 'C',
       title: 'Discovery & Budget',
-      status: 'READY FOR PHASE 4',
+      status: 'COMPLETED (SCR 7, 8, 9)',
       desc: 'City Search (Screen 7), Activity Search (Screen 8), Budget Breakdown (Screen 9)',
       color: 'bg-white border-2 border-[#1F2B2E]'
     },
     {
       person: 'D',
       title: 'Visualization & Sharing',
-      status: 'READY FOR PHASE 5',
+      status: 'CALENDAR READY (SCR 10)',
       desc: 'Itinerary View (Screen 6), Calendar (Screen 10), Public Share (Screen 11), Admin (Screen 13)',
       color: 'bg-white border-2 border-[#1F2B2E]'
     }
@@ -73,14 +75,14 @@ function MainApp() {
 
   return (
     <div className="min-h-screen bg-[#F6F3EC] text-[#1F2B2E] flex flex-col font-body selection:bg-[#2C5F7C] selection:text-[#F6F3EC]">
-      
+
       {/* Top Boarding Pass Header Shell */}
       <header className="bg-white border-b-2 border-[#1F2B2E] sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          
+
           {/* Logo & Brand Identity */}
           <div className="flex items-center gap-6">
-            <div 
+            <div
               onClick={() => setActiveTab('overview')}
               className="flex items-center gap-3 cursor-pointer group"
             >
@@ -101,9 +103,8 @@ function MainApp() {
             <nav className="hidden md:flex items-center gap-2 font-mono text-xs">
               <button
                 onClick={() => setActiveTab('overview')}
-                className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold transition ${
-                  activeTab === 'overview' ? 'bg-[#1F2B2E] text-[#F6F3EC]' : 'bg-white text-[#1F2B2E] hover:bg-[#F6F3EC]'
-                }`}
+                className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold transition ${activeTab === 'overview' ? 'bg-[#1F2B2E] text-[#F6F3EC]' : 'bg-white text-[#1F2B2E] hover:bg-[#F6F3EC]'
+                  }`}
               >
                 OVERVIEW
               </button>
@@ -143,12 +144,29 @@ function MainApp() {
                 <Calendar className="h-3.5 w-3.5" />
                 ITINERARY (SCR 6)
               </button>
+              <button
+                onClick={() => setActiveTab('budget')}
+                className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold transition flex items-center gap-1.5 ${
+                  activeTab === 'budget' ? 'bg-[#1F2B2E] text-[#F6F3EC]' : 'bg-white text-[#1F2B2E] hover:bg-[#F6F3EC]'
+                }`}
+              >
+                <DollarSign className="h-3.5 w-3.5 text-[#B8823A]" />
+                BUDGET (SCR 9)
+              </button>
+              <button
+                onClick={() => setActiveTab('calendar')}
+                className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold transition flex items-center gap-1.5 ${
+                  activeTab === 'calendar' ? 'bg-[#1F2B2E] text-[#F6F3EC]' : 'bg-white text-[#1F2B2E] hover:bg-[#F6F3EC]'
+                }`}
+              >
+                <Calendar className="h-3.5 w-3.5 text-[#2C5F7C]" />
+                CALENDAR (SCR 10)
+              </button>
               {isAuthenticated && (
                 <button
                   onClick={() => setActiveTab('profile')}
-                  className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold transition ${
-                    activeTab === 'profile' ? 'bg-[#1F2B2E] text-[#F6F3EC]' : 'bg-white text-[#1F2B2E] hover:bg-[#F6F3EC]'
-                  }`}
+                  className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold transition ${activeTab === 'profile' ? 'bg-[#1F2B2E] text-[#F6F3EC]' : 'bg-white text-[#1F2B2E] hover:bg-[#F6F3EC]'
+                    }`}
                 >
                   PROFILE (SCR 12)
                 </button>
@@ -195,7 +213,7 @@ function MainApp() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl mx-auto px-6 py-8 w-full">
-        
+
         {activeTab === 'auth' && !isAuthenticated && (
           <AuthPage onSuccess={() => setActiveTab('profile')} />
         )}
@@ -233,9 +251,24 @@ function MainApp() {
           </div>
         )}
 
+        {activeTab === 'budget' && (
+          <TripBudgetPage
+            onBack={() => setActiveTab('overview')}
+            onNavigateToCalendar={() => setActiveTab('calendar')}
+          />
+        )}
+
+        {activeTab === 'calendar' && (
+          <TripCalendarPage
+            onBack={() => setActiveTab('overview')}
+            onNavigateToBudget={() => setActiveTab('budget')}
+            onNavigateToActivities={() => setActiveTab('activities')}
+          />
+        )}
+
         {(activeTab === 'overview' || (activeTab === 'auth' && isAuthenticated) || (activeTab === 'profile' && !isAuthenticated)) && (
           <div className="space-y-10">
-            
+
             {/* Document Hero Header */}
             <section className="bg-white border-2 border-[#1F2B2E] p-8 shadow-[4px_4px_0px_0px_#1F2B2E] relative overflow-hidden">
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
@@ -326,7 +359,7 @@ function MainApp() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {roles.map((r) => (
-                  <div 
+                  <div
                     key={r.person}
                     className="bg-white border-2 border-[#1F2B2E] p-5 shadow-[3px_3px_0px_0px_#1F2B2E] flex flex-col justify-between space-y-4"
                   >
