@@ -26,6 +26,7 @@ JSON format schema required:
   "durationDays": ${Number(durationDays)},
   "estimatedBudget": {
     "total": ${Number(budget)},
+    "total": ${Number(budget)},
     "currency": "${currency}",
     "breakdown": {
       "accommodation": ${Math.round(Number(budget) * 0.4)},
@@ -166,6 +167,7 @@ Specific traveler requests: ${prompt || 'Explore top landmarks, authentic food s
     return res.status(200).json({
       success: true,
       itinerary: fallbackItinerary,
+      modelUsed: 'Smart AI Travel Engine',
       modelUsed: 'Smart AI Travel Engine',
       provider: 'GlobeTrotter AI'
     });
