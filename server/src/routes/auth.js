@@ -11,6 +11,13 @@ const SALT_ROUNDS = parseInt(process.env.BCRYPT_SALT_ROUNDS, 10) || 12;
 const JWT_SECRET = process.env.JWT_SECRET || 'globetrotter_super_secret_jwt_key_2026';
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || 'globetrotter_refresh_token_secret_7d_2026';
 
+// Email validation helper
+const isValidEmail = (email) => {
+  if (!email || typeof email !== 'string') return false;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email.toLowerCase().trim());
+};
+
 // Access Token: Short-lived (15 minutes)
 const generateAccessToken = (userId, email) => {
   return jwt.sign({ userId, email }, JWT_SECRET, { expiresIn: '15m' });
@@ -67,6 +74,10 @@ router.post('/signup', async (req, res) => {
       return res.status(400).json({ error: 'Validation Error', message: 'Name, email, and password are required.' });
     }
 
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ error: 'Validation Error', message: 'Please provide a valid email address.' });
+    }
+
     if (password.length < 6) {
       return res.status(400).json({ error: 'Validation Error', message: 'Password must be at least 6 characters long.' });
     }
@@ -87,7 +98,7 @@ router.post('/signup', async (req, res) => {
         email: email.toLowerCase().trim(),
         password: hashedPassword,
         languagePref: languagePref || 'en',
-        avatar: avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`
+        avatar: avatar || null
       }
     });
 
@@ -116,6 +127,10 @@ router.post('/login', async (req, res) => {
 
     if (!email || !password) {
       return res.status(400).json({ error: 'Validation Error', message: 'Email and password are required.' });
+    }
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ error: 'Validation Error', message: 'Please enter a valid email address.' });
     }
 
     const user = await prisma.user.findUnique({
@@ -261,8 +276,11 @@ const updateMeHandler = async (req, res) => {
     if (name) updateData.name = name;
     if (avatar !== undefined) updateData.avatar = avatar;
     if (languagePref) updateData.languagePref = languagePref;
-    
+
     if (email && email.toLowerCase().trim() !== user.email) {
+      if (!isValidEmail(email)) {
+        return res.status(400).json({ error: 'Validation Error', message: 'Please provide a valid email address.' });
+      }
       const emailCheck = await prisma.user.findUnique({
         where: { email: email.toLowerCase().trim() }
       });
@@ -307,7 +325,7 @@ const updateMeHandler = async (req, res) => {
 router.put('/profile', authenticateToken, updateMeHandler);
 router.put('/me', authenticateToken, updateMeHandler);
 
-// DELETE /api/me or /api/auth/account (Screen 12 / Protected)
+// DELETE /api/me or /api/auth/account (Protected)
 const deleteMeHandler = async (req, res) => {
   try {
     await prisma.user.delete({
@@ -323,22 +341,6 @@ const deleteMeHandler = async (req, res) => {
 };
 
 router.delete('/account', authenticateToken, deleteMeHandler);
-
-// POST /api/auth/forgot-password
-router.post('/forgot-password', async (req, res) => {
-  try {
-    const { email } = req.body;
-    if (!email) {
-      return res.status(400).json({ error: 'Validation Error', message: 'Email address is required.' });
-    }
-    res.status(200).json({
-      message: 'If an account exists with this email, a password reset link has been sent.'
-    });
-  } catch (error) {
-    console.error('Forgot Password Error:', error);
-    res.status(500).json({ error: 'Internal Server Error', message: error.message });
-  }
-});
 
 export default router;
 export { getMeHandler, deleteMeHandler };

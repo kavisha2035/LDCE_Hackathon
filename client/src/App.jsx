@@ -182,11 +182,17 @@ function MainApp() {
                   onClick={() => setActiveTab('profile')}
                   className="flex items-center gap-2 px-3 py-1 bg-white border border-[#1F2B2E] font-mono text-xs font-bold"
                 >
-                  <img
-                    src={user.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'}
-                    alt={user.name}
-                    className="h-6 w-6 object-cover border border-[#1F2B2E]"
-                  />
+                  {user.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt={user.name}
+                      className="h-6 w-6 object-cover border border-[#1F2B2E]"
+                    />
+                  ) : (
+                    <div className="h-6 w-6 bg-[#1F2B2E] text-[#F6F3EC] flex items-center justify-center font-mono font-bold text-xs border border-[#1F2B2E]">
+                      {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                    </div>
+                  )}
                   <span className="text-[#1F2B2E] uppercase">{user.name}</span>
                 </button>
 

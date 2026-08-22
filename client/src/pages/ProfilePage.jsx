@@ -1,21 +1,13 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { User, Mail, Shield, Trash2, Save, KeyRound, CheckCircle2, AlertCircle, Globe, MapPin } from 'lucide-react';
-
-const PRESET_AVATARS = [
-  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
-  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
-  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80',
-  'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80',
-];
+import { User, Mail, Shield, Trash2, Save, KeyRound, CheckCircle2, AlertCircle, Globe, MapPin, Upload, Image } from 'lucide-react';
 
 export default function ProfilePage() {
   const { user, updateProfile, deleteAccount, logout } = useAuth();
 
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
-  const [avatar, setAvatar] = useState(user?.avatar || PRESET_AVATARS[0]);
+  const [avatar, setAvatar] = useState(user?.avatar || '');
   const [languagePref, setLanguagePref] = useState(user?.languagePref || 'en');
   
   const [currentPassword, setCurrentPassword] = useState('');
@@ -28,14 +20,39 @@ export default function ProfilePage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  const validateEmail = (val) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(val).toLowerCase().trim());
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) { // 2MB limit
+        setError('Image file must be under 2MB.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatar(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
+
+    if (!validateEmail(email)) {
+      setError('Please provide a valid email address (e.g. user@example.com).');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const payload = { name, email, avatar, languagePref };
+      const payload = { name, email: email.toLowerCase().trim(), avatar, languagePref };
       if (newPassword) {
         payload.currentPassword = currentPassword;
         payload.newPassword = newPassword;
@@ -63,6 +80,8 @@ export default function ProfilePage() {
       setDeleting(false);
     }
   };
+
+  const initialLetter = name ? name.charAt(0).toUpperCase() : 'P';
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 py-6 px-4">
@@ -105,34 +124,64 @@ export default function ProfilePage() {
       {/* Main Profile Form */}
       <form onSubmit={handleUpdateProfile} className="space-y-6">
         
-        {/* Avatar Section */}
+        {/* Custom Avatar Section */}
         <div className="bg-white border-2 border-[#1F2B2E] p-6 shadow-[3px_3px_0px_0px_#1F2B2E] space-y-4">
           <h3 className="text-lg font-bold font-display text-[#1F2B2E] border-b border-[#1F2B2E]/20 pb-2">
             1. AVATAR PORTRAIT
           </h3>
 
-          <div className="flex flex-wrap items-center gap-6">
-            <img
-              src={avatar}
-              alt="Portrait"
-              className="h-20 w-20 border-2 border-[#1F2B2E] object-cover shadow-[2px_2px_0px_0px_#1F2B2E]"
-            />
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+            {avatar ? (
+              <img
+                src={avatar}
+                alt="Portrait"
+                className="h-20 w-20 border-2 border-[#1F2B2E] object-cover shadow-[2px_2px_0px_0px_#1F2B2E]"
+              />
+            ) : (
+              <div className="h-20 w-20 bg-[#1F2B2E] text-[#F6F3EC] border-2 border-[#1F2B2E] shadow-[2px_2px_0px_0px_#2C5F7C] flex items-center justify-center font-mono font-extrabold text-2xl">
+                {initialLetter}
+              </div>
+            )}
 
-            <div className="space-y-2">
-              <span className="text-xs font-mono text-[#1F2B2E] block uppercase font-bold">Select Preset Avatar:</span>
-              <div className="flex items-center gap-3">
-                {PRESET_AVATARS.map((preset, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setAvatar(preset)}
-                    className={`h-10 w-10 overflow-hidden border-2 transition ${
-                      avatar === preset ? 'border-[#2C5F7C] scale-105 shadow-[2px_2px_0px_0px_#2C5F7C]' : 'border-[#1F2B2E]/40 opacity-70 hover:opacity-100'
-                    }`}
-                  >
-                    <img src={preset} alt={`Preset ${idx}`} className="h-full w-full object-cover" />
-                  </button>
-                ))}
+            <div className="space-y-3 flex-1">
+              <label className="text-xs font-mono text-[#1F2B2E] block uppercase font-bold">
+                CHOOSE CUSTOM AVATAR (IMAGE URL OR UPLOAD)
+              </label>
+
+              <div className="space-y-2">
+                <div className="relative">
+                  <Image className="absolute left-3 top-3 h-4 w-4 text-[#1F2B2E]/60" />
+                  <input
+                    type="url"
+                    placeholder="Paste custom image URL (https://...)"
+                    value={avatar}
+                    onChange={(e) => setAvatar(e.target.value)}
+                    className="w-full bg-[#F6F3EC] border border-[#1F2B2E] rounded-sm pl-9 pr-3 py-2 text-xs text-[#1F2B2E] placeholder-[#1F2B2E]/40 focus:outline-none focus:ring-2 focus:ring-[#2C5F7C] font-mono"
+                  />
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <label className="cursor-pointer px-3 py-1.5 bg-[#F6F3EC] border border-[#1F2B2E] font-mono text-xs font-bold text-[#2C5F7C] hover:bg-[#1F2B2E] hover:text-white transition flex items-center gap-1.5">
+                    <Upload className="h-4 w-4" />
+                    <span>UPLOAD LOCAL IMAGE FILE</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                  </label>
+                  
+                  {avatar && (
+                    <button
+                      type="button"
+                      onClick={() => setAvatar('')}
+                      className="text-xs font-mono text-[#B84A3E] hover:underline uppercase font-bold"
+                    >
+                      REMOVE AVATAR
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -162,7 +211,10 @@ export default function ProfilePage() {
                 type="email"
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (error && error.includes('email')) setError('');
+                }}
                 className="w-full bg-[#F6F3EC] border border-[#1F2B2E] rounded-sm px-3 py-2 text-sm text-[#1F2B2E] focus:outline-none focus:ring-2 focus:ring-[#2C5F7C] font-mono"
               />
             </div>
