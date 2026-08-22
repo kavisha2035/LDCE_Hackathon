@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CITIES } from '../../api/mockData';
+import { useCities } from '../../hooks/useCities';
 import { useCityActivities } from '../../hooks/useCityActivities';
 import ActivityCard from './ActivityCard';
 
@@ -17,13 +17,14 @@ const COST_CAPS = [
  * hides the picker instead.
  */
 export default function ActivitySearch({ cityId: fixedCityId, onAdd, embedded = false }) {
-  const [pickedCityId, setPickedCityId] = useState(fixedCityId || CITIES[0].id);
-  const cityId = fixedCityId || pickedCityId;
+  const { data: cities = [] } = useCities();
+  const [pickedCityId, setPickedCityId] = useState(fixedCityId || '');
+  const cityId = fixedCityId || pickedCityId || (cities[0]?.id || '');
   const [category, setCategory] = useState('');
   const [maxCost, setMaxCost] = useState('');
 
   const { data: activities = [], isLoading } = useCityActivities(cityId, { category, maxCost });
-  const city = CITIES.find((c) => c.id === cityId);
+  const city = cities.find((c) => c.id === cityId);
 
   return (
     <div className={embedded ? '' : 'max-w-5xl mx-auto'}>
@@ -43,7 +44,7 @@ export default function ActivitySearch({ cityId: fixedCityId, onAdd, embedded = 
             onChange={(e) => setPickedCityId(e.target.value)}
             className="bg-paper border border-ink px-3 py-2 text-sm font-mono text-ink focus:outline-none focus:ring-2 focus:ring-route-blue"
           >
-            {CITIES.map((c) => <option key={c.id} value={c.id}>{c.name}, {c.country}</option>)}
+            {cities.map((c) => <option key={c.id} value={c.id}>{c.name}, {c.country}</option>)}
           </select>
         )}
         <select

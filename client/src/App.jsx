@@ -14,7 +14,6 @@ import TripBudgetPage from './pages/TripBudgetPage';
 import TripCalendarPage from './pages/TripCalendarPage';
 import PublicItineraryPage from './pages/PublicItineraryPage';
 import AdminPage from './pages/AdminPage';
-import { TRIP_ID } from './api/mockData';
 import {
   Compass, ArrowLeft, Layers, Calendar, DollarSign,
   Globe, Search, MapPin, Shield, User, Sparkles, Plus

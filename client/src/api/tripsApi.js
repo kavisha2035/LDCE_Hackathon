@@ -1,10 +1,4 @@
-import { apiFetch, mockDelay } from './apiClient';
-import { TRIP, CITIES, ACTIVITIES } from './mockData';
-
-const USE_MOCK = false;
-
-let nextStopId = 100;
-let nextStopActivityId = 100;
+import { apiFetch } from './apiClient';
 
 function normalizeTrip(tripData) {
   if (!tripData) return null;
@@ -66,9 +60,6 @@ function normalizeTrip(tripData) {
 
 // GET /api/trips — List trips (Screen 4)
 export async function fetchTrips() {
-  if (USE_MOCK) {
-    return mockDelay([normalizeTrip(TRIP)]);
-  }
   try {
     const data = await apiFetch('/trips');
     const list = data?.trips || [];
@@ -81,15 +72,12 @@ export async function fetchTrips() {
 
 // GET /api/trips/:id — Trip details
 export async function fetchTrip(tripId) {
-  if (USE_MOCK) {
-    return mockDelay(JSON.parse(JSON.stringify(TRIP)));
-  }
   try {
     const data = await apiFetch(`/trips/${tripId}`);
     return normalizeTrip(data);
   } catch (err) {
-    console.error('fetchTrip error, falling back to mock:', err);
-    return JSON.parse(JSON.stringify(TRIP));
+    console.error('fetchTrip error:', err);
+    throw err;
   }
 }
 
@@ -162,23 +150,6 @@ export async function shareTrip(tripId, isPublic = true) {
 
 // POST /api/trips/:id/stops  { city_id, start_date, end_date, est_stay_cost_per_day, est_transport_cost }
 export async function addStop(tripId, payload) {
-  if (USE_MOCK) {
-    const city = CITIES.find((c) => c.id === payload.city_id);
-    const stop = {
-      id: `stop-${nextStopId++}`,
-      trip_id: tripId,
-      city_id: payload.city_id,
-      start_date: payload.start_date,
-      end_date: payload.end_date,
-      order_index: TRIP.stops.length,
-      est_stay_cost_per_day: payload.est_stay_cost_per_day ?? 0,
-      est_transport_cost: payload.est_transport_cost ?? 0,
-      city,
-      activities: [],
-    };
-    TRIP.stops.push(stop);
-    return mockDelay(stop);
-  }
   try {
     const data = await apiFetch(`/trips/${tripId}/stops`, {
       method: 'POST',
@@ -193,32 +164,13 @@ export async function addStop(tripId, payload) {
     });
     return data?.stop || data;
   } catch (err) {
-    console.error('addStop error, falling back:', err);
-    const city = CITIES.find((c) => c.id === payload.city_id) || { id: payload.city_id, name: 'City', country: '' };
-    const stop = {
-      id: `stop-${nextStopId++}`,
-      trip_id: tripId,
-      city_id: payload.city_id,
-      start_date: payload.start_date,
-      end_date: payload.end_date,
-      order_index: TRIP.stops.length,
-      est_stay_cost_per_day: payload.est_stay_cost_per_day ?? 0,
-      est_transport_cost: payload.est_transport_cost ?? 0,
-      city,
-      activities: [],
-    };
-    TRIP.stops.push(stop);
-    return stop;
+    console.error('addStop error:', err);
+    throw err;
   }
 }
 
 // PUT /api/stops/:id  (dates, cost estimates, order_index)
 export async function updateStop(stopId, payload) {
-  if (USE_MOCK) {
-    const stop = TRIP.stops.find((s) => s.id === stopId);
-    if (stop) Object.assign(stop, payload);
-    return mockDelay(stop);
-  }
   try {
     const data = await apiFetch(`/stops/${stopId}`, {
       method: 'PUT',
@@ -232,57 +184,23 @@ export async function updateStop(stopId, payload) {
     });
     return data?.stop || data;
   } catch (err) {
-    console.error('updateStop error, falling back:', err);
-    const stop = TRIP.stops.find((s) => s.id === stopId);
-    if (stop) Object.assign(stop, payload);
-    return stop || payload;
+    console.error('updateStop error:', err);
+    throw err;
   }
 }
 
 // DELETE /api/stops/:id
 export async function deleteStop(stopId) {
-  if (USE_MOCK) {
-    TRIP.stops = TRIP.stops.filter((s) => s.id !== stopId);
-    TRIP.stops.forEach((s, i) => { s.order_index = i; });
-    return mockDelay(null, 200);
-  }
   try {
     return await apiFetch(`/stops/${stopId}`, { method: 'DELETE' });
   } catch (err) {
-    console.error('deleteStop error, falling back:', err);
-    TRIP.stops = TRIP.stops.filter((s) => s.id !== stopId);
-    return { success: true };
+    console.error('deleteStop error:', err);
+    throw err;
   }
 }
 
 // POST /api/stops/:id/activities  { activity_id, scheduled_date, scheduled_time, name, category, cost, notes }
 export async function addStopActivity(stopId, payload) {
-  if (USE_MOCK) {
-    const actId = payload.activity_id || payload.activityId;
-    const stop = TRIP.stops.find((s) => s.id === stopId);
-    const foundAct = ACTIVITIES.find((a) => a.id === actId);
-    const activity = foundAct || {
-      id: actId || `act-custom-${nextStopActivityId}`,
-      name: payload.name || 'Activity',
-      category: payload.category || 'sightseeing',
-      cost: payload.cost ?? 2500,
-      duration_hours: payload.duration_hours ?? 2,
-    };
-    const stopActivity = {
-      id: `sa-${nextStopActivityId++}`,
-      trip_stop_id: stopId,
-      activity_id: activity.id,
-      scheduled_date: payload.scheduled_date ?? payload.scheduledDate ?? stop?.start_date,
-      scheduled_time: payload.scheduled_time ?? payload.scheduledTime ?? '10:00',
-      notes: payload.notes ?? '',
-      activity,
-    };
-    if (stop) {
-      if (!stop.activities) stop.activities = [];
-      stop.activities.push(stopActivity);
-    }
-    return mockDelay(stopActivity);
-  }
   try {
     return await apiFetch(`/stops/${stopId}/activities`, {
       method: 'POST',
@@ -297,46 +215,17 @@ export async function addStopActivity(stopId, payload) {
       }),
     });
   } catch (err) {
-    console.error('addStopActivity error, falling back:', err);
-    const stop = TRIP.stops.find((s) => s.id === stopId);
-    const activity = ACTIVITIES.find((a) => a.id === payload.activity_id || a.id === payload.activityId) || {
-      id: payload.activity_id || `act-${Date.now()}`,
-      name: payload.name || 'Activity',
-      cost: payload.cost || 0,
-      category: payload.category || 'sightseeing'
-    };
-    const stopActivity = {
-      id: `sa-${nextStopActivityId++}`,
-      trip_stop_id: stopId,
-      activity_id: activity.id,
-      scheduled_date: payload.scheduled_date ?? stop?.start_date,
-      scheduled_time: payload.scheduled_time ?? '10:00',
-      notes: payload.notes ?? '',
-      activity,
-    };
-    if (stop) {
-      if (!stop.activities) stop.activities = [];
-      stop.activities.push(stopActivity);
-    }
-    return stopActivity;
+    console.error('addStopActivity error:', err);
+    throw err;
   }
 }
 
 // DELETE /api/stop-activities/:id
 export async function removeStopActivity(stopActivityId) {
-  if (USE_MOCK) {
-    TRIP.stops.forEach((s) => {
-      s.activities = s.activities.filter((a) => a.id !== stopActivityId);
-    });
-    return mockDelay(null, 200);
-  }
   try {
     return await apiFetch(`/stop-activities/${stopActivityId}`, { method: 'DELETE' });
   } catch (err) {
-    console.error('removeStopActivity error, falling back:', err);
-    TRIP.stops.forEach((s) => {
-      s.activities = s.activities.filter((a) => a.id !== stopActivityId);
-    });
-    return { success: true };
+    console.error('removeStopActivity error:', err);
+    throw err;
   }
 }

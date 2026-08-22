@@ -1,14 +1,7 @@
-import { apiFetch, mockDelay } from './apiClient';
-import { TRIP_BUDGET } from './mockData';
-
-const USE_MOCK = false;
+import { apiFetch } from './apiClient';
 
 // GET /api/trips/:id/budget -> { trip_total, avg_per_day, breakdown_by_category, per_stop }
 export async function fetchTripBudget(tripId) {
-  if (USE_MOCK) {
-    return mockDelay({ ...TRIP_BUDGET, trip_id: tripId });
-  }
-
   try {
     const data = await apiFetch(`/trips/${tripId}/budget`);
     const b = data?.budget || data;
@@ -33,7 +26,7 @@ export async function fetchTripBudget(tripId) {
       })),
     };
   } catch (err) {
-    console.error('fetchTripBudget error, falling back:', err);
-    return { ...TRIP_BUDGET, trip_id: tripId };
+    console.error('fetchTripBudget error:', err);
+    throw err;
   }
 }
