@@ -4,25 +4,69 @@
 
 @layer base {
   body {
-    @apply bg-slate-950 text-slate-100 selection:bg-cyan-500 selection:text-slate-950;
+    background-color: #F6F3EC;
+    color: #1F2B2E;
+    font-family: 'Inter', sans-serif;
+    ::selection {
+      background-color: #2C5F7C;
+      color: #F6F3EC;
+    }
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Barlow Condensed', sans-serif;
+    letter-spacing: -0.01em;
   }
 }
 
-/* Custom subtle scrollbar */
+/* Custom Inked Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #020617;
+  background: #EAE6DB;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 4px;
+  background: #1F2B2E;
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: #2C5F7C;
+}
+
+/* Perforated edge line generator */
+.border-perforated {
+  border-right: 2px dashed #1F2B2E;
+}
+
+.border-perforated-v {
+  border-bottom: 2px dashed #1F2B2E;
+}
+
+/* Ticket Notch Effects */
+.ticket-stub {
+  position: relative;
+  background: #FFFFFF;
+  border: 1.5px solid #1F2B2E;
+  border-radius: 2px;
+}
+
+/* Timeline Left Rule */
+.timeline-rule {
+  position: relative;
+}
+
+.timeline-rule::before {
+  content: '';
+  position: absolute;
+  left: 20px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: #1F2B2E;
+  z-index: 0;
 }

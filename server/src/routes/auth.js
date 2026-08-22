@@ -10,21 +10,19 @@ const prisma = new PrismaClient();
 const SALT_ROUNDS = parseInt(process.env.BCRYPT_SALT_ROUNDS, 10) || 12;
 const JWT_SECRET = process.env.JWT_SECRET || 'globetrotter_super_secret_jwt_key_2026';
 
-// Helper to generate JWT token
 const generateToken = (userId, email) => {
   return jwt.sign({ userId, email }, JWT_SECRET, { expiresIn: '7d' });
 };
 
-// Helper to sanitize user object
 const sanitizeUser = (user) => {
   const { password, ...userWithoutPassword } = user;
   return userWithoutPassword;
 };
 
-// POST /api/auth/signup
+// POST /api/auth/signup (Screen 1)
 router.post('/signup', async (req, res) => {
   try {
-    const { name, email, password, avatar } = req.body;
+    const { name, email, password, avatar, languagePref } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'Validation Error', message: 'Name, email, and password are required.' });
@@ -49,6 +47,7 @@ router.post('/signup', async (req, res) => {
         name,
         email: email.toLowerCase().trim(),
         password: hashedPassword,
+        languagePref: languagePref || 'en',
         avatar: avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`
       }
     });
@@ -66,7 +65,7 @@ router.post('/signup', async (req, res) => {
   }
 });
 
-// POST /api/auth/login
+// POST /api/auth/login (Screen 1)
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -102,11 +101,16 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// GET /api/auth/me (Protected)
-router.get('/me', authenticateToken, async (req, res) => {
+// GET /api/me or /api/auth/me (Screen 2, 12)
+const getMeHandler = async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
-      where: { id: req.user.userId }
+      where: { id: req.user.userId },
+      include: {
+        savedDestinations: {
+          include: { city: true }
+        }
+      }
     });
 
     if (!user) {
@@ -120,12 +124,14 @@ router.get('/me', authenticateToken, async (req, res) => {
     console.error('Fetch Profile Error:', error);
     res.status(500).json({ error: 'Internal Server Error', message: error.message });
   }
-});
+};
 
-// PUT /api/auth/profile (Protected)
-router.put('/profile', authenticateToken, async (req, res) => {
+router.get('/me', authenticateToken, getMeHandler);
+
+// PUT /api/me or /api/auth/profile (Screen 12)
+const updateMeHandler = async (req, res) => {
   try {
-    const { name, email, avatar, currentPassword, newPassword } = req.body;
+    const { name, email, avatar, languagePref, currentPassword, newPassword } = req.body;
 
     const user = await prisma.user.findUnique({
       where: { id: req.user.userId }
@@ -139,6 +145,7 @@ router.put('/profile', authenticateToken, async (req, res) => {
 
     if (name) updateData.name = name;
     if (avatar !== undefined) updateData.avatar = avatar;
+    if (languagePref) updateData.languagePref = languagePref;
     
     if (email && email.toLowerCase().trim() !== user.email) {
       const emailCheck = await prisma.user.findUnique({
@@ -166,7 +173,10 @@ router.put('/profile', authenticateToken, async (req, res) => {
 
     const updatedUser = await prisma.user.update({
       where: { id: req.user.userId },
-      data: updateData
+      data: updateData,
+      include: {
+        savedDestinations: { include: { city: true } }
+      }
     });
 
     res.status(200).json({
@@ -177,7 +187,28 @@ router.put('/profile', authenticateToken, async (req, res) => {
     console.error('Update Profile Error:', error);
     res.status(500).json({ error: 'Internal Server Error', message: error.message });
   }
-});
+};
+
+router.put('/profile', authenticateToken, updateMeHandler);
+router.put('/me', authenticateToken, updateMeHandler);
+
+// DELETE /api/me or /api/auth/account (Screen 12)
+const deleteMeHandler = async (req, res) => {
+  try {
+    await prisma.user.delete({
+      where: { id: req.user.userId }
+    });
+
+    res.status(200).json({
+      message: 'User account deleted successfully.'
+    });
+  } catch (error) {
+    console.error('Delete Account Error:', error);
+    res.status(500).json({ error: 'Internal Server Error', message: error.message });
+  }
+};
+
+router.delete('/account', authenticateToken, deleteMeHandler);
 
 // POST /api/auth/forgot-password
 router.post('/forgot-password', async (req, res) => {
@@ -186,12 +217,6 @@ router.post('/forgot-password', async (req, res) => {
     if (!email) {
       return res.status(400).json({ error: 'Validation Error', message: 'Email address is required.' });
     }
-
-    const user = await prisma.user.findUnique({
-      where: { email: email.toLowerCase().trim() }
-    });
-
-    // Security best practice: don't reveal if email exists or not
     res.status(200).json({
       message: 'If an account exists with this email, a password reset link has been sent.'
     });
@@ -201,20 +226,5 @@ router.post('/forgot-password', async (req, res) => {
   }
 });
 
-// DELETE /api/auth/account (Protected)
-router.delete('/account', authenticateToken, async (req, res) => {
-  try {
-    await prisma.user.delete({
-      where: { id: req.user.userId }
-    });
-
-    res.status(200).json({
-      message: 'User account and associated trips deleted successfully.'
-    });
-  } catch (error) {
-    console.error('Delete Account Error:', error);
-    res.status(500).json({ error: 'Internal Server Error', message: error.message });
-  }
-});
-
 export default router;
+export { getMeHandler, deleteMeHandler };

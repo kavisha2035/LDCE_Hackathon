@@ -1,4 +1,4 @@
-// Prisma Schema for GlobeTrotter
+// Prisma Schema for GlobeTrotter — Aligned with design.md
 
 generator client {
   provider = "prisma-client-js"
@@ -10,28 +10,34 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  password  String
-  avatar    String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  trips     Trip[]
+  id                String             @id @default(uuid())
+  name              String
+  email             String             @unique
+  password          String
+  isAdmin           Boolean            @default(false)
+  languagePref      String             @default("en")
+  avatar            String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  trips             Trip[]
+  savedDestinations SavedDestination[]
 }
 
 model City {
-  id          String     @id @default(uuid())
-  name        String
-  country     String
-  costIndex   Float      @default(1.0)
-  popularity  Int        @default(0)
-  imageUrl    String?
-  description String?
-  stops       Stop[]
-  activities  Activity[]
+  id                String             @id @default(uuid())
+  name              String
+  country           String
+  region            String?
+  costIndex         Int                @default(1) // 1 (cheap) to 5 (expensive)
+  popularity        Int                @default(0)
+  imageUrl          String?
+  description       String?
+  stops             Stop[]
+  activities        Activity[]
+  savedBy           SavedDestination[]
 
   @@index([country])
+  @@index([region])
   @@index([popularity])
 }
 
@@ -45,23 +51,27 @@ model Trip {
   endDate     DateTime
   coverPhoto  String?
   isPublic    Boolean  @default(false)
+  shareSlug   String?  @unique
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   stops       Stop[]
 
   @@index([userId])
+  @@index([shareSlug])
 }
 
 model Stop {
-  id             String         @id @default(uuid())
-  tripId         String
-  trip           Trip           @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  cityId         String
-  city           City           @relation(fields: [cityId], references: [id])
-  startDate      DateTime
-  endDate        DateTime
-  order          Int            @default(0)
-  tripActivities TripActivity[]
+  id                   String         @id @default(uuid())
+  tripId               String
+  trip                 Trip           @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  cityId               String
+  city                 City           @relation(fields: [cityId], references: [id])
+  startDate            DateTime
+  endDate              DateTime
+  orderIndex           Int            @default(0)
+  estStayCostPerDay    Float          @default(0.0)
+  estTransportCost     Float          @default(0.0)
+  tripActivities       TripActivity[]
 
   @@index([tripId])
   @@index([cityId])
@@ -72,15 +82,15 @@ model Activity {
   cityId         String
   city           City           @relation(fields: [cityId], references: [id], onDelete: Cascade)
   name           String
-  type           String         // sightseeing, food, adventure, culture, shopping, nightlife
+  category       String         // sightseeing, food, adventure, culture, nightlife
   cost           Float          @default(0.0)
-  duration       Int            @default(60) // minutes
+  durationHours  Float          @default(1.0) // hours
   description    String?
   imageUrl       String?
   tripActivities TripActivity[]
 
   @@index([cityId])
-  @@index([type])
+  @@index([category])
 }
 
 model TripActivity {
@@ -91,8 +101,17 @@ model TripActivity {
   activity      Activity  @relation(fields: [activityId], references: [id])
   scheduledDate DateTime?
   scheduledTime String?
-  cost          Float?
+  notes         String?
 
   @@index([stopId])
   @@index([activityId])
+}
+
+model SavedDestination {
+  userId    String
+  cityId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  city      City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+
+  @@id([userId, cityId])
 }
