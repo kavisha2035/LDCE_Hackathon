@@ -1,5 +1,6 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -363,50 +364,77 @@ router.get('/:id/activities', async (req, res) => {
   }
 });
 
+// GET /api/saved-destinations (List saved destinations for logged-in user)
+router.get('/saved-destinations', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const saved = await prisma.savedDestination.findMany({
+      where: { userId },
+      include: { city: true }
+    });
+    return res.status(200).json({ saved });
+  } catch (error) {
+    console.error('Fetch saved destinations error:', error);
+    return res.status(500).json({ error: 'Internal Server Error', message: error.message });
+  }
+});
+
 // POST /api/saved-destinations (Save destination for user)
 const saveDestinationHandler = async (req, res) => {
   try {
-    const { city_id, cityId, userId } = req.body;
+    const { city_id, cityId } = req.body;
     const targetCityId = city_id || cityId;
-    let targetUserId = userId;
+    const targetUserId = req.user?.userId;
 
     if (!targetCityId) {
       return res.status(400).json({ error: 'Validation Error', message: 'city_id is required.' });
     }
 
-    try {
-      if (!targetUserId) {
-        const firstUser = await prisma.user.findFirst();
-        targetUserId = firstUser ? firstUser.id : 'demo-user-id';
-      }
+    if (!targetUserId) {
+      return res.status(401).json({ error: 'Unauthorized', message: 'Authentication required to save destinations.' });
+    }
 
-      const saved = await prisma.savedDestination.upsert({
-        where: {
-          userId_cityId: {
-            userId: targetUserId,
-            cityId: targetCityId
-          }
-        },
-        update: {},
-        create: {
+    const saved = await prisma.savedDestination.upsert({
+      where: {
+        userId_cityId: {
           userId: targetUserId,
           cityId: targetCityId
         }
-      });
-      return res.status(201).json({ message: 'Destination saved to passport.', saved });
-    } catch (dbErr) {
-      return res.status(201).json({
-        message: 'Destination saved to passport (mock mode).',
-        saved: { userId: targetUserId || 'demo-user-id', cityId: targetCityId }
-      });
-    }
+      },
+      update: {},
+      create: {
+        userId: targetUserId,
+        cityId: targetCityId
+      }
+    });
+    return res.status(201).json({ message: 'Destination saved to passport.', saved });
   } catch (error) {
     console.error('Save destination error:', error);
     res.status(500).json({ error: 'Internal Server Error', message: error.message });
   }
 };
 
-router.post('/saved-destinations', saveDestinationHandler);
-router.post('/', saveDestinationHandler);
+// DELETE /api/saved-destinations/:cityId (Remove saved destination)
+router.delete('/saved-destinations/:cityId', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const cityId = req.params.cityId;
+
+    await prisma.savedDestination.deleteMany({
+      where: {
+        userId,
+        cityId
+      }
+    });
+
+    return res.status(200).json({ message: 'Destination removed from saved list.' });
+  } catch (error) {
+    console.error('Delete saved destination error:', error);
+    return res.status(500).json({ error: 'Internal Server Error', message: error.message });
+  }
+});
+
+router.post('/saved-destinations', authenticateToken, saveDestinationHandler);
 
 export default router;
+

@@ -425,10 +425,9 @@ function MainApp() {
             <ActivitySearchPage
               initialCityName={navParams.city}
               initialSearch={navParams.search || ''}
+              navTripId={navParams.tripId}
+              onNavigate={navigate}
               onBack={() => navigate('home')}
-              onAddActivity={(activity) => console.log('Add activity:', activity)}
-              onRemoveActivity={(activity) => console.log('Remove activity:', activity)}
-              selectedActivityIds={[]}
             />
           </div>
         )}

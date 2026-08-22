@@ -1,6 +1,7 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { calculateTripBudget } from './trips.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -254,39 +255,83 @@ router.get('/:share_slug', async (req, res) => {
   }
 });
 
-// POST /api/public/trips/:share_slug/copy — Clones the trip into the viewer's account
-router.post('/:share_slug/copy', async (req, res) => {
+// POST /api/public/trips/:share_slug/copy — Clones the trip into the authenticated user's account
+router.post('/:share_slug/copy', authenticateToken, async (req, res) => {
   try {
     const { share_slug } = req.params;
-    const { userId } = req.body;
+    const targetUserId = req.user.userId;
 
-    let targetUserId = userId;
-    if (!targetUserId) {
-      const user = await prisma.user.findFirst();
-      targetUserId = user ? user.id : 'cloned-user-id';
+    let sourceTrip = await prisma.trip.findFirst({
+      where: {
+        OR: [
+          { shareSlug: share_slug },
+          { id: share_slug }
+        ]
+      },
+      include: {
+        stops: {
+          include: {
+            city: true,
+            tripActivities: {
+              include: { activity: true }
+            }
+          }
+        }
+      }
+    }).catch(() => null);
+
+    if (!sourceTrip) {
+      sourceTrip = SAMPLE_PUBLIC_TRIPS.find(t => t.shareSlug === share_slug || t.id === share_slug) || SAMPLE_PUBLIC_TRIPS[0];
     }
-
-    let sourceTrip = SAMPLE_PUBLIC_TRIPS.find(t => t.shareSlug === share_slug || t.id === share_slug) || SAMPLE_PUBLIC_TRIPS[0];
 
     const clonedTripName = `Copy of ${sourceTrip.name}`;
     const newShareSlug = `${clonedTripName.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 25)}-${Math.random().toString(36).substring(2, 6)}`;
 
-    const clonedTrip = {
-      id: `trip-clone-${Date.now()}`,
-      userId: targetUserId,
-      name: clonedTripName,
-      description: sourceTrip.description,
-      startDate: sourceTrip.startDate,
-      endDate: sourceTrip.endDate,
-      coverPhoto: sourceTrip.coverPhoto,
-      isPublic: false,
-      shareSlug: newShareSlug,
-      stops: sourceTrip.stops || []
-    };
+    // Create cloned trip with nested stops and activities in database
+    const cloned = await prisma.trip.create({
+      data: {
+        userId: targetUserId,
+        name: clonedTripName,
+        description: sourceTrip.description,
+        startDate: new Date(sourceTrip.startDate || sourceTrip.start_date || new Date()),
+        endDate: new Date(sourceTrip.endDate || sourceTrip.end_date || new Date(Date.now() + 7 * 86400000)),
+        coverPhoto: sourceTrip.coverPhoto || sourceTrip.cover_photo_url,
+        isPublic: false,
+        shareSlug: newShareSlug,
+        stops: {
+          create: (sourceTrip.stops || []).map((s, idx) => ({
+            cityId: s.cityId || s.city_id,
+            startDate: new Date(s.startDate || s.start_date || new Date()),
+            endDate: new Date(s.endDate || s.end_date || new Date()),
+            orderIndex: s.orderIndex !== undefined ? s.orderIndex : idx,
+            estStayCostPerDay: parseFloat(s.estStayCostPerDay || s.est_stay_cost_per_day || 0),
+            estTransportCost: parseFloat(s.estTransportCost || s.est_transport_cost || 0),
+            tripActivities: {
+              create: (s.tripActivities || s.activities || []).map(ta => ({
+                activityId: ta.activityId || ta.activity_id || ta.id,
+                scheduledDate: ta.scheduledDate || ta.scheduled_date ? new Date(ta.scheduledDate || ta.scheduled_date) : null,
+                scheduledTime: ta.scheduledTime || ta.scheduled_time || '10:00 AM',
+                notes: ta.notes || ''
+              }))
+            }
+          }))
+        }
+      },
+      include: {
+        stops: {
+          include: {
+            city: true,
+            tripActivities: {
+              include: { activity: true }
+            }
+          }
+        }
+      }
+    });
 
     res.status(201).json({
       message: 'Trip cloned to your account successfully!',
-      trip: clonedTrip
+      trip: cloned
     });
   } catch (error) {
     console.error('Copy trip error:', error);
@@ -295,3 +340,4 @@ router.post('/:share_slug/copy', async (req, res) => {
 });
 
 export default router;
+

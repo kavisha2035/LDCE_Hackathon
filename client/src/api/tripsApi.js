@@ -74,8 +74,8 @@ export async function fetchTrips() {
     const list = data?.trips || [];
     return list.map(normalizeTrip);
   } catch (err) {
-    console.error('fetchTrips error, falling back:', err);
-    return [normalizeTrip(TRIP)];
+    console.error('fetchTrips error:', err);
+    return [];
   }
 }
 

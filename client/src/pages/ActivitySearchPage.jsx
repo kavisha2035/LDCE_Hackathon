@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import {
   Search, Filter, MapPin, Clock, DollarSign, Eye, Camera,
   Utensils, Mountain, Palette, Moon, ShoppingBag, ChevronDown,
-  X, Plus, Minus, ArrowLeft, Sparkles, Loader2
+  X, Plus, Minus, ArrowLeft, Sparkles, Loader2, Check, Layers, ExternalLink
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../lib/ToastContext';
+import { fetchTrips, addStopActivity } from '../api/tripsApi';
 
 const CATEGORY_CONFIG = {
   sightseeing: {
@@ -80,7 +83,7 @@ function ActivityCard({ activity, isSelected, onToggle, onPreview }) {
     <div
       className={`
         group relative rounded-3xl border border-gray-200 overflow-hidden bg-white shadow-xl hover:shadow-2xl transition duration-300 flex flex-col justify-between min-h-[480px]
-        ${isSelected ? 'ring-2 ring-[#F5B800]' : ''}
+        ${isSelected ? 'ring-2 ring-emerald-500' : ''}
       `}
     >
       <div>
@@ -137,20 +140,20 @@ function ActivityCard({ activity, isSelected, onToggle, onPreview }) {
         </div>
       </div>
 
-      {/* Curvy Action Button */}
+      {/* Action Button */}
       <div className="p-7 pt-0">
         <button
           onClick={() => onToggle(activity)}
           className={`
             w-full py-3.5 px-6 rounded-full text-xs font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 transition duration-200 cursor-pointer shadow-md
             ${isSelected
-              ? 'bg-red-500 hover:bg-red-600 text-white'
+              ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
               : 'bg-[#F5B800] hover:bg-[#E0A600] text-[#1E232A]'
             }
           `}
         >
-          {isSelected ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-          {isSelected ? 'Remove Stop' : 'Add to Journey'}
+          {isSelected ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+          {isSelected ? 'Added to Journey' : 'Add to Journey'}
         </button>
       </div>
     </div>
@@ -221,15 +224,261 @@ function ActivityDetailModal({ activity, onClose, isSelected, onToggle }) {
             className={`
               w-full py-4 rounded-full text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition cursor-pointer shadow-lg
               ${isSelected
-                ? 'bg-red-500 hover:bg-red-600 text-white'
+                ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
                 : 'bg-[#F5B800] hover:bg-[#E0A600] text-[#1E232A]'
               }
             `}
           >
-            {isSelected ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-            {isSelected ? 'Remove from Stop' : 'Add to Journey'}
+            {isSelected ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+            {isSelected ? 'Added to Journey' : 'Add to Journey'}
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ----------- Add to Journey Selection Modal -----------
+function AddToJourneyModal({ activity, cityName, onClose, onSuccess, onNavigate }) {
+  const { showToast } = useToast();
+  const [trips, setTrips] = useState([]);
+  const [loadingTrips, setLoadingTrips] = useState(true);
+  const [selectedTripId, setSelectedTripId] = useState('');
+  const [selectedStopId, setSelectedStopId] = useState('');
+  const [adding, setAdding] = useState(false);
+  const [error, setError] = useState('');
+  const [scheduledTime, setScheduledTime] = useState('10:00 AM');
+  const [notes, setNotes] = useState('');
+
+  useEffect(() => {
+    fetchTrips()
+      .then((list) => {
+        const validTrips = list || [];
+        setTrips(validTrips);
+        if (validTrips.length > 0) {
+          const firstTrip = validTrips[0];
+          setSelectedTripId(firstTrip.id);
+          
+          // Auto-select stop matching city if available
+          const matchingStop = (firstTrip.stops || []).find(
+            (s) => s.city_id === activity.cityId || s.city?.name?.toLowerCase() === cityName?.toLowerCase()
+          );
+          if (matchingStop) {
+            setSelectedStopId(matchingStop.id);
+          } else if (firstTrip.stops && firstTrip.stops.length > 0) {
+            setSelectedStopId(firstTrip.stops[0].id);
+          }
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load trips:', err);
+        setError('Failed to retrieve your travel itineraries.');
+      })
+      .finally(() => setLoadingTrips(false));
+  }, [activity, cityName]);
+
+  const currentTrip = trips.find((t) => t.id === selectedTripId);
+  const stops = currentTrip?.stops || [];
+
+  const handleTripChange = (e) => {
+    const tripId = e.target.value;
+    setSelectedTripId(tripId);
+    const chosenTrip = trips.find((t) => t.id === tripId);
+    if (chosenTrip?.stops?.length > 0) {
+      const matchingStop = chosenTrip.stops.find(
+        (s) => s.city_id === activity.cityId || s.city?.name?.toLowerCase() === cityName?.toLowerCase()
+      );
+      setSelectedStopId(matchingStop ? matchingStop.id : chosenTrip.stops[0].id);
+    } else {
+      setSelectedStopId('');
+    }
+  };
+
+  const handleConfirmAdd = async () => {
+    if (!selectedStopId) {
+      setError('Please select a destination stop to attach this experience to.');
+      return;
+    }
+
+    setAdding(true);
+    setError('');
+
+    try {
+      await addStopActivity(selectedStopId, {
+        activityId: activity.id,
+        name: activity.name,
+        category: activity.category || activity.type || 'sightseeing',
+        cost: activity.cost || 0,
+        scheduledTime: scheduledTime || undefined,
+        notes: notes || undefined,
+      });
+
+      showToast(`Added "${activity.name}" to your trip!`, 'success');
+      onSuccess?.(activity);
+      onClose();
+    } catch (err) {
+      console.error('Add activity error:', err);
+      setError(err.message || 'Failed to add activity to trip.');
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+
+      <div
+        className="relative bg-white border-2 border-[#1F2B2E] rounded-3xl max-w-lg w-full p-8 shadow-[6px_6px_0px_0px_#1F2B2E] space-y-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-5 right-5 p-2 rounded-full border border-[#1F2B2E]/20 hover:bg-[#F6F3EC] transition cursor-pointer"
+        >
+          <X className="w-5 h-5 text-[#1F2B2E]" />
+        </button>
+
+        <div>
+          <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#2C5F7C] block mb-1">
+            ITINERARY BUILDER &bull; ADD EXPERIENCE
+          </span>
+          <h3 className="text-2xl font-bold font-display text-[#1F2B2E] leading-tight">
+            Add to Journey
+          </h3>
+          <p className="text-xs text-[#1F2B2E]/70 font-mono mt-1">
+            {activity.name} &bull; {formatCost(activity.cost)}
+          </p>
+        </div>
+
+        {error && (
+          <div className="p-3 bg-red-50 border border-red-300 text-red-700 text-xs font-mono rounded-lg">
+            {error}
+          </div>
+        )}
+
+        {loadingTrips ? (
+          <div className="py-8 text-center space-y-2">
+            <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#2C5F7C]" />
+            <p className="text-xs font-mono text-[#1F2B2E]/60">Loading your travel routes...</p>
+          </div>
+        ) : trips.length === 0 ? (
+          <div className="py-6 text-center space-y-4 bg-[#F6F3EC] border border-[#1F2B2E]/20 p-6 rounded-2xl">
+            <p className="text-sm font-semibold text-[#1F2B2E]">
+              You don't have any active travel routes yet.
+            </p>
+            <p className="text-xs text-[#1F2B2E]/70">
+              Create a new trip first to add stops and experiences.
+            </p>
+            <button
+              onClick={() => {
+                onClose();
+                onNavigate?.('create-trip');
+              }}
+              className="px-6 py-3 bg-[#2C5F7C] hover:bg-[#1F2B2E] text-white font-mono text-xs font-bold uppercase rounded-full transition shadow-md inline-flex items-center gap-2 cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              Plan a New Journey
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4 font-sans">
+            <div>
+              <label className="text-xs font-mono font-bold uppercase text-[#1F2B2E] block mb-1.5">
+                Select Travel Itinerary
+              </label>
+              <select
+                value={selectedTripId}
+                onChange={handleTripChange}
+                className="w-full bg-[#F6F3EC] border-2 border-[#1F2B2E] rounded-xl px-4 py-2.5 text-sm font-semibold text-[#1F2B2E] focus:outline-none focus:ring-2 focus:ring-[#2C5F7C]"
+              >
+                {trips.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name} ({t.stops?.length || 0} stops)
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {stops.length > 0 ? (
+              <div>
+                <label className="text-xs font-mono font-bold uppercase text-[#1F2B2E] block mb-1.5">
+                  Select Destination Stop
+                </label>
+                <select
+                  value={selectedStopId}
+                  onChange={(e) => setSelectedStopId(e.target.value)}
+                  className="w-full bg-[#F6F3EC] border-2 border-[#1F2B2E] rounded-xl px-4 py-2.5 text-sm font-semibold text-[#1F2B2E] focus:outline-none focus:ring-2 focus:ring-[#2C5F7C]"
+                >
+                  {stops.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      Stop: {s.city?.name || 'Destination'} ({s.start_date || s.startDate} – {s.end_date || s.endDate})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div className="p-3 bg-amber-50 border border-amber-300 text-amber-800 text-xs rounded-xl font-mono">
+                This trip has no destination stops yet. Open the Itinerary Builder to add a stop first.
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-mono font-bold uppercase text-[#1F2B2E] block mb-1">
+                  Scheduled Time
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. 10:00 AM"
+                  value={scheduledTime}
+                  onChange={(e) => setScheduledTime(e.target.value)}
+                  className="w-full bg-[#F6F3EC] border border-[#1F2B2E]/40 rounded-xl px-3 py-2 text-xs font-mono"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-mono font-bold uppercase text-[#1F2B2E] block mb-1">
+                  Notes (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Fast-track entry"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="w-full bg-[#F6F3EC] border border-[#1F2B2E]/40 rounded-xl px-3 py-2 text-xs font-mono"
+                />
+              </div>
+            </div>
+
+            <div className="pt-2 flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-1/3 py-3 rounded-full border border-[#1F2B2E]/30 text-xs font-mono font-bold uppercase text-[#1F2B2E] hover:bg-[#F6F3EC] transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmAdd}
+                disabled={adding || !selectedStopId}
+                className="w-2/3 py-3.5 rounded-full bg-[#2C5F7C] hover:bg-[#1F2B2E] text-white font-mono text-xs font-bold uppercase tracking-wider transition shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {adding ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Adding to Stop...</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4" />
+                    <span>Confirm & Add to Trip</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -240,11 +489,15 @@ export default function ActivitySearchPage({
   cityId,
   initialCityName,
   initialSearch = '',
+  navTripId,
+  navStopId,
+  onNavigate,
   onBack,
   onAddActivity,
   onRemoveActivity,
   selectedActivityIds = []
 }) {
+  const { isAuthenticated } = useAuth();
   const [city, setCity] = useState(null);
   const [activities, setActivities] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -254,6 +507,8 @@ export default function ActivitySearchPage({
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [previewActivity, setPreviewActivity] = useState(null);
+  const [activityToAddToJourney, setActivityToAddToJourney] = useState(null);
+  const [addedActivityIds, setAddedActivityIds] = useState(new Set(selectedActivityIds));
 
   const [cities, setCities] = useState([]);
   const [activeCityId, setActiveCityId] = useState(cityId || null);
@@ -261,13 +516,13 @@ export default function ActivitySearchPage({
   useEffect(() => {
     if (!cityId) {
       fetch('/api/cities')
-        .then(res => res.json())
-        .then(data => {
+        .then((res) => res.json())
+        .then((data) => {
           const list = data.cities || [];
           setCities(list);
           if (list.length > 0 && !activeCityId) {
             if (initialCityName) {
-              const matched = list.find(c => c.name.toLowerCase() === initialCityName.toLowerCase());
+              const matched = list.find((c) => c.name.toLowerCase() === initialCityName.toLowerCase());
               if (matched) {
                 setActiveCityId(matched.id);
                 return;
@@ -289,13 +544,13 @@ export default function ActivitySearchPage({
     if (searchQuery) params.set('search', searchQuery);
 
     fetch(`/api/cities/${activeCityId}/activities?${params}`)
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         setCity(data.city);
         setActivities(data.activities || []);
         setCategories(data.categories || []);
       })
-      .catch(err => setError(err.message))
+      .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [activeCityId, selectedCategory, searchQuery]);
 
@@ -306,11 +561,31 @@ export default function ActivitySearchPage({
   }, [searchInput]);
 
   const handleToggle = (activity) => {
-    if (selectedActivityIds.includes(activity.id)) {
-      onRemoveActivity?.(activity);
-    } else {
-      onAddActivity?.(activity);
+    if (onAddActivity) {
+      if (addedActivityIds.has(activity.id)) {
+        onRemoveActivity?.(activity);
+        setAddedActivityIds((prev) => {
+          const next = new Set(prev);
+          next.delete(activity.id);
+          return next;
+        });
+      } else {
+        onAddActivity?.(activity);
+        setAddedActivityIds((prev) => new Set(prev).add(activity.id));
+      }
+      return;
     }
+
+    if (!isAuthenticated) {
+      onNavigate?.('auth');
+      return;
+    }
+
+    setActivityToAddToJourney(activity);
+  };
+
+  const handleJourneyAddSuccess = (activity) => {
+    setAddedActivityIds((prev) => new Set(prev).add(activity.id));
   };
 
   return (
@@ -324,7 +599,7 @@ export default function ActivitySearchPage({
             className="flex items-center gap-2 text-xs font-bold text-[#1E232A] hover:text-[#F5B800] transition cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Itinerary
+            Back to Dashboard
           </button>
         )}
 
@@ -405,7 +680,7 @@ export default function ActivitySearchPage({
             <ActivityCard
               key={activity.id}
               activity={activity}
-              isSelected={selectedActivityIds.includes(activity.id)}
+              isSelected={addedActivityIds.has(activity.id)}
               onToggle={handleToggle}
               onPreview={setPreviewActivity}
             />
@@ -413,14 +688,27 @@ export default function ActivitySearchPage({
         </div>
       )}
 
+      {/* Quick Preview Detail Modal */}
       {previewActivity && (
         <ActivityDetailModal
           activity={previewActivity}
           onClose={() => setPreviewActivity(null)}
-          isSelected={selectedActivityIds.includes(previewActivity.id)}
+          isSelected={addedActivityIds.has(previewActivity.id)}
           onToggle={handleToggle}
+        />
+      )}
+
+      {/* Add to Journey Selection Modal */}
+      {activityToAddToJourney && (
+        <AddToJourneyModal
+          activity={activityToAddToJourney}
+          cityName={city?.name}
+          onClose={() => setActivityToAddToJourney(null)}
+          onSuccess={handleJourneyAddSuccess}
+          onNavigate={onNavigate}
         />
       )}
     </div>
   );
 }
+

@@ -42,10 +42,10 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/saved-destinations', citiesRoutes);
 
 // Direct /api/stops & /api/stop-activities shortcuts
-app.put('/api/stops/:id', updateStopHandler);
-app.delete('/api/stops/:id', deleteStopHandler);
-app.post('/api/stops/:id/activities', addStopActivityHandler);
-app.delete('/api/stop-activities/:id', removeStopActivityHandler);
+app.put('/api/stops/:id', authenticateToken, updateStopHandler);
+app.delete('/api/stops/:id', authenticateToken, deleteStopHandler);
+app.post('/api/stops/:id/activities', authenticateToken, addStopActivityHandler);
+app.delete('/api/stop-activities/:id', authenticateToken, removeStopActivityHandler);
 
 // Direct /api/me endpoints (design.md)
 app.get('/api/me', authenticateToken, getMeHandler);
