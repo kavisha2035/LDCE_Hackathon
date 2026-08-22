@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import HomePage from './pages/HomePage';
+import CreateTripPage from './pages/CreateTripPage';
+import MyTripsPage from './pages/MyTripsPage';
 import AuthPage from './pages/AuthPage';
 import ProfilePage from './pages/ProfilePage';
 import ActivitySearchPage from './pages/ActivitySearchPage';
@@ -15,14 +17,22 @@ import AdminPage from './pages/AdminPage';
 import { TRIP_ID } from './api/mockData';
 import {
   Compass, ArrowLeft, Layers, Calendar, DollarSign,
-  Globe, Search, MapPin, Shield, User, Sparkles
+  Globe, Search, MapPin, Shield, User, Sparkles, Plus
 } from 'lucide-react';
+
+const PROTECTED_TABS = ['create-trip', 'my-trips', 'builder', 'profile', 'admin'];
 
 function MainApp() {
   const { user, isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState('home'); // 'home', 'cities', 'activities', 'builder', 'itinerary', 'budget', 'calendar', 'share', 'admin', 'profile', 'auth', 'reset'
+  const [activeTab, setActiveTab] = useState('home'); // 'home', 'create-trip', 'my-trips', 'cities', 'activities', 'builder', 'itinerary', 'budget', 'calendar', 'share', 'admin', 'profile', 'auth', 'reset'
   const [navParams, setNavParams] = useState({});
   const [resetToken, setResetToken] = useState(null);
+
+  // Authentication redirection memory: track previous page and intended target
+  const [previousPage, setPreviousPage] = useState({ tab: 'home', params: {} });
+  const [redirectTarget, setRedirectTarget] = useState(null);
+  const [authReason, setAuthReason] = useState('');
+  const [authMode, setAuthMode] = useState('signup'); // 'signup', 'login'
 
   // Detect reset_token query param from password reset email link
   useEffect(() => {
@@ -37,14 +47,67 @@ function MainApp() {
   }, []);
 
   const navigate = (tab, params = {}) => {
+    // 1. If unauthenticated user tries to access a protected page, remember the target and redirect to signup
+    if (PROTECTED_TABS.includes(tab) && !isAuthenticated) {
+      setRedirectTarget({ tab, params });
+      setAuthMode('signup');
+      setAuthReason(
+        tab === 'create-trip' ? 'Please sign in or create an account to plan and save custom travel routes.' :
+        tab === 'my-trips' ? 'Please sign in or create an account to view and manage your travel itineraries.' :
+        tab === 'builder' ? 'Please sign in or create an account to build and modify itinerary stops.' :
+        tab === 'profile' ? 'Please sign in or create an account to access your passenger passport profile.' :
+        tab === 'admin' ? 'Administrative credentials required to access the admin portal.' :
+        'Please sign in or register to access this section.'
+      );
+      setActiveTab('auth');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    // 2. If navigating directly to auth (e.g. clicking "SIGN IN" in navbar), remember the current page
+    if (tab === 'auth') {
+      if (!redirectTarget && activeTab !== 'auth' && activeTab !== 'reset') {
+        setRedirectTarget({ tab: activeTab, params: navParams });
+      }
+      setAuthMode('login');
+      setActiveTab('auth');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    // 3. Normal navigation: update previous page history
+    if (activeTab !== 'auth' && activeTab !== 'reset') {
+      setPreviousPage({ tab: activeTab, params: navParams });
+    }
+
     setActiveTab(tab);
     setNavParams(params);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Called after successful login or signup
+  const handleAuthSuccess = () => {
+    // Determine destination: intended target -> previous page -> default 'home'
+    const target = redirectTarget || (previousPage.tab !== 'auth' && previousPage.tab !== 'reset' ? previousPage : { tab: 'home', params: {} });
+    
+    // Clear auth memory
+    setRedirectTarget(null);
+    setAuthReason('');
+    setAuthMode('login');
+    
+    // Redirect to the remembered page
+    setNavParams(target.params || {});
+    setActiveTab(target.tab || 'home');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Subpage title helper
   const getSubpageInfo = () => {
     switch (activeTab) {
+      case 'create-trip':
+        return { title: 'PLAN A NEW JOURNEY', screen: 'SCREEN 3 • CREATE ROUTE', icon: Plus, color: 'text-[#2C5F7C]' };
+      case 'my-trips':
+        return { title: 'MY ROUTE SHEETS & WALLET', screen: 'SCREEN 4 • TICKET WALLET', icon: Layers, color: 'text-[#2C5F7C]' };
       case 'cities':
         return { title: 'CITY DISCOVERY & SEARCH', screen: 'SCREEN 7 • DISCOVERY', icon: MapPin, color: 'text-[#2C5F7C]' };
       case 'activities':
@@ -64,7 +127,7 @@ function MainApp() {
       case 'profile':
         return { title: 'PASSENGER PASSPORT & SETTINGS', screen: 'SCREEN 12 • USER PROFILE', icon: User, color: 'text-[#1F2B2E]' };
       case 'auth':
-        return { title: 'PASSENGER CHECK-IN & AUTHENTICATION', screen: 'SCREEN 1 • AUTH', icon: User, color: 'text-[#2C5F7C]' };
+        return { title: 'PASSENGER CHECK-IN & REGISTRATION', screen: 'SCREEN 1 • AUTH', icon: User, color: 'text-[#2C5F7C]' };
       case 'reset':
         return { title: 'PASSWORD RESET RECOVERY', screen: 'SCREEN 1 • AUTH RECOVERY', icon: User, color: 'text-[#B8823A]' };
       default:
@@ -109,8 +172,24 @@ function MainApp() {
             </div>
 
             {/* Quick Trip Workspace Switchers for Itinerary / Builder / Budget / Calendar / Share */}
-            {['builder', 'itinerary', 'budget', 'calendar', 'share'].includes(activeTab) && (
+            {['builder', 'itinerary', 'budget', 'calendar', 'share', 'my-trips', 'create-trip'].includes(activeTab) && (
               <div className="flex flex-wrap items-center gap-1 font-mono text-[11px]">
+                <button
+                  onClick={() => navigate('my-trips')}
+                  className={`px-2.5 py-1 border border-[#1F2B2E] uppercase font-bold transition cursor-pointer ${
+                    activeTab === 'my-trips' ? 'bg-[#1F2B2E] text-white' : 'bg-white hover:bg-[#F6F3EC]'
+                  }`}
+                >
+                  My Trips
+                </button>
+                <button
+                  onClick={() => navigate('create-trip')}
+                  className={`px-2.5 py-1 border border-[#1F2B2E] uppercase font-bold transition cursor-pointer ${
+                    activeTab === 'create-trip' ? 'bg-[#1F2B2E] text-white' : 'bg-white hover:bg-[#F6F3EC]'
+                  }`}
+                >
+                  + New
+                </button>
                 <button
                   onClick={() => navigate('itinerary')}
                   className={`px-2.5 py-1 border border-[#1F2B2E] uppercase font-bold transition cursor-pointer ${
@@ -156,13 +235,40 @@ function MainApp() {
           </div>
         )}
 
-        {/* View Switching */}
+        {/* View Switching with Auth Guards */}
         {activeTab === 'home' && (
           <HomePage
             onNavigate={navigate}
             onSelectCity={(cityName) => navigate('cities', { search: cityName })}
             onSelectActivity={(actName) => navigate('activities', { search: actName })}
           />
+        )}
+
+        {activeTab === 'create-trip' && (
+          isAuthenticated ? (
+            <CreateTripPage
+              onNavigate={navigate}
+              onTripCreated={(newTrip) => navigate('builder', { tripId: newTrip.id })}
+            />
+          ) : (
+            <AuthPage
+              mode="signup"
+              reason="Please sign in or create an account to plan and save your custom travel routes."
+              onSuccess={() => navigate('create-trip')}
+            />
+          )
+        )}
+
+        {activeTab === 'my-trips' && (
+          isAuthenticated ? (
+            <MyTripsPage onNavigate={navigate} />
+          ) : (
+            <AuthPage
+              mode="signup"
+              reason="Please sign in or create an account to view and manage your travel itineraries."
+              onSuccess={() => navigate('my-trips')}
+            />
+          )
         )}
 
         {activeTab === 'cities' && (
@@ -190,9 +296,17 @@ function MainApp() {
         )}
 
         {activeTab === 'builder' && (
-          <div className="bg-white border-2 border-[#1F2B2E] p-6 shadow-[4px_4px_0px_0px_#1F2B2E]">
-            <ItineraryBuilder tripId={navParams.tripId || TRIP_ID} />
-          </div>
+          isAuthenticated ? (
+            <div className="bg-white border-2 border-[#1F2B2E] p-6 shadow-[4px_4px_0px_0px_#1F2B2E]">
+              <ItineraryBuilder tripId={navParams.tripId || TRIP_ID} />
+            </div>
+          ) : (
+            <AuthPage
+              mode="signup"
+              reason="Please sign in or create an account to build and modify itinerary stops."
+              onSuccess={() => navigate('builder', navParams)}
+            />
+          )
         )}
 
         {activeTab === 'itinerary' && (
@@ -222,24 +336,45 @@ function MainApp() {
           <PublicItineraryPage
             shareSlug={navParams.slug || 'europe-grand-2026-x8f1'}
             onBack={() => navigate('home')}
-            onNavigateToAuth={() => navigate('auth')}
+            onNavigateToAuth={() => {
+              setRedirectTarget({ tab: 'share', params: navParams });
+              setAuthMode('signup');
+              setAuthReason('Please sign in or create an account to clone trips into your wallet.');
+              setActiveTab('auth');
+            }}
           />
         )}
 
         {activeTab === 'admin' && (
-          <AdminPage />
+          isAuthenticated ? (
+            <AdminPage />
+          ) : (
+            <AuthPage
+              mode="login"
+              reason="Administrative sign-in required to access the admin portal."
+              onSuccess={() => navigate('admin')}
+            />
+          )
         )}
 
-        {activeTab === 'profile' && isAuthenticated && (
-          <ProfilePage />
-        )}
-
-        {activeTab === 'profile' && !isAuthenticated && (
-          <AuthPage onSuccess={() => navigate('profile')} />
+        {activeTab === 'profile' && (
+          isAuthenticated ? (
+            <ProfilePage />
+          ) : (
+            <AuthPage
+              mode="signup"
+              reason="Please sign in or create an account to view and update your passenger profile."
+              onSuccess={() => navigate('profile')}
+            />
+          )
         )}
 
         {activeTab === 'auth' && (
-          <AuthPage onSuccess={() => navigate('home')} />
+          <AuthPage
+            mode={authMode}
+            reason={authReason}
+            onSuccess={handleAuthSuccess}
+          />
         )}
 
         {activeTab === 'reset' && resetToken && (
@@ -248,6 +383,7 @@ function MainApp() {
             resetToken={resetToken}
             onSuccess={() => {
               setResetToken(null);
+              setAuthMode('login');
               setActiveTab('auth');
             }}
           />

@@ -65,6 +65,14 @@ export default function Navbar({ currentTab, onNavigate }) {
             </button>
 
             <button
+              onClick={() => onNavigate('my-trips')}
+              className={navItemClass('my-trips')}
+            >
+              <Layers className="h-3.5 w-3.5 text-[#2C5F7C]" />
+              MY TRIPS
+            </button>
+
+            <button
               onClick={() => onNavigate('cities')}
               className={navItemClass('cities')}
             >
@@ -102,13 +110,33 @@ export default function Navbar({ currentTab, onNavigate }) {
                 >
                   <button
                     onClick={() => {
+                      onNavigate('my-trips');
+                      setTripDropdownOpen(false);
+                    }}
+                    className="w-full text-left px-3 py-2 text-xs font-mono font-bold text-[#1F2B2E] hover:bg-[#F6F3EC] flex items-center gap-2 border-b border-[#1F2B2E]/10 cursor-pointer"
+                  >
+                    <Layers className="h-3.5 w-3.5 text-[#2C5F7C]" />
+                    My Trips Wallet (Scr 4)
+                  </button>
+                  <button
+                    onClick={() => {
+                      onNavigate('create-trip');
+                      setTripDropdownOpen(false);
+                    }}
+                    className="w-full text-left px-3 py-2 text-xs font-mono font-bold text-[#1F2B2E] hover:bg-[#F6F3EC] flex items-center gap-2 border-b border-[#1F2B2E]/10 cursor-pointer"
+                  >
+                    <Plus className="h-3.5 w-3.5 text-[#B8823A]" />
+                    Plan New Trip (Scr 3)
+                  </button>
+                  <button
+                    onClick={() => {
                       onNavigate('itinerary');
                       setTripDropdownOpen(false);
                     }}
                     className="w-full text-left px-3 py-2 text-xs font-mono font-bold text-[#1F2B2E] hover:bg-[#F6F3EC] flex items-center gap-2 border-b border-[#1F2B2E]/10 cursor-pointer"
                   >
                     <Layers className="h-3.5 w-3.5 text-[#2C5F7C]" />
-                    Itinerary View
+                    Itinerary View (Scr 6)
                   </button>
                   <button
                     onClick={() => {
@@ -118,7 +146,7 @@ export default function Navbar({ currentTab, onNavigate }) {
                     className="w-full text-left px-3 py-2 text-xs font-mono font-bold text-[#1F2B2E] hover:bg-[#F6F3EC] flex items-center gap-2 border-b border-[#1F2B2E]/10 cursor-pointer"
                   >
                     <Plus className="h-3.5 w-3.5 text-[#B8823A]" />
-                    Itinerary Builder
+                    Itinerary Builder (Scr 5)
                   </button>
                   <button
                     onClick={() => {
@@ -128,7 +156,7 @@ export default function Navbar({ currentTab, onNavigate }) {
                     className="w-full text-left px-3 py-2 text-xs font-mono font-bold text-[#1F2B2E] hover:bg-[#F6F3EC] flex items-center gap-2 border-b border-[#1F2B2E]/10 cursor-pointer"
                   >
                     <DollarSign className="h-3.5 w-3.5 text-[#B8823A]" />
-                    Budget & Cost Ledger
+                    Budget & Ledger (Scr 9)
                   </button>
                   <button
                     onClick={() => {
@@ -138,7 +166,7 @@ export default function Navbar({ currentTab, onNavigate }) {
                     className="w-full text-left px-3 py-2 text-xs font-mono font-bold text-[#1F2B2E] hover:bg-[#F6F3EC] flex items-center gap-2 border-b border-[#1F2B2E]/10 cursor-pointer"
                   >
                     <Calendar className="h-3.5 w-3.5 text-[#2C5F7C]" />
-                    Calendar & Timeline
+                    Calendar & Timeline (Scr 10)
                   </button>
                   <button
                     onClick={() => {
@@ -148,7 +176,7 @@ export default function Navbar({ currentTab, onNavigate }) {
                     className="w-full text-left px-3 py-2 text-xs font-mono font-bold text-[#1F2B2E] hover:bg-[#F6F3EC] flex items-center gap-2 cursor-pointer"
                   >
                     <Globe className="h-3.5 w-3.5 text-[#7FA69C]" />
-                    Public Itinerary Pass
+                    Public Pass (Scr 11)
                   </button>
                 </div>
               )}
@@ -174,7 +202,7 @@ export default function Navbar({ currentTab, onNavigate }) {
           
           {/* Quick Plan CTA */}
           <button
-            onClick={() => onNavigate('builder')}
+            onClick={() => onNavigate('create-trip')}
             className="hidden sm:flex px-3 py-1.5 bg-[#B8823A] hover:bg-[#1F2B2E] text-white border-2 border-[#1F2B2E] font-mono text-xs font-bold uppercase transition shadow-[2px_2px_0px_0px_#1F2B2E] items-center gap-1.5 cursor-pointer"
           >
             <Plus className="h-3.5 w-3.5" />
@@ -245,6 +273,32 @@ export default function Navbar({ currentTab, onNavigate }) {
             }`}
           >
             Dashboard
+          </button>
+
+          <button
+            onClick={() => {
+              onNavigate('my-trips');
+              setMobileMenuOpen(false);
+            }}
+            className={`w-full text-left px-3 py-2 border border-[#1F2B2E] font-bold uppercase flex items-center gap-2 ${
+              currentTab === 'my-trips' ? 'bg-[#1F2B2E] text-white' : 'bg-white text-[#1F2B2E]'
+            }`}
+          >
+            <Layers className="h-4 w-4 text-[#2C5F7C]" />
+            My Trips Wallet (Scr 4)
+          </button>
+
+          <button
+            onClick={() => {
+              onNavigate('create-trip');
+              setMobileMenuOpen(false);
+            }}
+            className={`w-full text-left px-3 py-2 border border-[#1F2B2E] font-bold uppercase flex items-center gap-2 ${
+              currentTab === 'create-trip' ? 'bg-[#1F2B2E] text-white' : 'bg-white text-[#1F2B2E]'
+            }`}
+          >
+            <Plus className="h-4 w-4 text-[#B8823A]" />
+            Plan New Trip (Scr 3)
           </button>
 
           <button

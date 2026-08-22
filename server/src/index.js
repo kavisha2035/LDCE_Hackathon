@@ -5,7 +5,12 @@ import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import authRoutes, { getMeHandler, deleteMeHandler } from './routes/auth.js';
 import citiesRoutes from './routes/cities.js';
-import tripsRoutes from './routes/trips.js';
+import tripsRoutes, {
+  updateStopHandler,
+  deleteStopHandler,
+  addStopActivityHandler,
+  removeStopActivityHandler
+} from './routes/trips.js';
 import publicTripsRoutes from './routes/publicTrips.js';
 import { authenticateToken } from './middleware/auth.js';
 
@@ -30,6 +35,12 @@ app.use('/api/auth', authRoutes);
 app.use('/api/cities', citiesRoutes);
 app.use('/api/trips', tripsRoutes);
 app.use('/api/public/trips', publicTripsRoutes);
+
+// Direct /api/stops & /api/stop-activities shortcuts
+app.put('/api/stops/:id', updateStopHandler);
+app.delete('/api/stops/:id', deleteStopHandler);
+app.post('/api/stops/:id/activities', addStopActivityHandler);
+app.delete('/api/stop-activities/:id', removeStopActivityHandler);
 
 // Direct /api/me endpoints (design.md)
 app.get('/api/me', authenticateToken, getMeHandler);

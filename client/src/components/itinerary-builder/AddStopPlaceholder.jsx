@@ -96,11 +96,23 @@ export default function AddStopPlaceholder({ existingStops, onAddStop, isSubmitt
               type="button"
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="px-4 py-2 rounded-sm bg-route-blue text-paper text-body-sm font-body hover:bg-route-blue/90 transition-colors disabled:opacity-50"
+              className="px-4 py-2 rounded-sm bg-[#2C5F7C] text-white text-xs font-mono font-bold uppercase hover:bg-[#1F2B2E] transition disabled:opacity-50 flex items-center gap-2 cursor-pointer shadow-sm"
             >
-              Add stop
+              {isSubmitting ? (
+                <>
+                  <span className="inline-block h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  ADDING STOP TO ROUTE...
+                </>
+              ) : (
+                '+ ADD STOP TO ROUTE'
+              )}
             </button>
-            <button type="button" onClick={reset} className="px-4 py-2 rounded-sm text-body-sm text-ink/60 hover:text-ink">
+            <button
+              type="button"
+              disabled={isSubmitting}
+              onClick={reset}
+              className="px-4 py-2 rounded-sm text-xs font-mono text-[#1F2B2E]/60 hover:text-[#1F2B2E] uppercase font-bold cursor-pointer"
+            >
               Cancel
             </button>
           </div>

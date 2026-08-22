@@ -255,13 +255,20 @@ router.get('/:id/activities', async (req, res) => {
     let categories = [];
 
     try {
-      city = await prisma.city.findUnique({
-        where: { id: req.params.id },
+      const cleanParam = req.params.id.replace(/^city-/, '');
+      city = await prisma.city.findFirst({
+        where: {
+          OR: [
+            { id: req.params.id },
+            { name: { equals: req.params.id, mode: 'insensitive' } },
+            { name: { equals: cleanParam, mode: 'insensitive' } }
+          ]
+        },
         select: { id: true, name: true, country: true, imageUrl: true },
       });
 
       if (city) {
-        const where = { cityId: req.params.id };
+        const where = { cityId: city.id };
         if (category && category !== 'all') {
           where.category = { equals: category, mode: 'insensitive' };
         }
@@ -283,7 +290,7 @@ router.get('/:id/activities', async (req, res) => {
         });
 
         const allActivities = await prisma.activity.findMany({
-          where: { cityId: req.params.id },
+          where: { cityId: city.id },
           select: { category: true },
           distinct: ['category'],
         });
@@ -295,7 +302,12 @@ router.get('/:id/activities', async (req, res) => {
 
     // Fallback if DB didn't return or was in transition
     if (!city || activities.length === 0) {
-      const fallbackCity = FALLBACK_CITIES.find(c => c.id === req.params.id || c.name.toLowerCase() === req.params.id.toLowerCase()) || FALLBACK_CITIES[0];
+      const cleanParam = req.params.id.toLowerCase().replace(/^city-/, '');
+      const fallbackCity = FALLBACK_CITIES.find(c => 
+        c.id.toLowerCase() === req.params.id.toLowerCase() || 
+        c.name.toLowerCase() === cleanParam ||
+        c.name.toLowerCase().includes(cleanParam)
+      ) || FALLBACK_CITIES[0];
       city = {
         id: fallbackCity.id,
         name: fallbackCity.name,

@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Compass, Mail, Lock, User, Eye, EyeOff, ArrowRight, CheckCircle, AlertCircle, Globe, Image, Upload, KeyRound, ArrowLeft } from 'lucide-react';
 
-export default function AuthPage({ onSuccess, mode, resetToken }) {
+export default function AuthPage({ onSuccess, mode, resetToken, initialIsLogin, reason }) {
   const { login, signup } = useAuth();
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(
+    mode === 'signup' ? false : (initialIsLogin !== undefined ? initialIsLogin : true)
+  );
   const [isForgot, setIsForgot] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   
@@ -277,6 +279,17 @@ export default function AuthPage({ onSuccess, mode, resetToken }) {
             DOC #1
           </span>
         </div>
+
+        {/* Reason Notification Banner */}
+        {reason && !isForgot && (
+          <div className="mb-5 p-3 bg-[#2C5F7C]/10 border-2 border-[#2C5F7C] text-[#2C5F7C] font-mono text-xs flex items-start gap-2 shadow-[2px_2px_0px_0px_#2C5F7C]">
+            <Compass className="h-4 w-4 shrink-0 mt-0.5" />
+            <div>
+              <span className="font-bold uppercase block text-[10px] text-[#1F2B2E]">PASSENGER SIGN IN / REGISTRATION REQUIRED</span>
+              <span className="text-[#1F2B2E]/90 text-xs">{reason}</span>
+            </div>
+          </div>
+        )}
 
         {/* Ticket Stub Tabs Toggle */}
         {!isForgot && (

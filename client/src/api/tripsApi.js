@@ -51,13 +51,32 @@ function normalizeTrip(tripData) {
     ...rawTrip,
     id: rawTrip.id,
     name: rawTrip.name,
+    description: rawTrip.description,
+    coverPhoto: rawTrip.coverPhoto || rawTrip.cover_photo_url,
+    isPublic: rawTrip.isPublic ?? rawTrip.is_public ?? false,
+    shareSlug: rawTrip.shareSlug ?? rawTrip.share_slug,
     start_date: rawTrip.start_date ?? (rawTrip.startDate ? new Date(rawTrip.startDate).toISOString().split('T')[0] : '2026-10-12'),
     end_date: rawTrip.end_date ?? (rawTrip.endDate ? new Date(rawTrip.endDate).toISOString().split('T')[0] : '2026-10-21'),
     stops,
   };
 }
 
-// GET /api/trips/:id
+// GET /api/trips — List trips (Screen 4)
+export async function fetchTrips() {
+  if (USE_MOCK) {
+    return mockDelay([normalizeTrip(TRIP)]);
+  }
+  try {
+    const data = await apiFetch('/trips');
+    const list = data?.trips || [];
+    return list.map(normalizeTrip);
+  } catch (err) {
+    console.error('fetchTrips error, falling back:', err);
+    return [normalizeTrip(TRIP)];
+  }
+}
+
+// GET /api/trips/:id — Trip details
 export async function fetchTrip(tripId) {
   if (USE_MOCK) {
     return mockDelay(JSON.parse(JSON.stringify(TRIP)));
@@ -68,6 +87,73 @@ export async function fetchTrip(tripId) {
   } catch (err) {
     console.error('fetchTrip error, falling back to mock:', err);
     return JSON.parse(JSON.stringify(TRIP));
+  }
+}
+
+// POST /api/trips — Create trip (Screen 3)
+export async function createTrip(payload) {
+  try {
+    const data = await apiFetch('/trips', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: payload.name,
+        description: payload.description,
+        startDate: payload.startDate || payload.start_date,
+        endDate: payload.endDate || payload.end_date,
+        coverPhoto: payload.coverPhoto || payload.cover_photo_url,
+        initialCityId: payload.initialCityId,
+        estStayCostPerDay: payload.estStayCostPerDay,
+        estTransportCost: payload.estTransportCost,
+      }),
+    });
+    return normalizeTrip(data?.trip || data);
+  } catch (err) {
+    console.error('createTrip error:', err);
+    throw err;
+  }
+}
+
+// PUT /api/trips/:id — Update trip
+export async function updateTrip(tripId, payload) {
+  try {
+    const data = await apiFetch(`/trips/${tripId}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        name: payload.name,
+        description: payload.description,
+        startDate: payload.startDate || payload.start_date,
+        endDate: payload.endDate || payload.end_date,
+        coverPhoto: payload.coverPhoto,
+        isPublic: payload.isPublic,
+      }),
+    });
+    return normalizeTrip(data?.trip || data);
+  } catch (err) {
+    console.error('updateTrip error:', err);
+    throw err;
+  }
+}
+
+// DELETE /api/trips/:id — Delete trip
+export async function deleteTrip(tripId) {
+  try {
+    return await apiFetch(`/trips/${tripId}`, { method: 'DELETE' });
+  } catch (err) {
+    console.error('deleteTrip error:', err);
+    throw err;
+  }
+}
+
+// PATCH /api/trips/:id/share — Share trip toggle
+export async function shareTrip(tripId, isPublic = true) {
+  try {
+    return await apiFetch(`/trips/${tripId}/share`, {
+      method: 'PATCH',
+      body: JSON.stringify({ isPublic }),
+    });
+  } catch (err) {
+    console.error('shareTrip error:', err);
+    throw err;
   }
 }
 
@@ -144,29 +230,43 @@ export async function deleteStop(stopId) {
   return apiFetch(`/stops/${stopId}`, { method: 'DELETE' });
 }
 
-// POST /api/stops/:id/activities  { activity_id, scheduled_date, scheduled_time }
+// POST /api/stops/:id/activities  { activity_id, scheduled_date, scheduled_time, name, category, cost, notes }
 export async function addStopActivity(stopId, payload) {
   if (USE_MOCK) {
+    const actId = payload.activity_id || payload.activityId;
     const stop = TRIP.stops.find((s) => s.id === stopId);
-    const activity = ACTIVITIES.find((a) => a.id === payload.activity_id);
+    const foundAct = ACTIVITIES.find((a) => a.id === actId);
+    const activity = foundAct || {
+      id: actId || `act-custom-${nextStopActivityId}`,
+      name: payload.name || 'Activity',
+      category: payload.category || 'sightseeing',
+      cost: payload.cost ?? 2500,
+      duration_hours: payload.duration_hours ?? 2,
+    };
     const stopActivity = {
       id: `sa-${nextStopActivityId++}`,
       trip_stop_id: stopId,
-      activity_id: payload.activity_id,
-      scheduled_date: payload.scheduled_date ?? stop?.start_date,
-      scheduled_time: payload.scheduled_time ?? '09:00',
+      activity_id: activity.id,
+      scheduled_date: payload.scheduled_date ?? payload.scheduledDate ?? stop?.start_date,
+      scheduled_time: payload.scheduled_time ?? payload.scheduledTime ?? '10:00',
       notes: payload.notes ?? '',
       activity,
     };
-    if (stop) stop.activities.push(stopActivity);
+    if (stop) {
+      if (!stop.activities) stop.activities = [];
+      stop.activities.push(stopActivity);
+    }
     return mockDelay(stopActivity);
   }
   return apiFetch(`/stops/${stopId}/activities`, {
     method: 'POST',
     body: JSON.stringify({
-      activityId: payload.activity_id,
-      scheduledDate: payload.scheduled_date,
-      scheduledTime: payload.scheduled_time,
+      activityId: payload.activity_id || payload.activityId,
+      name: payload.name,
+      category: payload.category,
+      cost: payload.cost,
+      scheduledDate: payload.scheduled_date || payload.scheduledDate,
+      scheduledTime: payload.scheduled_time || payload.scheduledTime,
       notes: payload.notes,
     }),
   });

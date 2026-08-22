@@ -239,7 +239,7 @@ export default function HomePage({
 
             <div className="lg:col-span-4 flex items-center gap-2">
               <button
-                onClick={() => onNavigate('builder')}
+                onClick={() => onNavigate('create-trip')}
                 className="w-full px-5 py-3 bg-[#B8823A] hover:bg-[#1F2B2E] text-white border-2 border-[#1F2B2E] font-mono text-xs font-bold uppercase transition shadow-[3px_3px_0px_0px_#1F2B2E] flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Plus className="h-4 w-4" />
@@ -295,6 +295,13 @@ export default function HomePage({
 
           {/* Quick Action Switchers */}
           <div className="flex flex-wrap items-center gap-2 font-mono text-xs">
+            <button
+              onClick={() => onNavigate('my-trips')}
+              className="px-3 py-1.5 bg-[#1F2B2E] hover:bg-[#2C5F7C] text-white border-2 border-[#1F2B2E] font-bold uppercase transition flex items-center gap-1.5 shadow-[2px_2px_0px_0px_#2C5F7C] cursor-pointer"
+            >
+              <Layers className="h-3.5 w-3.5 text-[#7FA69C]" />
+              MY TRIPS WALLET
+            </button>
             <button
               onClick={() => onNavigate('builder')}
               className="px-3 py-1.5 bg-white hover:bg-[#F6F3EC] text-[#1F2B2E] border-2 border-[#1F2B2E] font-bold uppercase transition flex items-center gap-1.5 shadow-[2px_2px_0px_0px_#1F2B2E] cursor-pointer"
