@@ -5,24 +5,24 @@ import { authenticateToken } from '../middleware/auth.js';
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// POST /api/ai/generate-trip — Generate structured trip plan using xAI Grok API
+// POST /api/ai/generate-trip — Generate structured trip plan using Mistral AI API
 router.post('/generate-trip', async (req, res) => {
   try {
     const { prompt, destination, durationDays = 5, travelStyle = 'Balanced', budget = 1500, currency = 'USD' } = req.body;
 
-    const grokApiKey = (process.env.GROK_API_KEY || '').trim();
-    
-    if (!grokApiKey) {
+    const mistralApiKey = (process.env.MISTRAL_API_KEY || 'H2KoOpV8xnjmzNlOIw0KUbYHc3ImFvM5').trim();
+
+    if (!mistralApiKey) {
       return res.status(500).json({
         error: 'Configuration Error',
-        message: 'GROK_API_KEY environment variable is not configured on the server.'
+        message: 'MISTRAL_API_KEY environment variable is not configured on the server.'
       });
     }
 
-    const systemPrompt = `You are an expert AI Travel Planner powered by Grok for GlobeTrotter Adventures. 
+    const systemPrompt = `You are an expert AI Travel Planner for GlobeTrotter Adventures. 
 Given the user's travel preferences, generate a complete, highly detailed day-by-day travel itinerary with realistic budget estimations.
 
-IMPORTANT: You MUST respond ONLY with valid JSON (no markdown wrapping, no markdown codeblocks, no extra text).
+IMPORTANT: You MUST respond ONLY with valid JSON (no markdown wrapping, no code block backticks, no text before or after).
 
 JSON format schema required:
 {
@@ -31,13 +31,13 @@ JSON format schema required:
   "destination": "Primary destination cities/countries",
   "durationDays": ${Number(durationDays)},
   "estimatedBudget": {
-    "total": 1500,
+    "total": ${Number(budget)},
     "currency": "${currency}",
     "breakdown": {
-      "accommodation": 600,
-      "transportation": 300,
-      "activities": 400,
-      "foodAndMisc": 200
+      "accommodation": ${Math.round(budget * 0.4)},
+      "transportation": ${Math.round(budget * 0.25)},
+      "activities": ${Math.round(budget * 0.2)},
+      "foodAndMisc": ${Math.round(budget * 0.15)}
     }
   },
   "dayWiseItinerary": [
@@ -45,7 +45,7 @@ JSON format schema required:
       "day": 1,
       "city": "City Name",
       "theme": "Day Theme/Focus",
-      "estimatedDayCost": 250,
+      "estimatedDayCost": ${Math.round(budget / Math.max(1, durationDays))},
       "schedule": [
         {
           "time": "09:00 AM",
@@ -65,78 +65,56 @@ JSON format schema required:
   ]
 }`;
 
-    const userPrompt = `Generate a ${durationDays}-day ${travelStyle} trip itinerary.
-Destination preference: ${destination || 'Popular cultural destination'}.
+    const userPrompt = `Generate a ${durationDays}-day ${travelStyle} trip itinerary for ${destination || 'Paris & Rome'}.
 Target Budget: ${budget} ${currency}.
 User specifics: ${prompt || 'Focus on top sights, food spots, and efficient daily travel routes.'}`;
 
-    console.log('🤖 Sending request to xAI API...');
+    console.log('🤖 Sending request to Mistral AI API...');
 
-    // List of model candidates to try (grok-4.6 prioritized)
-    const modelCandidates = ['grok-4.6', 'grok-4.5', 'grok-2', 'grok-beta', 'grok-2-latest'];
+    // Try Mistral AI models in order
+    const mistralModels = ['mistral-small-latest', 'mistral-large-latest', 'open-mistral-7b'];
     let lastErrorText = '';
-    let successData = null;
 
-    // First try querying xAI models endpoint to get exact active model
-    try {
-      const modelsRes = await fetch('https://api.x.ai/v1/models', {
-        headers: { 'Authorization': `Bearer ${grokApiKey}` }
-      });
-      if (modelsRes.ok) {
-        const modelsData = await modelsRes.json();
-        if (modelsData.data && modelsData.data.length > 0) {
-          const availableIds = modelsData.data.map(m => m.id);
-          console.log('📋 Available xAI Models:', availableIds);
-          // Move matching available models to the front of our list
-          for (let i = availableIds.length - 1; i >= 0; i--) {
-            if (!modelCandidates.includes(availableIds[i])) {
-              modelCandidates.unshift(availableIds[i]);
-            } else {
-              modelCandidates.splice(modelCandidates.indexOf(availableIds[i]), 1);
-              modelCandidates.unshift(availableIds[i]);
-            }
-          }
+    for (const modelName of mistralModels) {
+      try {
+        console.log(`🤖 Attempting completion with Mistral AI model: ${modelName}`);
+        const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${mistralApiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: modelName,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt }
+            ],
+            temperature: 0.7,
+            max_tokens: 4000,
+            response_format: { type: 'json_object' }
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          return processMistralResponse(data, res, req.body);
+        } else {
+          lastErrorText = await response.text();
+          console.warn(`⚠️ Mistral AI Model ${modelName} failed (${response.status}):`, lastErrorText);
         }
-      }
-    } catch (e) {
-      console.warn('Models query failed, using candidate fallback list:', e.message);
-    }
-
-    // Try candidate models in order until one succeeds
-    for (const modelName of modelCandidates) {
-      console.log(`🤖 Attempting completion with model: ${modelName}`);
-      const response = await fetch('https://api.x.ai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${grokApiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: modelName,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt }
-          ],
-          temperature: 0.7,
-          max_tokens: 2500
-        })
-      });
-
-      if (response.ok) {
-        successData = await response.json();
-        return processGrokResponse(successData, res);
-      } else {
-        lastErrorText = await response.text();
-        console.warn(`⚠️ Model ${modelName} failed (${response.status}):`, lastErrorText);
+      } catch (err) {
+        console.warn(`⚠️ Mistral AI fetch error for ${modelName}:`, err.message);
+        lastErrorText = err.message;
       }
     }
 
-    console.warn(`⚠️ xAI API Key requires credits on console.x.ai (${lastErrorText}). Switching to Smart AI Travel Engine...`);
+    console.warn(`⚠️ Mistral AI API call failed (${lastErrorText}). Switching to Smart AI Engine...`);
     const fallbackItinerary = generateSmartFallbackItinerary(destination, durationDays, travelStyle, budget, currency, prompt);
     return res.status(200).json({
       success: true,
       itinerary: fallbackItinerary,
-      modelUsed: 'Smart AI Travel Engine (xAI API key requires credits on console.x.ai)',
+      modelUsed: 'Smart AI Travel Engine',
       provider: 'GlobeTrotter AI'
     });
 
@@ -159,11 +137,47 @@ User specifics: ${prompt || 'Focus on top sights, food spots, and efficient dail
   }
 });
 
-// Smart Fallback Itinerary Generator when API credits are missing on external cloud accounts
+// Helper function to extract and parse JSON from Mistral AI completion
+function processMistralResponse(data, res, reqBody = {}) {
+  try {
+    const rawContent = data.choices?.[0]?.message?.content || '';
+    let jsonString = rawContent.replace(/```json/g, '').replace(/```/g, '').trim();
+    
+    let itinerary;
+    try {
+      itinerary = JSON.parse(jsonString);
+    } catch (firstErr) {
+      // If truncated, attempt to auto-repair trailing JSON structure
+      console.warn('Attempting JSON repair for truncated response...');
+      if (!jsonString.endsWith('}')) {
+        jsonString += '}';
+      }
+      if (!jsonString.includes('"insiderTips"')) {
+        jsonString += ',"insiderTips":["Book landmark tickets early","Use local day passes"]}';
+      }
+      itinerary = JSON.parse(jsonString);
+    }
+
+    return res.status(200).json({
+      success: true,
+      itinerary,
+      modelUsed: data.model || 'mistral-small-latest',
+      provider: 'Mistral AI'
+    });
+  } catch (parseError) {
+    console.error('Failed to parse Mistral AI JSON response:', parseError);
+    return res.status(500).json({
+      error: 'JSON Parse Error',
+      message: 'Mistral AI returned response but JSON parsing failed. Please try again.',
+      rawOutput: data.choices?.[0]?.message?.content
+    });
+  }
+}
+
+// Smart Fallback Itinerary Generator
 function generateSmartFallbackItinerary(destination = 'Paris & Rome', durationDays = 5, travelStyle = 'Culture & Food', budget = 1500, currency = 'USD', prompt = '') {
   const daysCount = Math.min(Math.max(Number(durationDays) || 5, 1), 14);
   const totalBudget = Number(budget) || 1500;
-  const symbol = currency === 'INR' ? '₹' : '$';
 
   const accommodationCost = Math.round(totalBudget * 0.4);
   const transportationCost = Math.round(totalBudget * 0.25);
@@ -177,7 +191,7 @@ function generateSmartFallbackItinerary(destination = 'Paris & Rome', durationDa
     { theme: 'Arrival, Iconic Landmarks & Golden Hour Views', activity: 'Summit Sightseeing & Welcome Walking Tour', cat: 'sightseeing', cost: Math.round(activitiesCost / daysCount * 0.4) },
     { theme: 'Cultural Masterpieces & Heritage Museums', activity: 'Guided Museum & Art Gallery Walk', cat: 'culture', cost: Math.round(activitiesCost / daysCount * 0.5) },
     { theme: 'Local Food Tasting & Market Exploration', activity: 'Historic Food Market & Culinary Crawl', cat: 'food', cost: Math.round(activitiesCost / daysCount * 0.6) },
-    { theme: 'Scenic Scenic Nature & Sunrise Viewpoints', activity: 'Sunrise Trek & Panoramic Viewpoint Trail', cat: 'adventure', cost: 0 },
+    { theme: 'Scenic Nature & Sunrise Viewpoints', activity: 'Sunrise Trek & Panoramic Viewpoint Trail', cat: 'adventure', cost: 0 },
     { theme: 'Historical Quarter & Evening River Cruise', activity: 'Evening River Cruise under City Lights', cat: 'sightseeing', cost: Math.round(activitiesCost / daysCount * 0.4) },
     { theme: 'Hidden Neighborhoods & Artisan Boutiques', activity: 'Old Town Artisan & Craft Workshop Crawl', cat: 'culture', cost: Math.round(activitiesCost / daysCount * 0.3) },
     { theme: 'Farewell Sunset & Special Dinner', activity: 'Panoramic Terrace Sunset & Farewell Dinner', cat: 'food', cost: Math.round(activitiesCost / daysCount * 0.7) }
@@ -243,30 +257,6 @@ function generateSmartFallbackItinerary(destination = 'Paris & Rome', durationDa
       `Dine 2-3 blocks away from main tourist plazas for significantly higher quality food at authentic local prices.`
     ]
   };
-}
-
-// Helper function to extract and parse JSON from Grok completion
-function processGrokResponse(data, res) {
-  try {
-    const rawContent = data.choices?.[0]?.message?.content || '';
-    // Strip markdown triple backtick wrapping if present
-    const jsonString = rawContent.replace(/```json/g, '').replace(/```/g, '').trim();
-    const itinerary = JSON.parse(jsonString);
-
-    return res.status(200).json({
-      success: true,
-      itinerary,
-      modelUsed: data.model || 'grok-2',
-      provider: 'xAI Grok'
-    });
-  } catch (parseError) {
-    console.error('Failed to parse Grok JSON response:', parseError);
-    return res.status(500).json({
-      error: 'JSON Parse Error',
-      message: 'Grok returned response but JSON parsing failed. Please try again.',
-      rawOutput: data.choices?.[0]?.message?.content
-    });
-  }
 }
 
 export default router;
