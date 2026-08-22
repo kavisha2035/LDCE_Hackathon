@@ -5,7 +5,7 @@ export default function CityResultRow({ city, onAdd, onSave, saving = false }) {
     <div className="flex items-center justify-between gap-4 py-3 px-4 border-b border-ink/15 last:border-b-0 hover:bg-paper transition-colors">
       <div className="min-w-0 flex-1">
         <p className="font-display font-bold text-lg text-ink truncate leading-none">{city.name}</p>
-        <p className="text-xs font-mono text-ink/60 truncate mt-1">{city.country.toUpperCase()} &middot; {city.region.toUpperCase()}</p>
+        <p className="text-xs font-mono text-ink/60 truncate mt-1">{city.country?.toUpperCase()} &middot; {city.region?.toUpperCase() || 'UNSPECIFIED'}</p>
       </div>
 
       <div className="shrink-0" title={`cost index ${city.cost_index}/5`}>

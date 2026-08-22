@@ -181,4 +181,17 @@ router.get('/dashboard', authenticateToken, requireAdmin, async (req, res) => {
   }
 });
 
+router.delete('/users/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    if (req.params.id === req.user.userId) {
+      return res.status(400).json({ error: 'Bad Request', message: 'Admins cannot delete their own account from this panel.' });
+    }
+    await prisma.user.delete({ where: { id: req.params.id } });
+    return res.status(200).json({ message: 'User deleted successfully.', id: req.params.id });
+  } catch (error) {
+    console.error('Admin delete user failed:', error);
+    return res.status(500).json({ error: 'Internal Server Error', message: 'Failed to delete user.' });
+  }
+});
+
 export default router;
