@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+
+# Production builds
+/client/dist
+/client/build
+/server/dist
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+server/.env
+client/.env
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Editor directories & IDEs
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+
+# Prisma generated outputs if any custom
+# prisma/migrations
+
+GlobeTrotter_Hackathon_Plan.md
