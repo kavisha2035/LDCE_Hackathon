@@ -105,6 +105,9 @@ export default function AuthPage({ onSuccess, mode, resetToken, initialIsLogin, 
           body: JSON.stringify({ email: email.toLowerCase().trim() })
         });
         const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.message || 'Failed to request password reset.');
+        }
         setMessage(data.message);
       } else if (isLogin) {
         await login(email.toLowerCase().trim(), password);
