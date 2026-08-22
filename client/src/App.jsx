@@ -18,7 +18,8 @@ import AITripPlannerPage from './pages/AITripPlannerPage';
 import AdminPage from './pages/AdminPage';
 import {
   Compass, ArrowLeft, Layers, Calendar, DollarSign,
-  Globe, Search, MapPin, Shield, User, Sparkles, Plus, MessageSquare
+  Globe, Search, MapPin, Shield, User, Sparkles, Plus, MessageSquare,
+  Phone, Instagram, Facebook, Twitter
 } from 'lucide-react';
 
 const PROTECTED_TABS = ['create-trip', 'my-trips', 'builder', 'profile', 'admin'];
@@ -537,7 +538,7 @@ function MainApp() {
 
         {activeTab === 'profile' && (
           isAuthenticated ? (
-            <ProfilePage />
+            <ProfilePage onNavigate={navigate} />
           ) : (
             <AuthPage
               mode="signup"
@@ -578,14 +579,52 @@ function MainApp() {
       </main>
 
       {/* Footer Inked Seal */}
-      <footer className="border-t border-gray-200 bg-[#1A1D23] text-white py-8 mt-12">
-        <div className="w-full px-6 sm:px-12 flex flex-col sm:flex-row items-center justify-between gap-4 font-sans text-xs">
+      <footer className="border-t border-white/10 bg-[#1A1D23] text-white py-10 mt-12">
+        <div className="w-full px-6 sm:px-12 flex flex-col md:flex-row items-center justify-between gap-6 font-sans text-xs">
           <div className="flex items-center gap-3">
-            <span className="h-8 w-8 bg-[#F5B800] text-[#1E232A] rounded-full flex items-center justify-center font-extrabold text-xs">GT</span>
-            <span className="font-serif text-base font-bold text-white tracking-wide">GLOBETROTTER ADVENTURES</span>
+            <span className="h-9 w-9 bg-[#F5B800] text-[#1E232A] rounded-full flex items-center justify-center font-extrabold text-xs shadow-md">GT</span>
+            <div>
+              <span className="font-serif text-base font-bold text-white tracking-wide block">GLOBETROTTER ADVENTURES</span>
+              <span className="text-[11px] text-gray-400">Curated Itineraries & Precision Travel Planning</span>
+            </div>
           </div>
-          <div className="text-gray-400 text-center sm:text-right text-xs">
-            REACT VITE &bull; NEON POSTGRESQL &bull; EXPRESS API &bull; JWT SECURED
+
+          <div className="flex flex-wrap items-center justify-center gap-6 text-gray-300">
+            <a
+              href="tel:18004562387"
+              className="flex items-center gap-2 text-white font-semibold hover:text-[#F5B800] transition"
+            >
+              <Phone className="h-4 w-4 text-[#F5B800]" />
+              <span>1-800-GLOBE-TRIP (456-2387)</span>
+            </a>
+
+            <div className="flex items-center gap-3 text-gray-300 border-l border-white/10 pl-6">
+              <a
+                href="#"
+                aria-label="Instagram"
+                className="p-1.5 bg-white/5 hover:bg-[#F5B800] hover:text-[#1E232A] rounded-full transition cursor-pointer"
+              >
+                <Instagram className="h-4 w-4" />
+              </a>
+              <a
+                href="#"
+                aria-label="Facebook"
+                className="p-1.5 bg-white/5 hover:bg-[#F5B800] hover:text-[#1E232A] rounded-full transition cursor-pointer"
+              >
+                <Facebook className="h-4 w-4" />
+              </a>
+              <a
+                href="#"
+                aria-label="Twitter"
+                className="p-1.5 bg-white/5 hover:bg-[#F5B800] hover:text-[#1E232A] rounded-full transition cursor-pointer"
+              >
+                <Twitter className="h-4 w-4" />
+              </a>
+            </div>
+          </div>
+
+          <div className="text-gray-400 text-center md:text-right text-xs">
+            &copy; {new Date().getFullYear()} GlobeTrotter Adventures. All rights reserved.
           </div>
         </div>
       </footer>

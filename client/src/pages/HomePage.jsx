@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import TicketCard from '../components/TicketCard';
+import { fetchSavedDestinations, saveDestination, removeSavedDestination } from '../api/citiesApi';
 import {
   Compass, Plus, MapPin, Calendar, ShieldCheck, Sparkles,
   ArrowRight, Globe, DollarSign, Clock, Search, Layers,
@@ -141,6 +142,23 @@ const FEATURED_ACTIVITIES = [
   }
 ];
 
+const REVIEWS = [
+  {
+    author: 'KARIN THOMAS',
+    location: 'Adventure Alaska',
+    quote: 'GlobeTrotter provided us with the most seamless multi-city journey we have ever experienced. The automated itinerary and day-by-day scheduler made our trip to Alaska unforgettable!',
+    rating: 5,
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'
+  },
+  {
+    author: 'MARCUS VANCE',
+    location: 'Kyoto & Tokyo Expedition',
+    quote: 'The live cost ledger and shared public pass allowed our travel group to stay completely synchronized without endless spreadsheets. Truly modern travel design!',
+    rating: 5,
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80'
+  }
+];
+
 export default function HomePage({
   onNavigate,
   onSelectCity,
@@ -151,31 +169,59 @@ export default function HomePage({
   const [whenDate, setWhenDate] = useState('');
   const [travelType, setTravelType] = useState('All');
   const [selectedRegion, setSelectedRegion] = useState('All');
-  const [savedCities, setSavedCities] = useState(['Tokyo', 'Paris']);
+  const [savedCities, setSavedCities] = useState(() => {
+    try {
+      const stored = localStorage.getItem('globetrotter_saved_destinations');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [activeReviewIndex, setActiveReviewIndex] = useState(0);
 
-  const REVIEWS = [
-    {
-      author: 'KARIN THOMAS',
-      location: 'Adventure Alaska',
-      quote: 'GlobeTrotter provided us with the most seamless multi-city journey we have ever experienced. The automated itinerary and day-by-day scheduler made our trip to Alaska unforgettable!',
-      rating: 5,
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'
-    },
-    {
-      author: 'MARCUS VANCE',
-      location: 'Kyoto & Tokyo Expedition',
-      quote: 'The live cost ledger and shared public pass allowed our travel group to stay completely synchronized without endless spreadsheets. Truly modern travel design!',
-      rating: 5,
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80'
+  // Sync saved destinations with backend when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchSavedDestinations().then((saved) => {
+        if (Array.isArray(saved) && saved.length > 0) {
+          const remoteNames = saved.map((s) => s.city?.name || s.cityId).filter(Boolean);
+          setSavedCities((prev) => {
+            const merged = Array.from(new Set([...prev, ...remoteNames]));
+            try {
+              localStorage.setItem('globetrotter_saved_destinations', JSON.stringify(merged));
+            } catch (e) {}
+            return merged;
+          });
+        }
+      }).catch((err) => {
+        console.error('Failed to fetch user saved destinations:', err);
+      });
     }
-  ];
+  }, [isAuthenticated]);
 
-  const toggleSaveCity = (cityName) => {
-    setSavedCities(prev =>
-      prev.includes(cityName) ? prev.filter(c => c !== cityName) : [...prev, cityName]
-    );
+  const toggleSaveCity = async (cityName) => {
+    const isCurrentlySaved = savedCities.includes(cityName);
+    const updated = isCurrentlySaved
+      ? savedCities.filter((c) => c !== cityName)
+      : [...savedCities, cityName];
+
+    setSavedCities(updated);
+    try {
+      localStorage.setItem('globetrotter_saved_destinations', JSON.stringify(updated));
+    } catch (e) {}
+
+    if (isAuthenticated) {
+      try {
+        if (isCurrentlySaved) {
+          await removeSavedDestination(cityName);
+        } else {
+          await saveDestination({ cityName, city_id: cityName });
+        }
+      } catch (err) {
+        console.error('Failed to sync saved destination with server:', err);
+      }
+    }
   };
 
   const filteredCities = selectedRegion === 'All'

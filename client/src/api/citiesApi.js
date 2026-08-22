@@ -22,15 +22,42 @@ export async function fetchCities({ search = '', region = '', costIndex = '' } =
   }
 }
 
-// POST /api/saved-destinations  { city_id }
-export async function saveDestination(cityId) {
+// POST /api/saved-destinations  { city_id / cityName }
+export async function saveDestination(param) {
+  const body = typeof param === 'string'
+    ? { city_id: param, cityName: param }
+    : { city_id: param?.id || param?.city_id || param?.cityId, cityName: param?.name || param?.cityName };
+
   try {
     return await apiFetch('/saved-destinations', {
       method: 'POST',
-      body: JSON.stringify({ city_id: cityId }),
+      body: JSON.stringify(body),
     });
   } catch (err) {
     console.error('saveDestination error:', err);
     throw err;
+  }
+}
+
+// DELETE /api/saved-destinations/:cityId
+export async function removeSavedDestination(cityIdOrName) {
+  try {
+    return await apiFetch(`/saved-destinations/${encodeURIComponent(cityIdOrName)}`, {
+      method: 'DELETE',
+    });
+  } catch (err) {
+    console.error('removeSavedDestination error:', err);
+    throw err;
+  }
+}
+
+// GET /api/saved-destinations
+export async function fetchSavedDestinations() {
+  try {
+    const data = await apiFetch('/saved-destinations');
+    return data?.saved || [];
+  } catch (err) {
+    console.error('fetchSavedDestinations error:', err);
+    return [];
   }
 }

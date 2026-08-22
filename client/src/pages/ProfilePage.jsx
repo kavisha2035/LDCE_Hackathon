@@ -1,18 +1,22 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { User, Mail, Shield, Trash2, Save, KeyRound, CheckCircle2, AlertCircle, Globe, MapPin, Upload, Image } from 'lucide-react';
+import {
+  User, Mail, Shield, Trash2, Save, KeyRound,
+  CheckCircle2, AlertCircle, Globe, Upload, Image,
+  Sparkles, ArrowLeft, Check, Camera, Lock
+} from 'lucide-react';
 
-export default function ProfilePage() {
+export default function ProfilePage({ onNavigate }) {
   const { user, updateProfile, deleteAccount, logout } = useAuth();
 
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [avatar, setAvatar] = useState(user?.avatar || '');
   const [languagePref, setLanguagePref] = useState(user?.languagePref || 'en');
-  
+
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -59,7 +63,7 @@ export default function ProfilePage() {
       }
 
       await updateProfile(payload);
-      setSuccess('Passenger manifest & preferences updated.');
+      setSuccess('Passenger manifest and preferences updated successfully.');
       setCurrentPassword('');
       setNewPassword('');
     } catch (err) {
@@ -84,244 +88,311 @@ export default function ProfilePage() {
   const initialLetter = name ? name.charAt(0).toUpperCase() : 'P';
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 py-6 px-4">
-      {/* Document Header */}
-      <div className="bg-white border-2 border-[#1F2B2E] p-6 shadow-[4px_4px_0px_0px_#1F2B2E] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-mono text-[#B8823A] uppercase tracking-wider mb-1">
-            <span>PASSENGER PASSPORT & SETTINGS</span>
+    <div className="w-full max-w-[1200px] mx-auto px-6 sm:px-12 py-6 space-y-8 font-sans">
+      
+      {/* Header Document Notice */}
+      <div className="bg-white border border-gray-200 rounded-3xl p-8 sm:p-10 shadow-xl space-y-4 relative overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 pb-4">
+          <div className="flex items-center gap-2">
+            <span className="px-3.5 py-1 bg-[#1E232A] text-[#F5B800] rounded-full text-xs font-extrabold uppercase tracking-widest shadow">
+              PASSPORT & IDENTITY
+            </span>
+            <span className="px-3.5 py-1 bg-gray-100 border border-gray-300 text-[#1E232A] rounded-full text-xs font-extrabold uppercase">
+              {user?.isAdmin ? 'ADMINISTRATOR' : 'VERIFIED EXPLORER'}
+            </span>
           </div>
-          <h1 className="text-3xl font-bold font-display text-[#1F2B2E] tracking-tight">
-            USER PROFILE & PREFERENCES
-          </h1>
+
+          {onNavigate && (
+            <button
+              onClick={() => onNavigate('my-trips')}
+              className="text-xs text-gray-600 hover:text-[#1E232A] font-extrabold uppercase flex items-center gap-1.5 cursor-pointer bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full transition"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to My Trips
+            </button>
+          )}
         </div>
 
-        <button
-          onClick={logout}
-          className="px-4 py-2 bg-[#1F2B2E] hover:bg-[#2C5F7C] text-[#F6F3EC] font-mono text-xs font-bold uppercase transition"
-        >
-          SIGN OUT
-        </button>
+        <div>
+          <span className="font-script text-[#F5B800] text-4xl block">passenger dossier</span>
+          <h1 className="text-4xl sm:text-5xl font-black font-serif tracking-wide text-[#1E232A]">
+            USER PROFILE & PREFERENCES
+          </h1>
+          <p className="text-sm text-gray-600 font-sans font-medium max-w-2xl mt-2 leading-relaxed">
+            Manage your passenger identity, custom avatar portrait, security credentials, and system preferences across all itineraries.
+          </p>
+        </div>
       </div>
 
       {/* Feedback Alerts */}
       {error && (
-        <div className="p-4 bg-[#B84A3E]/10 border-2 border-[#B84A3E] text-[#B84A3E] text-xs font-mono flex items-center gap-3">
-          <AlertCircle className="h-5 w-5 shrink-0" />
-          <div>{error}</div>
+        <div className="p-5 bg-red-50 border border-red-200 text-red-700 font-sans text-xs font-bold rounded-2xl flex items-center gap-3 shadow">
+          <AlertCircle className="h-5 w-5 shrink-0 text-red-500" />
+          <span>{error}</span>
         </div>
       )}
 
       {success && (
-        <div className="p-4 bg-[#7FA69C]/20 border-2 border-[#7FA69C] text-[#1F2B2E] text-xs font-mono flex items-center gap-3">
-          <CheckCircle2 className="h-5 w-5 text-[#2C5F7C] shrink-0" />
-          <div>{success}</div>
+        <div className="p-5 bg-emerald-50 border border-emerald-200 text-emerald-800 font-sans text-xs font-bold rounded-2xl flex items-center gap-3 shadow">
+          <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
+          <span>{success}</span>
         </div>
       )}
 
       {/* Main Profile Form */}
-      <form onSubmit={handleUpdateProfile} className="space-y-6">
+      <form onSubmit={handleUpdateProfile} className="space-y-8">
         
-        {/* Custom Avatar Section */}
-        <div className="bg-white border-2 border-[#1F2B2E] p-6 shadow-[3px_3px_0px_0px_#1F2B2E] space-y-4">
-          <h3 className="text-lg font-bold font-display text-[#1F2B2E] border-b border-[#1F2B2E]/20 pb-2">
-            1. AVATAR PORTRAIT
-          </h3>
+        {/* Section 1: Avatar Portrait */}
+        <div className="bg-white border border-gray-200 rounded-3xl p-8 sm:p-10 shadow-xl space-y-6">
+          <div className="border-b border-gray-200 pb-3">
+            <h2 className="text-2xl font-serif font-black text-[#1E232A] uppercase tracking-wide flex items-center gap-2">
+              <Camera className="h-6 w-6 text-[#F5B800]" />
+              1. AVATAR PORTRAIT
+            </h2>
+          </div>
 
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-            {avatar ? (
-              <img
-                src={avatar}
-                alt="Portrait"
-                className="h-20 w-20 border-2 border-[#1F2B2E] object-cover shadow-[2px_2px_0px_0px_#1F2B2E]"
-              />
-            ) : (
-              <div className="h-20 w-20 bg-[#1F2B2E] text-[#F6F3EC] border-2 border-[#1F2B2E] shadow-[2px_2px_0px_0px_#2C5F7C] flex items-center justify-center font-mono font-extrabold text-2xl">
-                {initialLetter}
-              </div>
-            )}
+          <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
+            {/* Avatar Preview */}
+            <div className="relative group shrink-0">
+              {avatar ? (
+                <img
+                  src={avatar}
+                  alt="Passenger Portrait"
+                  className="h-28 w-28 rounded-full object-cover border-4 border-[#F5B800] ring-4 ring-[#F5B800]/20 shadow-lg"
+                />
+              ) : (
+                <div className="h-28 w-28 bg-[#1E232A] text-[#F5B800] rounded-full border-4 border-[#F5B800] ring-4 ring-[#F5B800]/20 shadow-lg flex items-center justify-center font-serif font-black text-4xl">
+                  {initialLetter}
+                </div>
+              )}
+            </div>
 
-            <div className="space-y-3 flex-1">
-              <label className="text-xs font-mono text-[#1F2B2E] block uppercase font-bold">
-                CHOOSE CUSTOM AVATAR (IMAGE URL OR UPLOAD)
-              </label>
-
+            {/* Avatar Controls */}
+            <div className="space-y-4 flex-1 w-full">
               <div className="space-y-2">
+                <label className="block font-sans text-xs font-extrabold text-[#1E232A] uppercase tracking-wider">
+                  Avatar Image Web URL
+                </label>
                 <div className="relative">
-                  <Image className="absolute left-3 top-3 h-4 w-4 text-[#1F2B2E]/60" />
+                  <Image className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <input
                     type="url"
-                    placeholder="Paste custom image URL (https://...)"
+                    placeholder="https://images.unsplash.com/... or custom image URL"
                     value={avatar}
                     onChange={(e) => setAvatar(e.target.value)}
-                    className="w-full bg-[#F6F3EC] border border-[#1F2B2E] rounded-sm pl-9 pr-3 py-2 text-xs text-[#1F2B2E] placeholder-[#1F2B2E]/40 focus:outline-none focus:ring-2 focus:ring-[#2C5F7C] font-mono"
+                    className="w-full bg-gray-50 border border-gray-300 rounded-full pl-11 pr-4 py-3.5 font-sans text-sm text-[#1E232A] placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#F5B800] transition shadow-inner"
                   />
                 </div>
+              </div>
 
-                <div className="flex items-center gap-3">
-                  <label className="cursor-pointer px-3 py-1.5 bg-[#F6F3EC] border border-[#1F2B2E] font-mono text-xs font-bold text-[#2C5F7C] hover:bg-[#1F2B2E] hover:text-white transition flex items-center gap-1.5">
-                    <Upload className="h-4 w-4" />
-                    <span>UPLOAD LOCAL IMAGE FILE</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                    />
-                  </label>
-                  
-                  {avatar && (
-                    <button
-                      type="button"
-                      onClick={() => setAvatar('')}
-                      className="text-xs font-mono text-[#B84A3E] hover:underline uppercase font-bold"
-                    >
-                      REMOVE AVATAR
-                    </button>
-                  )}
-                </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <label className="cursor-pointer px-5 py-2.5 bg-[#1E232A] hover:bg-[#F5B800] text-white hover:text-[#1E232A] font-extrabold text-xs uppercase tracking-wider transition rounded-full shadow flex items-center gap-2">
+                  <Upload className="h-4 w-4" />
+                  <span>Upload Local File</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                </label>
+
+                {avatar && (
+                  <button
+                    type="button"
+                    onClick={() => setAvatar('')}
+                    className="px-5 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-full text-xs font-extrabold uppercase tracking-wider transition cursor-pointer"
+                  >
+                    Remove Avatar
+                  </button>
+                )}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Passenger Information */}
-        <div className="bg-white border-2 border-[#1F2B2E] p-6 shadow-[3px_3px_0px_0px_#1F2B2E] space-y-4">
-          <h3 className="text-lg font-bold font-display text-[#1F2B2E] border-b border-[#1F2B2E]/20 pb-2">
-            2. PASSENGER INFORMATION
-          </h3>
+        {/* Section 2: Passenger Information */}
+        <div className="bg-white border border-gray-200 rounded-3xl p-8 sm:p-10 shadow-xl space-y-6">
+          <div className="border-b border-gray-200 pb-3">
+            <h2 className="text-2xl font-serif font-black text-[#1E232A] uppercase tracking-wide flex items-center gap-2">
+              <User className="h-6 w-6 text-[#F5B800]" />
+              2. PASSENGER IDENTITY & LOCALE
+            </h2>
+          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-xs font-mono font-bold uppercase text-[#1F2B2E]">FULL NAME</label>
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full bg-[#F6F3EC] border border-[#1F2B2E] rounded-sm px-3 py-2 text-sm text-[#1F2B2E] focus:outline-none focus:ring-2 focus:ring-[#2C5F7C] font-body"
-              />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {/* Full Name */}
+            <div className="space-y-2">
+              <label className="block font-sans text-xs font-extrabold text-[#1E232A] uppercase tracking-wider">
+                Full Name <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Elena Rostova"
+                  className="w-full bg-gray-50 border border-gray-300 rounded-full pl-11 pr-4 py-3.5 font-sans text-sm text-[#1E232A] focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#F5B800] transition shadow-inner"
+                />
+              </div>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-mono font-bold uppercase text-[#1F2B2E]">EMAIL ADDRESS</label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (error && error.includes('email')) setError('');
-                }}
-                className="w-full bg-[#F6F3EC] border border-[#1F2B2E] rounded-sm px-3 py-2 text-sm text-[#1F2B2E] focus:outline-none focus:ring-2 focus:ring-[#2C5F7C] font-mono"
-              />
+            {/* Email Address */}
+            <div className="space-y-2">
+              <label className="block font-sans text-xs font-extrabold text-[#1E232A] uppercase tracking-wider">
+                Email Address <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (error && error.includes('email')) setError('');
+                  }}
+                  placeholder="e.g. explorer@globetrotter.io"
+                  className="w-full bg-gray-50 border border-gray-300 rounded-full pl-11 pr-4 py-3.5 font-sans text-sm text-[#1E232A] focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#F5B800] transition shadow-inner"
+                />
+              </div>
             </div>
           </div>
 
-          <div className="space-y-1 pt-2">
-            <label className="text-xs font-mono font-bold uppercase text-[#1F2B2E]">LANGUAGE PREFERENCE</label>
-            <select
-              value={languagePref}
-              onChange={(e) => setLanguagePref(e.target.value)}
-              className="w-full bg-[#F6F3EC] border border-[#1F2B2E] rounded-sm px-3 py-2 text-sm text-[#1F2B2E] focus:outline-none focus:ring-2 focus:ring-[#2C5F7C] font-mono"
-            >
-              <option value="en">English (en)</option>
-              <option value="es">Español (es)</option>
-              <option value="fr">Français (fr)</option>
-              <option value="de">Deutsch (de)</option>
-              <option value="ja">日本語 (ja)</option>
-            </select>
+          {/* Language Preference */}
+          <div className="space-y-2 pt-2">
+            <label className="block font-sans text-xs font-extrabold text-[#1E232A] uppercase tracking-wider">
+              Preferred Interface Language
+            </label>
+            <div className="relative">
+              <Globe className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              <select
+                value={languagePref}
+                onChange={(e) => setLanguagePref(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-300 rounded-full pl-11 pr-8 py-3.5 font-sans text-sm text-[#1E232A] focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#F5B800] transition shadow-inner cursor-pointer appearance-none"
+              >
+                <option value="en">English (United States / International)</option>
+                <option value="es">Español (Spanish)</option>
+                <option value="fr">Français (French)</option>
+                <option value="de">Deutsch (German)</option>
+                <option value="ja">日本語 (Japanese)</option>
+              </select>
+            </div>
           </div>
         </div>
 
-        {/* Security Credentials */}
-        <div className="bg-white border-2 border-[#1F2B2E] p-6 shadow-[3px_3px_0px_0px_#1F2B2E] space-y-4">
-          <h3 className="text-lg font-bold font-display text-[#1F2B2E] border-b border-[#1F2B2E]/20 pb-2">
-            3. SECURITY CREDENTIALS
-          </h3>
+        {/* Section 3: Security & Passphrase */}
+        <div className="bg-white border border-gray-200 rounded-3xl p-8 sm:p-10 shadow-xl space-y-6">
+          <div className="border-b border-gray-200 pb-3">
+            <h2 className="text-2xl font-serif font-black text-[#1E232A] uppercase tracking-wide flex items-center gap-2">
+              <Lock className="h-6 w-6 text-[#F5B800]" />
+              3. SECURITY & PASSPHRASE
+            </h2>
+          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-xs font-mono font-bold uppercase text-[#1F2B2E]">CURRENT PASSPHRASE</label>
-              <input
-                type="password"
-                placeholder="••••••••"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full bg-[#F6F3EC] border border-[#1F2B2E] rounded-sm px-3 py-2 text-sm text-[#1F2B2E] focus:outline-none focus:ring-2 focus:ring-[#2C5F7C] font-mono"
-              />
+          <p className="text-xs text-gray-500 font-medium">
+            Leave these passphrase fields blank if you only wish to modify your profile name or avatar.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {/* Current Passphrase */}
+            <div className="space-y-2">
+              <label className="block font-sans text-xs font-extrabold text-[#1E232A] uppercase tracking-wider">
+                Current Passphrase
+              </label>
+              <div className="relative">
+                <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-300 rounded-full pl-11 pr-4 py-3.5 font-sans text-sm text-[#1E232A] focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#F5B800] transition shadow-inner"
+                />
+              </div>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-mono font-bold uppercase text-[#1F2B2E]">NEW PASSPHRASE</label>
-              <input
-                type="password"
-                placeholder="At least 6 characters"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full bg-[#F6F3EC] border border-[#1F2B2E] rounded-sm px-3 py-2 text-sm text-[#1F2B2E] focus:outline-none focus:ring-2 focus:ring-[#2C5F7C] font-mono"
-              />
+            {/* New Passphrase */}
+            <div className="space-y-2">
+              <label className="block font-sans text-xs font-extrabold text-[#1E232A] uppercase tracking-wider">
+                New Passphrase
+              </label>
+              <div className="relative">
+                <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="password"
+                  placeholder="Minimum 6 characters"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-300 rounded-full pl-11 pr-4 py-3.5 font-sans text-sm text-[#1E232A] focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#F5B800] transition shadow-inner"
+                />
+              </div>
             </div>
           </div>
         </div>
 
         {/* Form Footer Actions */}
-        <div className="flex items-center justify-between pt-2">
-          {/* Stamp-red reserved strictly for destructive action */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
           <button
             type="button"
             onClick={() => setShowDeleteModal(true)}
-            className="px-4 py-2.5 bg-white border-2 border-[#B84A3E] text-[#B84A3E] font-mono text-xs font-bold uppercase hover:bg-[#B84A3E] hover:text-white transition shadow-[2px_2px_0px_0px_#B84A3E] flex items-center gap-2"
+            className="w-full sm:w-auto px-6 py-3.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-extrabold text-xs sm:text-sm tracking-wider uppercase rounded-full transition flex items-center justify-center gap-2 cursor-pointer shadow-sm"
           >
             <Trash2 className="h-4 w-4" />
-            DELETE ACCOUNT
+            Delete Account
           </button>
 
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2.5 bg-[#2C5F7C] hover:bg-[#1F2B2E] text-[#F6F3EC] border-2 border-[#1F2B2E] font-mono text-xs font-bold uppercase transition shadow-[2px_2px_0px_0px_#1F2B2E] flex items-center gap-2 disabled:opacity-50"
+            className="w-full sm:w-auto px-8 py-3.5 bg-[#F5B800] hover:bg-[#E0A600] text-[#1E232A] font-extrabold text-xs sm:text-sm tracking-widest uppercase transition rounded-full shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
           >
             {loading ? (
-              <span className="inline-block h-4 w-4 border-2 border-[#F6F3EC] border-t-transparent rounded-full animate-spin"></span>
+              <span className="inline-block h-4 w-4 border-2 border-[#1E232A] border-t-transparent rounded-full animate-spin"></span>
             ) : (
               <>
                 <Save className="h-4 w-4" />
-                SAVE CHANGES
+                <span>SAVE PROFILE CHANGES</span>
               </>
             )}
           </button>
         </div>
       </form>
 
-      {/* Account Deletion Stamp Modal */}
+      {/* Account Deletion Confirmation Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 z-50 bg-[#1F2B2E]/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#F6F3EC] border-2 border-[#B84A3E] p-6 max-w-md w-full space-y-4 shadow-[6px_6px_0px_0px_#B84A3E]">
-            <div className="flex items-center gap-3 text-[#B84A3E]">
-              <Trash2 className="h-6 w-6" />
-              <h3 className="font-bold text-xl font-display uppercase tracking-tight">CONFIRM DELETION</h3>
+        <div className="fixed inset-0 z-50 bg-[#1A1D23]/75 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in">
+          <div className="bg-white border border-gray-200 rounded-3xl p-8 sm:p-10 max-w-lg w-full space-y-6 shadow-2xl">
+            <div className="flex items-center gap-3 text-red-600">
+              <div className="p-3 bg-red-100 rounded-full">
+                <Trash2 className="h-6 w-6" />
+              </div>
+              <h3 className="font-serif font-bold text-2xl text-[#1E232A] uppercase tracking-wide">
+                Confirm Deletion
+              </h3>
             </div>
 
-            <p className="text-[#1F2B2E] text-xs font-mono leading-relaxed border-t border-b border-[#1F2B2E]/20 py-3">
-              WARNING: This will permanently delete your account, trips, and saved destinations. This action cannot be reversed.
+            <p className="text-gray-600 text-sm font-sans leading-relaxed border-t border-b border-gray-200 py-4">
+              <strong>WARNING:</strong> This action will permanently erase your passenger record, created travel routes, and saved destination bookmarks. This operation cannot be reversed.
             </p>
 
             <div className="flex items-center justify-end gap-3 pt-2">
               <button
                 type="button"
                 onClick={() => setShowDeleteModal(false)}
-                className="px-4 py-2 bg-white border border-[#1F2B2E] text-[#1F2B2E] font-mono text-xs font-bold uppercase hover:bg-[#1F2B2E] hover:text-white transition"
+                className="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-[#1E232A] font-extrabold text-xs uppercase tracking-wider rounded-full transition cursor-pointer"
               >
-                CANCEL
+                Cancel
               </button>
               <button
                 type="button"
                 onClick={handleDeleteAccount}
                 disabled={deleting}
-                className="px-4 py-2 bg-[#B84A3E] text-white border border-[#1F2B2E] font-mono text-xs font-bold uppercase hover:bg-black transition disabled:opacity-50"
+                className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-full transition shadow-md cursor-pointer disabled:opacity-50"
               >
-                {deleting ? 'DELETING...' : 'PERMANENTLY DELETE'}
+                {deleting ? 'Erasing Record...' : 'Permanently Delete'}
               </button>
             </div>
           </div>

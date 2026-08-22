@@ -143,16 +143,27 @@ router.get('/saved-destinations', authenticateToken, async (req, res) => {
 // POST /api/saved-destinations (Save destination for user)
 const saveDestinationHandler = async (req, res) => {
   try {
-    const { city_id, cityId } = req.body;
-    const targetCityId = city_id || cityId;
+    const { city_id, cityId, cityName, name } = req.body;
+    let targetCityId = city_id || cityId;
     const targetUserId = req.user?.userId;
-
-    if (!targetCityId) {
-      return res.status(400).json({ error: 'Validation Error', message: 'city_id is required.' });
-    }
 
     if (!targetUserId) {
       return res.status(401).json({ error: 'Unauthorized', message: 'Authentication required to save destinations.' });
+    }
+
+    const nameToLookUp = cityName || name || (typeof targetCityId === 'string' && !targetCityId.includes('-') && isNaN(Number(targetCityId)) ? targetCityId : null);
+
+    if (nameToLookUp) {
+      const foundCity = await prisma.city.findFirst({
+        where: { name: { equals: nameToLookUp, mode: 'insensitive' } }
+      });
+      if (foundCity) {
+        targetCityId = foundCity.id;
+      }
+    }
+
+    if (!targetCityId) {
+      return res.status(400).json({ error: 'Validation Error', message: 'Valid city_id or cityName is required.' });
     }
 
     const saved = await prisma.savedDestination.upsert({
@@ -179,12 +190,23 @@ const saveDestinationHandler = async (req, res) => {
 router.delete('/saved-destinations/:cityId', authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
-    const cityId = req.params.cityId;
+    const rawCityId = req.params.cityId;
+
+    let targetCityId = rawCityId;
+    const foundCity = await prisma.city.findFirst({
+      where: { name: { equals: rawCityId, mode: 'insensitive' } }
+    });
+    if (foundCity) {
+      targetCityId = foundCity.id;
+    }
 
     await prisma.savedDestination.deleteMany({
       where: {
         userId,
-        cityId
+        OR: [
+          { cityId: targetCityId },
+          { cityId: rawCityId }
+        ]
       }
     });
 

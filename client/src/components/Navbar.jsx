@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   Compass, User as UserIcon, LogOut, Search, MapPin,
   Layers, Calendar, DollarSign, Globe, Shield, Plus,
-  Menu, X, Sparkles, ChevronDown, Phone, Instagram, Facebook, Twitter
+  Menu, X, Sparkles, ChevronDown
 } from 'lucide-react';
 
 export default function Navbar({ currentTab, onNavigate }) {
@@ -32,51 +32,8 @@ export default function Navbar({ currentTab, onNavigate }) {
 
   return (
     <header className="bg-white sticky top-0 z-50 shadow-md w-full">
-      
-      {/* Top Contact & Announcement Bar */}
-      <div className="bg-[#1A1D23] text-white text-xs sm:text-sm py-2.5 px-6 sm:px-12 flex justify-between items-center border-b border-white/10 font-sans">
-        <div className="flex items-center gap-6">
-          <div className="hidden sm:flex items-center gap-4 text-gray-300">
-            <span className="flex items-center gap-1.5 hover:text-[#F5B800] transition cursor-pointer">
-              <Instagram className="h-4 w-4" />
-            </span>
-            <span className="flex items-center gap-1.5 hover:text-[#F5B800] transition cursor-pointer">
-              <Facebook className="h-4 w-4" />
-            </span>
-            <span className="flex items-center gap-1.5 hover:text-[#F5B800] transition cursor-pointer">
-              <Twitter className="h-4 w-4" />
-            </span>
-          </div>
-          <span className="flex items-center gap-2 text-white font-semibold">
-            <Phone className="h-4 w-4 text-[#F5B800]" />
-            1-800-GLOBE-TRIP (456-2387)
-          </span>
-        </div>
-
-        <div className="flex items-center gap-4 font-bold tracking-wider uppercase">
-          {isAuthenticated ? (
-            <div className="flex items-center gap-4">
-              <span className="text-[#F5B800] font-extrabold">Welcome, {user.name}</span>
-              <button
-                onClick={handleLogout}
-                className="text-white hover:text-[#F5B800] transition flex items-center gap-1.5 cursor-pointer bg-white/10 px-3 py-1 rounded"
-              >
-                <LogOut className="h-4 w-4" /> SIGN OUT
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => onNavigate('auth')}
-              className="text-[#F5B800] hover:text-white bg-[#F5B800]/10 hover:bg-[#F5B800]/20 px-4 py-1.5 rounded-full transition cursor-pointer font-extrabold text-xs sm:text-sm tracking-widest border border-[#F5B800]/30"
-            >
-              LOGIN / REGISTER
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Main Wanderers Brand Header - Full Edge-to-Edge Width */}
-      <div className="w-full px-6 sm:px-12 h-24 flex items-center justify-between border-b border-gray-100">
+      {/* Main Brand Header */}
+      <div className="w-full px-6 sm:px-12 h-20 sm:h-24 flex items-center justify-between border-b border-gray-100">
         
         {/* Brand Logo with Yellow Script Accent */}
         <div
@@ -98,13 +55,6 @@ export default function Navbar({ currentTab, onNavigate }) {
 
         {/* Desktop Navigation Links */}
         <nav className="hidden lg:flex items-center gap-2">
-          <button
-            onClick={() => onNavigate('home')}
-            className={navItemClass('home')}
-          >
-            HOME
-          </button>
-
           <button
             onClick={() => onNavigate('my-trips')}
             className={navItemClass('my-trips')}
@@ -131,18 +81,6 @@ export default function Navbar({ currentTab, onNavigate }) {
             className={navItemClass('community')}
           >
             COMMUNITY
-          </button>
-
-          <button
-            onClick={() => onNavigate('ai-planner')}
-            className={`px-4 py-2 uppercase font-extrabold text-xs sm:text-sm tracking-wider transition cursor-pointer flex items-center gap-1.5 ${
-              currentTab === 'ai-planner'
-                ? 'text-[#F5B800] border-b-2 border-[#F5B800]'
-                : 'text-[#F5B800] hover:text-white bg-[#1A1D23] px-3 py-1.5 rounded-full shadow'
-            }`}
-          >
-            <Sparkles className="h-4 w-4 text-[#F5B800]" />
-            AI PLANNER
           </button>
 
           {/* Trip Hub Dropdown */}
@@ -248,6 +186,18 @@ export default function Navbar({ currentTab, onNavigate }) {
             )}
           </div>
 
+          <button
+            onClick={() => onNavigate('ai-planner')}
+            className={`px-4 py-2 uppercase font-extrabold text-xs sm:text-sm tracking-wider transition cursor-pointer flex items-center gap-1.5 ${
+              currentTab === 'ai-planner'
+                ? 'text-[#F5B800] border-b-2 border-[#F5B800]'
+                : 'text-[#F5B800] hover:text-white bg-[#1A1D23] px-3 py-1.5 rounded-full shadow'
+            }`}
+          >
+            <Sparkles className="h-4 w-4 text-[#F5B800]" />
+            AI PLANNER
+          </button>
+
           {/* Admin link */}
           {isAdmin && (
             <button
@@ -263,40 +213,56 @@ export default function Navbar({ currentTab, onNavigate }) {
         </nav>
 
         {/* User Actions & Wanderers Gold CTA */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4 ml-3 sm:ml-5">
           <button
             onClick={() => onNavigate('create-trip')}
-            className="px-6 py-3 bg-[#F5B800] hover:bg-[#E0A600] text-[#1E232A] font-extrabold text-xs sm:text-sm tracking-widest uppercase transition shadow-md hover:shadow-lg flex items-center gap-2 cursor-pointer rounded-full"
+            className="hidden sm:inline-flex px-5 sm:px-6 h-11 bg-[#F5B800] hover:bg-[#E0A600] text-[#1E232A] font-extrabold text-xs sm:text-sm tracking-widest uppercase transition shadow-md hover:shadow-lg items-center gap-2 cursor-pointer rounded-full"
           >
             <Plus className="h-4 w-4" />
             PLAN NOW
           </button>
 
           {isAuthenticated ? (
-            <button
-              onClick={() => onNavigate('profile')}
-              className="flex items-center gap-2 px-3.5 py-2 bg-[#F9F8F6] border border-gray-300 hover:border-[#F5B800] transition cursor-pointer rounded-full"
-            >
-              {user.avatar ? (
-                <img
-                  src={user.avatar}
-                  alt={user.name}
-                  className="h-7 w-7 rounded-full object-cover border border-[#F5B800]"
-                />
-              ) : (
-                <div className="h-7 w-7 bg-[#F5B800] text-[#1E232A] rounded-full flex items-center justify-center font-bold text-xs">
-                  {initialLetter}
-                </div>
-              )}
-              <span className="text-xs sm:text-sm font-bold uppercase hidden xl:inline text-[#1E232A] truncate max-w-[100px]">{user.name}</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => onNavigate('profile')}
+                className="inline-flex items-center gap-2.5 px-3.5 h-11 bg-[#F9F8F6] border border-gray-300 hover:border-[#F5B800] transition cursor-pointer rounded-full shadow-sm"
+                title="View Passport & Profile"
+              >
+                {user?.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt={user?.name || 'Explorer'}
+                    className="h-7 w-7 rounded-full object-cover border border-[#F5B800]"
+                  />
+                ) : (
+                  <div className="h-7 w-7 bg-[#F5B800] text-[#1E232A] rounded-full flex items-center justify-center font-bold text-xs">
+                    {initialLetter}
+                  </div>
+                )}
+                <span className="text-xs sm:text-sm font-bold uppercase hidden md:inline text-[#1E232A] truncate max-w-[110px]">
+                  {user?.name || 'Explorer'}
+                </span>
+              </button>
+
+              {/* Small Door Sign Out Button beside Profile */}
+              <button
+                onClick={handleLogout}
+                className="w-11 h-11 bg-[#F9F8F6] border border-gray-300 hover:border-red-400 hover:bg-red-50 text-gray-700 hover:text-red-500 rounded-full transition cursor-pointer inline-flex items-center justify-center shadow-sm"
+                title="Sign Out"
+                aria-label="Sign Out"
+              >
+                <LogOut className="h-5 w-5" />
+              </button>
+            </div>
           ) : (
             <button
               onClick={() => onNavigate('auth')}
-              className="hidden lg:flex p-2.5 text-[#1E232A] hover:text-[#F5B800] transition cursor-pointer"
-              title="Account Login"
+              className="inline-flex items-center gap-1.5 px-5 h-11 bg-[#1E232A] hover:bg-[#F5B800] text-white hover:text-[#1E232A] font-extrabold text-xs sm:text-sm tracking-wider uppercase transition cursor-pointer rounded-full shadow-sm"
+              title="Sign In / Register"
             >
-              <UserIcon className="h-6 w-6" />
+              <UserIcon className="h-4 w-4" />
+              <span>LOGIN</span>
             </button>
           )}
 
@@ -314,6 +280,54 @@ export default function Navbar({ currentTab, onNavigate }) {
       {/* Mobile Menu Drawer */}
       {mobileMenuOpen && (
         <div className="lg:hidden bg-[#1A1D23] text-white border-t border-white/10 p-6 space-y-4 font-sans text-sm">
+          {isAuthenticated ? (
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <button
+                onClick={() => {
+                  onNavigate('profile');
+                  setMobileMenuOpen(false);
+                }}
+                className="flex items-center gap-3 text-left"
+              >
+                {user?.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt={user?.name || 'Explorer'}
+                    className="h-9 w-9 rounded-full object-cover border border-[#F5B800]"
+                  />
+                ) : (
+                  <div className="h-9 w-9 bg-[#F5B800] text-[#1E232A] rounded-full flex items-center justify-center font-bold text-xs">
+                    {initialLetter}
+                  </div>
+                )}
+                <div>
+                  <span className="font-bold text-sm text-white block">{user?.name || 'Explorer'}</span>
+                  <span className="text-xs text-[#F5B800]">View Passport &rarr;</span>
+                </div>
+              </button>
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setMobileMenuOpen(false);
+                }}
+                className="p-2 text-gray-400 hover:text-red-400 hover:bg-white/5 rounded-full transition flex items-center justify-center border border-white/10"
+                title="Sign Out"
+              >
+                <LogOut className="h-5 w-5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                onNavigate('auth');
+                setMobileMenuOpen(false);
+              }}
+              className="w-full py-2.5 bg-white/10 hover:bg-white/20 text-[#F5B800] font-bold text-center uppercase tracking-wider text-xs rounded-full border border-[#F5B800]/30"
+            >
+              Login / Register
+            </button>
+          )}
+
           <button
             onClick={() => {
               onNavigate('home');
@@ -362,6 +376,42 @@ export default function Navbar({ currentTab, onNavigate }) {
             Tours & Activities
           </button>
 
+          <button
+            onClick={() => {
+              onNavigate('community');
+              setMobileMenuOpen(false);
+            }}
+            className={`w-full text-left px-4 py-2.5 font-bold uppercase tracking-wider ${
+              currentTab === 'community' ? 'text-[#F5B800] bg-white/5' : 'text-white'
+            }`}
+          >
+            Community
+          </button>
+
+          <button
+            onClick={() => {
+              onNavigate('ai-planner');
+              setMobileMenuOpen(false);
+            }}
+            className={`w-full text-left px-4 py-2.5 font-bold uppercase tracking-wider ${
+              currentTab === 'ai-planner' ? 'text-[#F5B800] bg-white/5' : 'text-[#F5B800]'
+            }`}
+          >
+            AI Trip Planner
+          </button>
+
+          {isAdmin && (
+            <button
+              onClick={() => {
+                onNavigate('admin');
+                setMobileMenuOpen(false);
+              }}
+              className="w-full text-left px-4 py-2.5 font-bold uppercase tracking-wider text-red-400"
+            >
+              Admin Dashboard
+            </button>
+          )}
+
           <div className="p-4 bg-white/5 border border-white/10 space-y-3">
             <span className="font-bold text-xs text-[#F5B800] uppercase block tracking-wider">Trip Hub Options:</span>
             <div className="grid grid-cols-2 gap-2">
@@ -409,7 +459,7 @@ export default function Navbar({ currentTab, onNavigate }) {
               onNavigate('create-trip');
               setMobileMenuOpen(false);
             }}
-            className="w-full py-3.5 bg-[#F5B800] text-[#1E232A] font-extrabold text-center uppercase tracking-widest text-sm"
+            className="w-full py-3.5 bg-[#F5B800] text-[#1E232A] font-extrabold text-center uppercase tracking-widest text-sm rounded-full shadow"
           >
             Plan New Journey
           </button>
