@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import TicketCard from '../ticket/TicketCard';
+import StopTicketCard from '../ticket/StopTicketCard';
 import ActivityChip from './ActivityChip';
 import ActivitySearchScoped from './ActivitySearchScoped';
 import { formatCurrency } from '../../lib/format';
@@ -18,7 +18,7 @@ export default function StopCard({
   const [addingActivity, setAddingActivity] = useState(false);
 
   return (
-    <TicketCard
+    <StopTicketCard
       cityName={stop.city.name}
       country={stop.city.country}
       startDate={stop.start_date}
@@ -83,6 +83,6 @@ export default function StopCard({
           onClose={() => setAddingActivity(false)}
         />
       )}
-    </TicketCard>
+    </StopTicketCard>
   );
 }

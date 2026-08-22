@@ -4,6 +4,10 @@ import AuthPage from './pages/AuthPage';
 import ProfilePage from './pages/ProfilePage';
 import TicketCard from './components/TicketCard';
 import ActivitySearchPage from './pages/ActivitySearchPage';
+import CitySearch from './components/city-search/CitySearch';
+import ItineraryBuilder from './components/itinerary-builder/ItineraryBuilder';
+import ItineraryView from './components/itinerary-view/ItineraryView';
+import { TRIP_ID } from './api/mockData';
 import { 
   Compass, Server, CheckCircle2, ShieldCheck, MapPin, DollarSign, 
   Calendar, Users, RefreshCw, Sparkles, ArrowRight, User as UserIcon, 
@@ -112,6 +116,33 @@ function MainApp() {
                 <Search className="h-3.5 w-3.5" />
                 ACTIVITIES (SCR 8)
               </button>
+              <button
+                onClick={() => setActiveTab('cities')}
+                className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold transition flex items-center gap-1.5 ${
+                  activeTab === 'cities' ? 'bg-[#1F2B2E] text-[#F6F3EC]' : 'bg-white text-[#1F2B2E] hover:bg-[#F6F3EC]'
+                }`}
+              >
+                <MapPin className="h-3.5 w-3.5" />
+                CITIES (SCR 7)
+              </button>
+              <button
+                onClick={() => setActiveTab('builder')}
+                className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold transition flex items-center gap-1.5 ${
+                  activeTab === 'builder' ? 'bg-[#1F2B2E] text-[#F6F3EC]' : 'bg-white text-[#1F2B2E] hover:bg-[#F6F3EC]'
+                }`}
+              >
+                <Layers className="h-3.5 w-3.5" />
+                BUILDER (SCR 5)
+              </button>
+              <button
+                onClick={() => setActiveTab('itinerary')}
+                className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold transition flex items-center gap-1.5 ${
+                  activeTab === 'itinerary' ? 'bg-[#1F2B2E] text-[#F6F3EC]' : 'bg-white text-[#1F2B2E] hover:bg-[#F6F3EC]'
+                }`}
+              >
+                <Calendar className="h-3.5 w-3.5" />
+                ITINERARY (SCR 6)
+              </button>
               {isAuthenticated && (
                 <button
                   onClick={() => setActiveTab('profile')}
@@ -181,6 +212,24 @@ function MainApp() {
               onRemoveActivity={(activity) => console.log('Remove activity:', activity)}
               selectedActivityIds={[]}
             />
+          </div>
+        )}
+
+        {activeTab === 'cities' && (
+          <div className="bg-white border-2 border-[#1F2B2E] p-6 shadow-[4px_4px_0px_0px_#1F2B2E]">
+            <CitySearch onAddToTrip={(city) => console.log('Add to trip:', city)} />
+          </div>
+        )}
+
+        {activeTab === 'builder' && (
+          <div className="bg-white border-2 border-[#1F2B2E] p-6 shadow-[4px_4px_0px_0px_#1F2B2E]">
+            <ItineraryBuilder tripId={TRIP_ID} />
+          </div>
+        )}
+
+        {activeTab === 'itinerary' && (
+          <div className="bg-white border-2 border-[#1F2B2E] p-6 shadow-[4px_4px_0px_0px_#1F2B2E]">
+            <ItineraryView tripId={TRIP_ID} />
           </div>
         )}
 

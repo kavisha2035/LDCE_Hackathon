@@ -47,9 +47,9 @@ export default function ItineraryBuilder({ tripId }) {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <header className="mb-8">
-        <p className="font-mono text-caption text-ink/50 uppercase tracking-wide mb-1">Itinerary Builder</p>
-        <h1 className="font-display font-semibold text-hero text-ink leading-none">{trip.name}</h1>
+      <header className="mb-8 border-b-2 border-dashed border-ink pb-4">
+        <p className="text-[10px] font-mono uppercase tracking-widest text-route-blue mb-1">Screen 5 &bull; Itinerary Builder</p>
+        <h1 className="text-3xl font-extrabold font-display tracking-tight text-ink leading-none">{trip.name}</h1>
         <p className="font-mono text-body-sm text-ink/60 mt-2">
           {trip.start_date} – {trip.end_date}
         </p>

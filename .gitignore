@@ -34,3 +34,11 @@ yarn-error.log*
 
 # Prisma generated outputs if any custom
 # prisma/migrations
+
+GlobeTrotter_Hackathon_Plan.md
+
+# Internal planning / AI-tooling docs (not for public repo)
+.claude/
+CLAUDE.md
+frontend-design.md
+design.md
