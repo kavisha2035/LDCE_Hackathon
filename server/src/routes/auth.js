@@ -9,9 +9,48 @@ const prisma = new PrismaClient();
 
 const SALT_ROUNDS = parseInt(process.env.BCRYPT_SALT_ROUNDS, 10) || 12;
 const JWT_SECRET = process.env.JWT_SECRET || 'globetrotter_super_secret_jwt_key_2026';
+const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || 'globetrotter_refresh_token_secret_7d_2026';
 
-const generateToken = (userId, email) => {
-  return jwt.sign({ userId, email }, JWT_SECRET, { expiresIn: '7d' });
+// Access Token: Short-lived (15 minutes)
+const generateAccessToken = (userId, email) => {
+  return jwt.sign({ userId, email }, JWT_SECRET, { expiresIn: '15m' });
+};
+
+// Refresh Token: Long-lived (7 days) & DB persisted
+const generateRefreshToken = async (userId, email) => {
+  const token = jwt.sign({ userId, email }, REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+  await prisma.refreshToken.create({
+    data: {
+      token,
+      userId,
+      expiresAt
+    }
+  });
+
+  return token;
+};
+
+// Set HTTP-Only Cookie helper (Protects against XSS attacks)
+const setRefreshTokenCookie = (res, token) => {
+  res.cookie('refreshToken', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+  });
+};
+
+// Clear HTTP-Only Cookie helper
+const clearRefreshTokenCookie = (res) => {
+  res.clearCookie('refreshToken', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/'
+  });
 };
 
 const sanitizeUser = (user) => {
@@ -19,7 +58,7 @@ const sanitizeUser = (user) => {
   return userWithoutPassword;
 };
 
-// POST /api/auth/signup (Screen 1)
+// POST /api/auth/signup
 router.post('/signup', async (req, res) => {
   try {
     const { name, email, password, avatar, languagePref } = req.body;
@@ -52,12 +91,17 @@ router.post('/signup', async (req, res) => {
       }
     });
 
-    const token = generateToken(newUser.id, newUser.email);
+    const accessToken = generateAccessToken(newUser.id, newUser.email);
+    const refreshToken = await generateRefreshToken(newUser.id, newUser.email);
+
+    // Set secure HTTP-Only Cookie
+    setRefreshTokenCookie(res, refreshToken);
 
     res.status(201).json({
       message: 'Account created successfully',
       user: sanitizeUser(newUser),
-      token
+      accessToken,
+      expiresIn: '15m'
     });
   } catch (error) {
     console.error('Signup Error:', error);
@@ -65,7 +109,7 @@ router.post('/signup', async (req, res) => {
   }
 });
 
-// POST /api/auth/login (Screen 1)
+// POST /api/auth/login
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -88,12 +132,17 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized', message: 'Invalid email or password.' });
     }
 
-    const token = generateToken(user.id, user.email);
+    const accessToken = generateAccessToken(user.id, user.email);
+    const refreshToken = await generateRefreshToken(user.id, user.email);
+
+    // Set secure HTTP-Only Cookie
+    setRefreshTokenCookie(res, refreshToken);
 
     res.status(200).json({
       message: 'Login successful',
       user: sanitizeUser(user),
-      token
+      accessToken,
+      expiresIn: '15m'
     });
   } catch (error) {
     console.error('Login Error:', error);
@@ -101,15 +150,83 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// GET /api/me or /api/auth/me (Screen 2, 12)
+// POST /api/auth/refresh (Reads HTTP-Only Cookie or request body)
+router.post('/refresh', async (req, res) => {
+  try {
+    const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+
+    if (!refreshToken) {
+      return res.status(400).json({ error: 'Validation Error', message: 'Refresh token cookie is missing.' });
+    }
+
+    // Verify DB persistence
+    const storedToken = await prisma.refreshToken.findUnique({
+      where: { token: refreshToken }
+    });
+
+    if (!storedToken) {
+      clearRefreshTokenCookie(res);
+      return res.status(401).json({ error: 'Unauthorized', message: 'Invalid or revoked refresh token.' });
+    }
+
+    // Check expiration date
+    if (new Date() > storedToken.expiresAt) {
+      await prisma.refreshToken.delete({ where: { id: storedToken.id } });
+      clearRefreshTokenCookie(res);
+      return res.status(401).json({ error: 'Unauthorized', message: 'Refresh token expired. Please log in again.' });
+    }
+
+    // Verify JWT payload
+    jwt.verify(refreshToken, REFRESH_TOKEN_SECRET, async (err, decoded) => {
+      if (err) {
+        await prisma.refreshToken.delete({ where: { id: storedToken.id } });
+        clearRefreshTokenCookie(res);
+        return res.status(403).json({ error: 'Forbidden', message: 'Invalid refresh token.' });
+      }
+
+      // Rotate Refresh Token: delete old token, issue new tokens and updated HTTP-Only Cookie
+      await prisma.refreshToken.delete({ where: { id: storedToken.id } });
+
+      const newAccessToken = generateAccessToken(decoded.userId, decoded.email);
+      const newRefreshToken = await generateRefreshToken(decoded.userId, decoded.email);
+
+      setRefreshTokenCookie(res, newRefreshToken);
+
+      res.status(200).json({
+        accessToken: newAccessToken,
+        expiresIn: '15m'
+      });
+    });
+  } catch (error) {
+    console.error('Token Refresh Error:', error);
+    res.status(500).json({ error: 'Internal Server Error', message: error.message });
+  }
+});
+
+// POST /api/auth/logout (Revokes Refresh Token & Clears Cookie)
+router.post('/logout', async (req, res) => {
+  try {
+    const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+    if (refreshToken) {
+      await prisma.refreshToken.deleteMany({
+        where: { token: refreshToken }
+      });
+    }
+    clearRefreshTokenCookie(res);
+    res.status(200).json({ message: 'Logged out successfully.' });
+  } catch (error) {
+    console.error('Logout Error:', error);
+    res.status(500).json({ error: 'Internal Server Error', message: error.message });
+  }
+});
+
+// GET /api/me or /api/auth/me (Protected)
 const getMeHandler = async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.userId },
       include: {
-        savedDestinations: {
-          include: { city: true }
-        }
+        savedDestinations: { include: { city: true } }
       }
     });
 
@@ -117,9 +234,7 @@ const getMeHandler = async (req, res) => {
       return res.status(404).json({ error: 'Not Found', message: 'User profile not found.' });
     }
 
-    res.status(200).json({
-      user: sanitizeUser(user)
-    });
+    res.status(200).json({ user: sanitizeUser(user) });
   } catch (error) {
     console.error('Fetch Profile Error:', error);
     res.status(500).json({ error: 'Internal Server Error', message: error.message });
@@ -128,7 +243,7 @@ const getMeHandler = async (req, res) => {
 
 router.get('/me', authenticateToken, getMeHandler);
 
-// PUT /api/me or /api/auth/profile (Screen 12)
+// PUT /api/me or /api/auth/profile (Protected)
 const updateMeHandler = async (req, res) => {
   try {
     const { name, email, avatar, languagePref, currentPassword, newPassword } = req.body;
@@ -146,7 +261,7 @@ const updateMeHandler = async (req, res) => {
     if (name) updateData.name = name;
     if (avatar !== undefined) updateData.avatar = avatar;
     if (languagePref) updateData.languagePref = languagePref;
-
+    
     if (email && email.toLowerCase().trim() !== user.email) {
       const emailCheck = await prisma.user.findUnique({
         where: { email: email.toLowerCase().trim() }
@@ -192,16 +307,15 @@ const updateMeHandler = async (req, res) => {
 router.put('/profile', authenticateToken, updateMeHandler);
 router.put('/me', authenticateToken, updateMeHandler);
 
-// DELETE /api/me or /api/auth/account (Screen 12)
+// DELETE /api/me or /api/auth/account (Screen 12 / Protected)
 const deleteMeHandler = async (req, res) => {
   try {
     await prisma.user.delete({
       where: { id: req.user.userId }
     });
 
-    res.status(200).json({
-      message: 'User account deleted successfully.'
-    });
+    clearRefreshTokenCookie(res);
+    res.status(200).json({ message: 'User account deleted successfully.' });
   } catch (error) {
     console.error('Delete Account Error:', error);
     res.status(500).json({ error: 'Internal Server Error', message: error.message });
