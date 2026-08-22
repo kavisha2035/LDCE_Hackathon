@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import HomePage from './pages/HomePage';
@@ -20,8 +20,21 @@ import {
 
 function MainApp() {
   const { user, isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState('home'); // 'home', 'cities', 'activities', 'builder', 'itinerary', 'budget', 'calendar', 'share', 'admin', 'profile', 'auth'
+  const [activeTab, setActiveTab] = useState('home'); // 'home', 'cities', 'activities', 'builder', 'itinerary', 'budget', 'calendar', 'share', 'admin', 'profile', 'auth', 'reset'
   const [navParams, setNavParams] = useState({});
+  const [resetToken, setResetToken] = useState(null);
+
+  // Detect reset_token query param from password reset email link
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('reset_token');
+    if (token) {
+      setResetToken(token);
+      setActiveTab('reset');
+      // Clean URL without reload
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
 
   const navigate = (tab, params = {}) => {
     setActiveTab(tab);
@@ -52,6 +65,8 @@ function MainApp() {
         return { title: 'PASSENGER PASSPORT & SETTINGS', screen: 'SCREEN 12 • USER PROFILE', icon: User, color: 'text-[#1F2B2E]' };
       case 'auth':
         return { title: 'PASSENGER CHECK-IN & AUTHENTICATION', screen: 'SCREEN 1 • AUTH', icon: User, color: 'text-[#2C5F7C]' };
+      case 'reset':
+        return { title: 'PASSWORD RESET RECOVERY', screen: 'SCREEN 1 • AUTH RECOVERY', icon: User, color: 'text-[#B8823A]' };
       default:
         return null;
     }
@@ -225,6 +240,17 @@ function MainApp() {
 
         {activeTab === 'auth' && (
           <AuthPage onSuccess={() => navigate('home')} />
+        )}
+
+        {activeTab === 'reset' && resetToken && (
+          <AuthPage
+            mode="reset"
+            resetToken={resetToken}
+            onSuccess={() => {
+              setResetToken(null);
+              setActiveTab('auth');
+            }}
+          />
         )}
 
       </main>
