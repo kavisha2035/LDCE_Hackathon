@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { fetchTrips, deleteTrip, shareTrip } from '../api/tripsApi';
 import { useAuth } from '../context/AuthContext';
 import { formatDateShort } from '../lib/format';
+import InstagramBoardingPassModal from '../components/ticket/InstagramBoardingPassModal';
 import {
   Compass, Plus, Calendar, MapPin, DollarSign, Layers,
   Share2, Trash2, Edit3, Eye, Search, Filter, Check,
   ExternalLink, AlertCircle, Sparkles, Globe, Clock, Loader2,
-  Lock, Unlock, ArrowRight, CheckCircle2, Navigation, History, MessageSquare
+  Lock, Unlock, ArrowRight, CheckCircle2, Navigation, History, Ticket
 } from 'lucide-react';
 
 export const getTripTemporalStatus = (trip) => {
@@ -43,6 +44,7 @@ export default function MyTripsPage({ onNavigate }) {
   const [visibilityFilter, setVisibilityFilter] = useState('all'); // 'all', 'public', 'private'
   const [deletingId, setDeletingId] = useState(null);
   const [sharingId, setSharingId] = useState(null);
+  const [boardingPassTrip, setBoardingPassTrip] = useState(null);
 
   const loadTrips = async () => {
     setLoading(true);
@@ -170,16 +172,8 @@ export default function MyTripsPage({ onNavigate }) {
               </span>
             </div>
 
-            {/* Delete, Share Publicly & Share to Community Buttons */}
+            {/* Delete & Share Publicly Buttons */}
             <div className="absolute top-4 right-4 flex items-center gap-2">
-              <button
-                onClick={() => onNavigate('community', { tripId: trip.id })}
-                title="Share Experience to Community Tab"
-                className="p-2.5 bg-white/90 hover:bg-[#F5B800] text-[#1E232A] rounded-full shadow transition cursor-pointer flex items-center gap-1 font-bold text-xs"
-              >
-                <MessageSquare className="h-4 w-4 text-[#1E232A]" />
-              </button>
-
               <button
                 onClick={() => handleShareToggle(trip)}
                 disabled={sharingId === trip.id}
@@ -252,20 +246,30 @@ export default function MyTripsPage({ onNavigate }) {
         </div>
 
         {/* Card Action Footer */}
-        <div className="p-6 pt-0 flex items-center gap-2">
+        <div className="p-6 pt-0 space-y-2">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onNavigate('builder', { tripId: trip.id })}
+              className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 text-white font-extrabold text-xs uppercase tracking-wider transition rounded-full flex items-center justify-center gap-1.5 cursor-pointer border border-gray-700"
+            >
+              <Edit3 className="h-3.5 w-3.5 text-[#F5B800]" />
+              BUILDER
+            </button>
+            <button
+              onClick={() => onNavigate('itinerary', { tripId: trip.id })}
+              className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 text-white font-extrabold text-xs uppercase tracking-wider transition rounded-full flex items-center justify-center gap-1.5 cursor-pointer border border-gray-700"
+            >
+              <Eye className="h-3.5 w-3.5" />
+              VIEW
+            </button>
+          </div>
+          
           <button
-            onClick={() => onNavigate('builder', { tripId: trip.id })}
-            className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 text-white font-extrabold text-xs uppercase tracking-wider transition rounded-full flex items-center justify-center gap-1.5 cursor-pointer border border-gray-700"
+            onClick={() => setBoardingPassTrip(trip)}
+            className="w-full py-2.5 bg-[#F5B800] hover:bg-[#E0A600] text-[#1E232A] font-extrabold text-xs uppercase tracking-wider transition rounded-full shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
           >
-            <Edit3 className="h-3.5 w-3.5 text-[#F5B800]" />
-            BUILDER
-          </button>
-          <button
-            onClick={() => onNavigate('itinerary', { tripId: trip.id })}
-            className="flex-1 py-2.5 bg-[#F5B800] hover:bg-[#E0A600] text-[#1E232A] font-extrabold text-xs uppercase tracking-wider transition rounded-full shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
-          >
-            <Eye className="h-3.5 w-3.5" />
-            VIEW
+            <Ticket className="h-4 w-4" />
+            <span>INSTA PASS & PDF</span>
           </button>
         </div>
       </div>
@@ -501,6 +505,16 @@ export default function MyTripsPage({ onNavigate }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredTrips.map(renderTripCard)}
         </div>
+      )}
+
+      {/* Instagram & PDF Boarding Pass Modal */}
+      {boardingPassTrip && (
+        <InstagramBoardingPassModal
+          trip={boardingPassTrip}
+          user={user}
+          isOpen={!!boardingPassTrip}
+          onClose={() => setBoardingPassTrip(null)}
+        />
       )}
 
     </div>

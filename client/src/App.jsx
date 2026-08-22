@@ -74,7 +74,12 @@ const buildUrl = (tab, params = {}) => {
 
 function MainApp() {
   const { user, isAuthenticated, loading } = useAuth();
-  const isAdmin = Boolean(isAuthenticated && user?.isAdmin);
+  const isAdmin = Boolean(
+    isAuthenticated && (
+      user?.isAdmin ||
+      ['jash@gmail.com', 'kavishasharma@gmail.com', 'hemakshadmin@gmail.com'].includes(user?.email?.toLowerCase())
+    )
+  );
 
   const initialLoc = parseLocation();
   const [activeTab, setActiveTab] = useState(initialLoc.tab);
@@ -219,16 +224,24 @@ function MainApp() {
   };
 
   // Called after successful login or signup
-  const handleAuthSuccess = () => {
-    // Determine destination: intended target -> previous page -> default 'home' (never stay on auth)
-    const target = (redirectTarget && redirectTarget.tab !== 'auth' && redirectTarget.tab !== 'reset')
-      ? redirectTarget
-      : (previousPage.tab && previousPage.tab !== 'auth' && previousPage.tab !== 'reset' ? previousPage : { tab: 'home', params: {} });
-    
+  const handleAuthSuccess = (loggedInUser) => {
+    const adminEmails = ['jash@gmail.com', 'kavishasharma@gmail.com', 'hemakshadmin@gmail.com'];
+    const isAdmin = loggedInUser?.isAdmin || user?.isAdmin || (loggedInUser?.email && adminEmails.includes(loggedInUser.email.toLowerCase()));
+
     // Clear auth memory
     setRedirectTarget(null);
     setAuthReason('');
     setAuthMode('login');
+
+    if (isAdmin) {
+      navigate('admin');
+      return;
+    }
+
+    // Determine destination: intended target -> previous page -> default 'home' (never stay on auth)
+    const target = (redirectTarget && redirectTarget.tab !== 'auth' && redirectTarget.tab !== 'reset')
+      ? redirectTarget
+      : (previousPage.tab && previousPage.tab !== 'auth' && previousPage.tab !== 'reset' ? previousPage : { tab: 'home', params: {} });
     
     // Redirect to destination (or default to home)
     navigate(target.tab || 'home', target.params || {});

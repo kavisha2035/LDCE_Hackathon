@@ -1,13 +1,17 @@
 import { useState } from 'react';
 import { useTrip } from '../../hooks/useTrip';
 import { useTrips } from '../../hooks/useTrips';
+import { useAuth } from '../../context/AuthContext';
 import StopReadOnly from './StopReadOnly';
 import ViewModeToggle from './ViewModeToggle';
-import { Loader2, Compass, Plus, Edit3 } from 'lucide-react';
+import InstagramBoardingPassModal from '../ticket/InstagramBoardingPassModal';
+import { Loader2, Compass, Plus, Edit3, Ticket } from 'lucide-react';
 
 export default function ItineraryView({ tripId: propTripId, onNavigate }) {
+  const { user } = useAuth();
   const { data: userTrips = [], isLoading: loadingTrips } = useTrips();
   const [selectedTripId, setSelectedTripId] = useState(propTripId || '');
+  const [showBoardingPass, setShowBoardingPass] = useState(false);
 
   const effectiveTripId = propTripId || selectedTripId || (userTrips[0]?.id || '');
   const { data: trip, isLoading: loadingTrip } = useTrip(effectiveTripId);
@@ -82,7 +86,15 @@ export default function ItineraryView({ tripId: propTripId, onNavigate }) {
             {trip.start_date || trip.startDate} – {trip.end_date || trip.endDate}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setShowBoardingPass(true)}
+            className="px-3 py-1.5 bg-[#F5B800] hover:bg-[#E0A600] text-[#1E232A] font-mono text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs border border-[#1E232A]"
+          >
+            <Ticket className="h-3.5 w-3.5" />
+            <span>INSTA PASS / PDF</span>
+          </button>
+
           {onNavigate && (
             <button
               onClick={() => onNavigate('builder', { tripId: effectiveTripId })}
@@ -119,6 +131,17 @@ export default function ItineraryView({ tripId: propTripId, onNavigate }) {
           </div>
         </div>
       )}
+
+      {/* Instagram & PDF Boarding Pass Modal */}
+      {showBoardingPass && (
+        <InstagramBoardingPassModal
+          trip={trip}
+          user={user}
+          isOpen={showBoardingPass}
+          onClose={() => setShowBoardingPass(false)}
+        />
+      )}
     </div>
   );
 }
+

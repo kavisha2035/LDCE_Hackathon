@@ -44,10 +44,24 @@ const generateAccessToken = (userId, email) => {
   return jwt.sign({ userId, email }, JWT_SECRET, { expiresIn: '15m' });
 };
 
-// Refresh Token: Long-lived (7 days) & DB persisted
+// Refresh Token: Long-lived (7 days) & DB persisted (1 active token per user + automated sweep)
 const generateRefreshToken = async (userId, email) => {
   const token = jwt.sign({ userId, email }, REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+  // Automatically sweep out old tokens for this user and any globally expired tokens
+  try {
+    await prisma.refreshToken.deleteMany({
+      where: {
+        OR: [
+          { userId },
+          { expiresAt: { lt: new Date() } }
+        ]
+      }
+    });
+  } catch (cleanErr) {
+    console.warn('Warning sweeping old refresh tokens:', cleanErr.message);
+  }
 
   await prisma.refreshToken.create({
     data: {
