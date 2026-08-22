@@ -39,7 +39,7 @@ export default function InstagramBoardingPassModal({ trip, user, isOpen, onClose
       const canvas = await html2canvas(passRef.current, {
         scale: 2.5,
         useCORS: true,
-        allowTaint: true,
+        allowTaint: false,
         backgroundColor: '#0F1318',
         logging: false
       });
@@ -63,7 +63,7 @@ export default function InstagramBoardingPassModal({ trip, user, isOpen, onClose
       const canvas = await html2canvas(passRef.current, {
         scale: 2,
         useCORS: true,
-        allowTaint: true,
+        allowTaint: false,
         backgroundColor: '#0F1318',
         logging: false
       });
