@@ -1,4 +1,4 @@
-// Prisma schema for GlobeTrotter Backend
+// Prisma Schema for GlobeTrotter
 
 generator client {
   provider = "prisma-client-js"
@@ -9,8 +9,90 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Initial placeholder schema model to verify Prisma connection
-model HealthCheck {
+model User {
   id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  avatar    String?
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  trips     Trip[]
+}
+
+model City {
+  id          String     @id @default(uuid())
+  name        String
+  country     String
+  costIndex   Float      @default(1.0)
+  popularity  Int        @default(0)
+  imageUrl    String?
+  description String?
+  stops       Stop[]
+  activities  Activity[]
+
+  @@index([country])
+  @@index([popularity])
+}
+
+model Trip {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  coverPhoto  String?
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  stops       Stop[]
+
+  @@index([userId])
+}
+
+model Stop {
+  id             String         @id @default(uuid())
+  tripId         String
+  trip           Trip           @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  cityId         String
+  city           City           @relation(fields: [cityId], references: [id])
+  startDate      DateTime
+  endDate        DateTime
+  order          Int            @default(0)
+  tripActivities TripActivity[]
+
+  @@index([tripId])
+  @@index([cityId])
+}
+
+model Activity {
+  id             String         @id @default(uuid())
+  cityId         String
+  city           City           @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  name           String
+  type           String         // sightseeing, food, adventure, culture, shopping, nightlife
+  cost           Float          @default(0.0)
+  duration       Int            @default(60) // minutes
+  description    String?
+  imageUrl       String?
+  tripActivities TripActivity[]
+
+  @@index([cityId])
+  @@index([type])
+}
+
+model TripActivity {
+  id            String    @id @default(uuid())
+  stopId        String
+  stop          Stop      @relation(fields: [stopId], references: [id], onDelete: Cascade)
+  activityId    String
+  activity      Activity  @relation(fields: [activityId], references: [id])
+  scheduledDate DateTime?
+  scheduledTime String?
+  cost          Float?
+
+  @@index([stopId])
+  @@index([activityId])
 }
