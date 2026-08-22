@@ -1,259 +1,172 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import Navbar from './components/Navbar';
+import HomePage from './pages/HomePage';
 import AuthPage from './pages/AuthPage';
 import ProfilePage from './pages/ProfilePage';
-import TicketCard from './components/TicketCard';
 import ActivitySearchPage from './pages/ActivitySearchPage';
 import CitySearch from './components/city-search/CitySearch';
 import ItineraryBuilder from './components/itinerary-builder/ItineraryBuilder';
 import ItineraryView from './components/itinerary-view/ItineraryView';
-import { TRIP_ID } from './api/mockData';
 import TripBudgetPage from './pages/TripBudgetPage';
 import TripCalendarPage from './pages/TripCalendarPage';
 import PublicItineraryPage from './pages/PublicItineraryPage';
 import AdminPage from './pages/AdminPage';
-import { 
-  Compass, Server, CheckCircle2, ShieldCheck, MapPin, DollarSign, 
-  Calendar, Users, RefreshCw, Sparkles, ArrowRight, User as UserIcon, 
-  LogOut, Database, Globe, Layers, Key, Search, PieChart, Shield
+import { TRIP_ID } from './api/mockData';
+import {
+  Compass, ArrowLeft, Layers, Calendar, DollarSign,
+  Globe, Search, MapPin, Shield, User, Sparkles
 } from 'lucide-react';
 
 function MainApp() {
-  const { user, logout, isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'activities', 'budget', 'calendar', 'profile', 'auth', 'admin'
-  
-  // Health check & Cities data
-  const [health, setHealth] = useState(null);
-  const [loadingHealth, setLoadingHealth] = useState(true);
+  const { user, isAuthenticated } = useAuth();
+  const [activeTab, setActiveTab] = useState('home'); // 'home', 'cities', 'activities', 'builder', 'itinerary', 'budget', 'calendar', 'share', 'admin', 'profile', 'auth'
+  const [navParams, setNavParams] = useState({});
 
-  const fetchHealth = async () => {
-    setLoadingHealth(true);
-    try {
-      const res = await fetch('/api/health');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      setHealth(data);
-    } catch (err) {
-      console.error('Health fetch error:', err);
-    } finally {
-      setLoadingHealth(false);
+  const navigate = (tab, params = {}) => {
+    setActiveTab(tab);
+    setNavParams(params);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Subpage title helper
+  const getSubpageInfo = () => {
+    switch (activeTab) {
+      case 'cities':
+        return { title: 'CITY DISCOVERY & SEARCH', screen: 'SCREEN 7 • DISCOVERY', icon: MapPin, color: 'text-[#2C5F7C]' };
+      case 'activities':
+        return { title: 'ACTIVITY & EXPERIENCE CATALOG', screen: 'SCREEN 8 • CATALOG', icon: Search, color: 'text-[#B8823A]' };
+      case 'builder':
+        return { title: 'ITINERARY BUILDER & ROUTE DRAFT', screen: 'SCREEN 5 • WORKSPACE', icon: Layers, color: 'text-[#2C5F7C]' };
+      case 'itinerary':
+        return { title: 'ITINERARY DOCUMENT VIEW', screen: 'SCREEN 6 • READING VIEW', icon: Layers, color: 'text-[#1F2B2E]' };
+      case 'budget':
+        return { title: 'TRIP BUDGET & COST LEDGER', screen: 'SCREEN 9 • SERVER ARITHMETIC', icon: DollarSign, color: 'text-[#B8823A]' };
+      case 'calendar':
+        return { title: 'TRIP CALENDAR & TIMELINE', screen: 'SCREEN 10 • SCHEDULE', icon: Calendar, color: 'text-[#2C5F7C]' };
+      case 'share':
+        return { title: 'PUBLIC SHAREABLE ITINERARY PASS', screen: 'SCREEN 11 • PUBLIC PASS', icon: Globe, color: 'text-[#7FA69C]' };
+      case 'admin':
+        return { title: 'SYSTEM & ANALYTICS DASHBOARD', screen: 'SCREEN 13 • ADMIN PORTAL', icon: Shield, color: 'text-[#B84A3E]' };
+      case 'profile':
+        return { title: 'PASSENGER PASSPORT & SETTINGS', screen: 'SCREEN 12 • USER PROFILE', icon: User, color: 'text-[#1F2B2E]' };
+      case 'auth':
+        return { title: 'PASSENGER CHECK-IN & AUTHENTICATION', screen: 'SCREEN 1 • AUTH', icon: User, color: 'text-[#2C5F7C]' };
+      default:
+        return null;
     }
   };
 
-  useEffect(() => {
-    fetchHealth();
-  }, []);
-
-  const roles = [
-    {
-      person: 'A',
-      title: 'Auth & Core Backend',
-      status: 'COMPLETED & REFACTORED',
-      desc: 'Login/Signup, Profile/Settings, Neon DB Schema (design.md aligned), JWT Auth APIs',
-      color: 'bg-white border-2 border-[#1F2B2E]'
-    },
-    {
-      person: 'B',
-      title: 'Trip Management',
-      status: 'READY FOR PHASE 3',
-      desc: 'Dashboard (Screen 2), Create Trip (Screen 3), My Trips (Screen 4), Itinerary Builder (Screen 5)',
-      color: 'bg-white border-2 border-[#1F2B2E]'
-    },
-    {
-      person: 'C',
-      title: 'Discovery & Budget',
-      status: 'COMPLETED (SCR 7, 8, 9)',
-      desc: 'City Search (Screen 7), Activity Search (Screen 8), Budget Breakdown (Screen 9)',
-      color: 'bg-white border-2 border-[#1F2B2E]'
-    },
-    {
-      person: 'D',
-      title: 'Visualization & Sharing',
-      status: 'CALENDAR READY (SCR 10)',
-      desc: 'Itinerary View (Screen 6), Calendar (Screen 10), Public Share (Screen 11), Admin (Screen 13)',
-      color: 'bg-white border-2 border-[#1F2B2E]'
-    }
-  ];
+  const subpageInfo = getSubpageInfo();
 
   return (
     <div className="min-h-screen bg-[#F6F3EC] text-[#1F2B2E] flex flex-col font-body selection:bg-[#2C5F7C] selection:text-[#F6F3EC]">
-
-      {/* Top Boarding Pass Header Shell */}
-      <header className="bg-white border-b-2 border-[#1F2B2E] sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-
-          {/* Logo & Brand Identity */}
-          <div className="flex items-center gap-6">
-            <div
-              onClick={() => setActiveTab('overview')}
-              className="flex items-center gap-3 cursor-pointer group"
-            >
-              <div className="h-10 w-10 bg-[#1F2B2E] text-[#F6F3EC] flex items-center justify-center font-mono font-extrabold text-xl rounded-sm shadow-[2px_2px_0px_0px_#2C5F7C]">
-                GT
-              </div>
-              <div>
-                <span className="font-extrabold text-2xl font-display tracking-tight text-[#1F2B2E] block leading-none">
-                  GLOBETROTTER
-                </span>
-                <span className="text-[10px] font-mono text-[#2C5F7C] uppercase tracking-widest block">
-                  ITINERARY-AS-DOCUMENT
-                </span>
-              </div>
-            </div>
-
-            {/* Navigation Tabs */}
-            <nav className="hidden md:flex items-center gap-2 font-mono text-xs">
-              <button
-                onClick={() => setActiveTab('overview')}
-                className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold transition ${activeTab === 'overview' ? 'bg-[#1F2B2E] text-[#F6F3EC]' : 'bg-white text-[#1F2B2E] hover:bg-[#F6F3EC]'
-                  }`}
-              >
-                OVERVIEW
-              </button>
-              <button
-                onClick={() => setActiveTab('activities')}
-                className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold transition flex items-center gap-1.5 ${
-                  activeTab === 'activities' ? 'bg-[#1F2B2E] text-[#F6F3EC]' : 'bg-white text-[#1F2B2E] hover:bg-[#F6F3EC]'
-                }`}
-              >
-                <Search className="h-3.5 w-3.5" />
-                ACTIVITIES (SCR 8)
-              </button>
-              <button
-                onClick={() => setActiveTab('cities')}
-                className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold transition flex items-center gap-1.5 ${
-                  activeTab === 'cities' ? 'bg-[#1F2B2E] text-[#F6F3EC]' : 'bg-white text-[#1F2B2E] hover:bg-[#F6F3EC]'
-                }`}
-              >
-                <MapPin className="h-3.5 w-3.5" />
-                CITIES (SCR 7)
-              </button>
-              <button
-                onClick={() => setActiveTab('builder')}
-                className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold transition flex items-center gap-1.5 ${
-                  activeTab === 'builder' ? 'bg-[#1F2B2E] text-[#F6F3EC]' : 'bg-white text-[#1F2B2E] hover:bg-[#F6F3EC]'
-                }`}
-              >
-                <Layers className="h-3.5 w-3.5" />
-                BUILDER (SCR 5)
-              </button>
-              <button
-                onClick={() => setActiveTab('itinerary')}
-                className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold transition flex items-center gap-1.5 ${
-                  activeTab === 'itinerary' ? 'bg-[#1F2B2E] text-[#F6F3EC]' : 'bg-white text-[#1F2B2E] hover:bg-[#F6F3EC]'
-                }`}
-              >
-                <Calendar className="h-3.5 w-3.5" />
-                ITINERARY (SCR 6)
-              </button>
-              <button
-                onClick={() => setActiveTab('budget')}
-                className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold transition flex items-center gap-1.5 ${
-                  activeTab === 'budget' ? 'bg-[#1F2B2E] text-[#F6F3EC]' : 'bg-white text-[#1F2B2E] hover:bg-[#F6F3EC]'
-                }`}
-              >
-                <DollarSign className="h-3.5 w-3.5 text-[#B8823A]" />
-                BUDGET (SCR 9)
-              </button>
-              <button
-                onClick={() => setActiveTab('calendar')}
-                className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold transition flex items-center gap-1.5 ${
-                  activeTab === 'calendar' ? 'bg-[#1F2B2E] text-[#F6F3EC]' : 'bg-white text-[#1F2B2E] hover:bg-[#F6F3EC]'
-                }`}
-              >
-                <Calendar className="h-3.5 w-3.5 text-[#2C5F7C]" />
-                CALENDAR (SCR 10)
-              </button>
-              <button
-                onClick={() => setActiveTab('share')}
-                className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold transition flex items-center gap-1.5 ${
-                  activeTab === 'share' ? 'bg-[#1F2B2E] text-[#F6F3EC]' : 'bg-white text-[#1F2B2E] hover:bg-[#F6F3EC]'
-                }`}
-              >
-                <Globe className="h-3.5 w-3.5 text-[#7FA69C]" />
-                SHARE (SCR 11)
-              </button>
-              {isAuthenticated && (
-                <button
-                  onClick={() => setActiveTab('profile')}
-                  className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold transition ${activeTab === 'profile' ? 'bg-[#1F2B2E] text-[#F6F3EC]' : 'bg-white text-[#1F2B2E] hover:bg-[#F6F3EC]'
-                    }`}
-                >
-                  PROFILE (SCR 12)
-                </button>
-              )}
-              {isAuthenticated && user?.isAdmin && (
-                <button
-                  onClick={() => setActiveTab('admin')}
-                  className={`px-3 py-1.5 border border-[#1F2B2E] uppercase font-bold transition flex items-center gap-1.5 ${
-                    activeTab === 'admin' ? 'bg-[#B84A3E] text-[#F6F3EC] border-[#B84A3E]' : 'bg-white text-[#B84A3E] hover:bg-[#F6F3EC]'
-                  }`}
-                >
-                  <Shield className="h-3.5 w-3.5" />
-                  ADMIN (SCR 13)
-                </button>
-              )}
-            </nav>
-          </div>
-
-          {/* User Auth Action */}
-          <div className="flex items-center gap-3">
-            {isAuthenticated ? (
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setActiveTab('profile')}
-                  className="flex items-center gap-2 px-3 py-1 bg-white border border-[#1F2B2E] font-mono text-xs font-bold"
-                >
-                  {user.avatar ? (
-                    <img
-                      src={user.avatar}
-                      alt={user.name}
-                      className="h-6 w-6 object-cover border border-[#1F2B2E]"
-                    />
-                  ) : (
-                    <div className="h-6 w-6 bg-[#1F2B2E] text-[#F6F3EC] flex items-center justify-center font-mono font-bold text-xs border border-[#1F2B2E]">
-                      {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                    </div>
-                  )}
-                  <span className="text-[#1F2B2E] uppercase">{user.name}</span>
-                </button>
-
-                <button
-                  onClick={logout}
-                  title="Sign Out"
-                  className="p-2 bg-white border border-[#1F2B2E] text-[#1F2B2E] hover:bg-[#B84A3E] hover:text-white transition"
-                >
-                  <LogOut className="h-4 w-4" />
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setActiveTab('auth')}
-                className="px-4 py-2 bg-[#2C5F7C] hover:bg-[#1F2B2E] text-[#F6F3EC] border border-[#1F2B2E] font-mono text-xs font-bold uppercase transition shadow-[2px_2px_0px_0px_#1F2B2E] flex items-center gap-2"
-              >
-                <UserIcon className="h-4 w-4" />
-                SIGN IN / REGISTER
-              </button>
-            )}
-          </div>
-        </div>
-      </header>
+      
+      {/* Top Navbar */}
+      <Navbar currentTab={activeTab} onNavigate={navigate} />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl mx-auto px-6 py-8 w-full">
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-6 w-full">
+        
+        {/* Breadcrumb / Subpage Header if not on Home */}
+        {activeTab !== 'home' && (
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border-2 border-[#1F2B2E] p-4 shadow-[3px_3px_0px_0px_#1F2B2E]">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate('home')}
+                className="px-3 py-1.5 bg-[#F6F3EC] hover:bg-[#1F2B2E] hover:text-white border border-[#1F2B2E] font-mono text-xs font-bold uppercase transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                DASHBOARD
+              </button>
 
-        {activeTab === 'auth' && !isAuthenticated && (
-          <AuthPage onSuccess={() => setActiveTab('profile')} />
+              {subpageInfo && (
+                <div>
+                  <div className="font-mono text-[10px] uppercase font-bold text-[#2C5F7C] leading-none">
+                    {subpageInfo.screen}
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-bold font-display tracking-tight text-[#1F2B2E] leading-tight flex items-center gap-2">
+                    <subpageInfo.icon className={`h-5 w-5 ${subpageInfo.color}`} />
+                    {subpageInfo.title}
+                  </h2>
+                </div>
+              )}
+            </div>
+
+            {/* Quick Trip Workspace Switchers for Itinerary / Builder / Budget / Calendar / Share */}
+            {['builder', 'itinerary', 'budget', 'calendar', 'share'].includes(activeTab) && (
+              <div className="flex flex-wrap items-center gap-1 font-mono text-[11px]">
+                <button
+                  onClick={() => navigate('itinerary')}
+                  className={`px-2.5 py-1 border border-[#1F2B2E] uppercase font-bold transition cursor-pointer ${
+                    activeTab === 'itinerary' ? 'bg-[#1F2B2E] text-white' : 'bg-white hover:bg-[#F6F3EC]'
+                  }`}
+                >
+                  View
+                </button>
+                <button
+                  onClick={() => navigate('builder')}
+                  className={`px-2.5 py-1 border border-[#1F2B2E] uppercase font-bold transition cursor-pointer ${
+                    activeTab === 'builder' ? 'bg-[#1F2B2E] text-white' : 'bg-white hover:bg-[#F6F3EC]'
+                  }`}
+                >
+                  Builder
+                </button>
+                <button
+                  onClick={() => navigate('budget')}
+                  className={`px-2.5 py-1 border border-[#1F2B2E] uppercase font-bold transition cursor-pointer ${
+                    activeTab === 'budget' ? 'bg-[#1F2B2E] text-white' : 'bg-white hover:bg-[#F6F3EC]'
+                  }`}
+                >
+                  Budget
+                </button>
+                <button
+                  onClick={() => navigate('calendar')}
+                  className={`px-2.5 py-1 border border-[#1F2B2E] uppercase font-bold transition cursor-pointer ${
+                    activeTab === 'calendar' ? 'bg-[#1F2B2E] text-white' : 'bg-white hover:bg-[#F6F3EC]'
+                  }`}
+                >
+                  Calendar
+                </button>
+                <button
+                  onClick={() => navigate('share')}
+                  className={`px-2.5 py-1 border border-[#1F2B2E] uppercase font-bold transition cursor-pointer ${
+                    activeTab === 'share' ? 'bg-[#7FA69C] text-white' : 'bg-white hover:bg-[#F6F3EC]'
+                  }`}
+                >
+                  Share
+                </button>
+              </div>
+            )}
+          </div>
         )}
 
-        {activeTab === 'profile' && isAuthenticated && (
-          <ProfilePage />
+        {/* View Switching */}
+        {activeTab === 'home' && (
+          <HomePage
+            onNavigate={navigate}
+            onSelectCity={(cityName) => navigate('cities', { search: cityName })}
+            onSelectActivity={(actName) => navigate('activities', { search: actName })}
+          />
+        )}
+
+        {activeTab === 'cities' && (
+          <div className="bg-white border-2 border-[#1F2B2E] p-6 shadow-[4px_4px_0px_0px_#1F2B2E]">
+            <CitySearch
+              initialSearch={navParams.search || ''}
+              onAddToTrip={(city) => {
+                navigate('builder', { cityId: city.id });
+              }}
+            />
+          </div>
         )}
 
         {activeTab === 'activities' && (
           <div className="bg-white border-2 border-[#1F2B2E] p-6 shadow-[4px_4px_0px_0px_#1F2B2E]">
             <ActivitySearchPage
-              onBack={() => setActiveTab('overview')}
+              initialCityName={navParams.city}
+              initialSearch={navParams.search || ''}
+              onBack={() => navigate('home')}
               onAddActivity={(activity) => console.log('Add activity:', activity)}
               onRemoveActivity={(activity) => console.log('Remove activity:', activity)}
               selectedActivityIds={[]}
@@ -261,172 +174,74 @@ function MainApp() {
           </div>
         )}
 
-        {activeTab === 'cities' && (
-          <div className="bg-white border-2 border-[#1F2B2E] p-6 shadow-[4px_4px_0px_0px_#1F2B2E]">
-            <CitySearch onAddToTrip={(city) => console.log('Add to trip:', city)} />
-          </div>
-        )}
-
         {activeTab === 'builder' && (
           <div className="bg-white border-2 border-[#1F2B2E] p-6 shadow-[4px_4px_0px_0px_#1F2B2E]">
-            <ItineraryBuilder tripId={TRIP_ID} />
+            <ItineraryBuilder tripId={navParams.tripId || TRIP_ID} />
           </div>
         )}
 
         {activeTab === 'itinerary' && (
           <div className="bg-white border-2 border-[#1F2B2E] p-6 shadow-[4px_4px_0px_0px_#1F2B2E]">
-            <ItineraryView tripId={TRIP_ID} />
+            <ItineraryView tripId={navParams.tripId || TRIP_ID} />
           </div>
         )}
 
         {activeTab === 'budget' && (
           <TripBudgetPage
-            onBack={() => setActiveTab('overview')}
-            onNavigateToCalendar={() => setActiveTab('calendar')}
+            tripId={navParams.tripId || null}
+            onBack={() => navigate('home')}
+            onNavigateToCalendar={() => navigate('calendar')}
           />
         )}
 
         {activeTab === 'calendar' && (
           <TripCalendarPage
-            onBack={() => setActiveTab('overview')}
-            onNavigateToBudget={() => setActiveTab('budget')}
-            onNavigateToActivities={() => setActiveTab('activities')}
+            tripId={navParams.tripId || null}
+            onBack={() => navigate('home')}
+            onNavigateToBudget={() => navigate('budget')}
+            onNavigateToActivities={() => navigate('activities')}
           />
         )}
 
         {activeTab === 'share' && (
           <PublicItineraryPage
-            onBack={() => setActiveTab('overview')}
-            onNavigateToAuth={() => setActiveTab('auth')}
+            shareSlug={navParams.slug || 'europe-grand-2026-x8f1'}
+            onBack={() => navigate('home')}
+            onNavigateToAuth={() => navigate('auth')}
           />
         )}
 
-        {activeTab === 'admin' && isAuthenticated && user?.isAdmin && (
+        {activeTab === 'admin' && (
           <AdminPage />
         )}
 
-        {(activeTab === 'overview' || (activeTab === 'auth' && isAuthenticated) || (activeTab === 'profile' && !isAuthenticated)) && (
-          <div className="space-y-10">
-
-            {/* Document Hero Header */}
-            <section className="bg-white border-2 border-[#1F2B2E] p-8 shadow-[4px_4px_0px_0px_#1F2B2E] relative overflow-hidden">
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                <div className="space-y-2 max-w-2xl">
-                  <div className="inline-flex items-center gap-2 px-2.5 py-0.5 bg-[#B8823A] text-white font-mono text-xs font-bold uppercase">
-                    <span>DESIGN.MD ALIGNED</span>
-                    <span>&bull;</span>
-                    <span>NEON POSTGRESQL</span>
-                  </div>
-                  <h1 className="text-4xl sm:text-5xl font-extrabold font-display tracking-tight text-[#1F2B2E]">
-                    GLOBETROTTER ARCHITECTURE
-                  </h1>
-                  <p className="text-[#1F2B2E]/80 text-sm font-body leading-relaxed">
-                    Designed around the <span className="font-mono text-[#2C5F7C] font-bold">"Itinerary-as-Document"</span> identity. Powered by React (Vite), Express API, Neon PostgreSQL DB, and bcrypt 12 salt rounds.
-                  </p>
-                </div>
-
-                <div className="p-4 bg-[#F6F3EC] border border-[#1F2B2E] font-mono text-xs space-y-1 shrink-0">
-                  <div className="font-bold text-[#2C5F7C] uppercase">API STATUS</div>
-                  <div className="text-[#1F2B2E]">PORT: 5000</div>
-                  <div className="text-[#1F2B2E]">DB: Neon Cloud PostgreSQL</div>
-                  <div className="text-[#B8823A]">BCRYPT: 12 Rounds</div>
-                </div>
-              </div>
-            </section>
-
-            {/* Ticket Stub Demo Section */}
-            <section className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold font-display text-[#1F2B2E] uppercase">
-                  Signature Ticket Stub StopCard Component (Scr 2, 4, 5, 6)
-                </h2>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <TicketCard
-                  city="PARIS"
-                  country="FRANCE"
-                  dates="OCT 12 — OCT 16, 2026"
-                  cost={32500}
-                  activitiesCount={4}
-                  badge="DESTINATION 01"
-                >
-                  <p className="text-xs text-[#1F2B2E] font-body mb-3">
-                    The City of Light, featuring Eiffel Tower summit tour, Seine river evening cruise, and Montmartre food tastings.
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="px-2 py-0.5 bg-[#F6F3EC] border border-[#1F2B2E] font-mono text-[10px] text-[#2C5F7C] font-bold">
-                      #sightseeing
-                    </span>
-                    <span className="px-2 py-0.5 bg-[#F6F3EC] border border-[#1F2B2E] font-mono text-[10px] text-[#B8823A] font-bold">
-                      #culture
-                    </span>
-                    <span className="px-2 py-0.5 bg-[#F6F3EC] border border-[#1F2B2E] font-mono text-[10px] text-[#7FA69C] font-bold">
-                      #food
-                    </span>
-                  </div>
-                </TicketCard>
-
-                <TicketCard
-                  city="TOKYO"
-                  country="JAPAN"
-                  dates="NOV 02 — NOV 08, 2026"
-                  cost={48000}
-                  activitiesCount={4}
-                  badge="DESTINATION 02"
-                >
-                  <p className="text-xs text-[#1F2B2E] font-body mb-3">
-                    Ultra-modern metropolis blending neon skyscrapers with historic Senso-ji temple and Tsukiji market sushi.
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="px-2 py-0.5 bg-[#F6F3EC] border border-[#1F2B2E] font-mono text-[10px] text-[#2C5F7C] font-bold">
-                      #culture
-                    </span>
-                    <span className="px-2 py-0.5 bg-[#F6F3EC] border border-[#1F2B2E] font-mono text-[10px] text-[#7FA69C] font-bold">
-                      #food
-                    </span>
-                  </div>
-                </TicketCard>
-              </div>
-            </section>
-
-            {/* Team Execution Matrix */}
-            <section className="space-y-4">
-              <h2 className="text-2xl font-bold font-display text-[#1F2B2E] uppercase">
-                Team Role Architecture & Screen Assignments
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {roles.map((r) => (
-                  <div
-                    key={r.person}
-                    className="bg-white border-2 border-[#1F2B2E] p-5 shadow-[3px_3px_0px_0px_#1F2B2E] flex flex-col justify-between space-y-4"
-                  >
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="h-8 w-8 bg-[#1F2B2E] text-[#F6F3EC] flex items-center justify-center font-mono font-bold text-sm">
-                          {r.person}
-                        </span>
-                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-[#F6F3EC] border border-[#1F2B2E] text-[#2C5F7C]">
-                          {r.status}
-                        </span>
-                      </div>
-                      <h4 className="font-bold text-lg font-display text-[#1F2B2E]">{r.title}</h4>
-                      <p className="text-xs font-body text-[#1F2B2E]/80 leading-relaxed">{r.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-          </div>
+        {activeTab === 'profile' && isAuthenticated && (
+          <ProfilePage />
         )}
+
+        {activeTab === 'profile' && !isAuthenticated && (
+          <AuthPage onSuccess={() => navigate('profile')} />
+        )}
+
+        {activeTab === 'auth' && (
+          <AuthPage onSuccess={() => navigate('home')} />
+        )}
+
       </main>
 
-      {/* Footer Document Note */}
-      <footer className="border-t-2 border-[#1F2B2E] bg-white py-4 text-center font-mono text-xs text-[#1F2B2E]">
-        GLOBETROTTER &bull; INKED MAP DESIGN SYSTEM &bull; REACT VITE &bull; EXPRESS API &bull; NEON POSTGRESQL DB
+      {/* Footer Inked Seal */}
+      <footer className="border-t-2 border-[#1F2B2E] bg-white py-6 mt-12">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-xs text-[#1F2B2E]">
+          <div className="flex items-center gap-2">
+            <span className="h-6 w-6 bg-[#1F2B2E] text-[#F6F3EC] flex items-center justify-center font-bold text-xs">GT</span>
+            <span className="font-bold">GLOBETROTTER &bull; INKED MAP ROUTE SYSTEM</span>
+          </div>
+          <div className="text-[#1F2B2E]/70 text-center sm:text-right text-[11px]">
+            REACT VITE &bull; NEON POSTGRESQL &bull; EXPRESS API &bull; JWT SECURED
+          </div>
+        </div>
       </footer>
+
     </div>
   );
 }

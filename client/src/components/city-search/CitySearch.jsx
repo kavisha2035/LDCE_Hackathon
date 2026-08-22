@@ -11,8 +11,8 @@ const COST_LEVELS = [1, 2, 3, 4, 5];
  * (Screen 5's Add Stop flow, Dashboard's recommendations) imports and
  * embeds this directly rather than duplicating it.
  */
-export default function CitySearch({ onAddToTrip, embedded = false }) {
-  const [search, setSearch] = useState('');
+export default function CitySearch({ onAddToTrip, embedded = false, initialSearch = '' }) {
+  const [search, setSearch] = useState(initialSearch);
   const [region, setRegion] = useState('');
   const [costIndex, setCostIndex] = useState('');
 

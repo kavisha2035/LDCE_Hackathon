@@ -111,6 +111,7 @@ router.post('/signup', async (req, res) => {
     res.status(201).json({
       message: 'Account created successfully',
       user: sanitizeUser(newUser),
+      token: accessToken,
       accessToken,
       expiresIn: '15m'
     });
@@ -156,6 +157,7 @@ router.post('/login', async (req, res) => {
     res.status(200).json({
       message: 'Login successful',
       user: sanitizeUser(user),
+      token: accessToken,
       accessToken,
       expiresIn: '15m'
     });
